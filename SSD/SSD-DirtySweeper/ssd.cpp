@@ -21,7 +21,7 @@ public:
 
 	bool writeData(int address, string hexData) {
 		createErrorOutputFile();
-		if (isAddressOutOfRange(address))	return false; 
+		if (isAddressOutOfRange(address)) return false; 
 		if (!readFromFile()) return false;
 		
 		ssdData[address] = hexData;
