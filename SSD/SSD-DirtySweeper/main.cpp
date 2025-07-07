@@ -29,16 +29,16 @@ TEST(TS, ReadTC_ReturnData01)
     int lba_addr = 50;
     int actual_data;
     actual_data = ssd.readData(lba_addr);
-    EXPECT_EQ(lba_addr, actual_data);
+    EXPECT_EQ(0, actual_data);
 }
 
 TEST(TS, ReadTC_ReturnData02)
 {
     SSD ssd;
-    int lba_addr = 25;
+    int lba_addr = 30;
     int actual_data;
     actual_data = ssd.readData(lba_addr);
-    EXPECT_EQ(lba_addr, actual_data);
+    EXPECT_EQ(0, actual_data);
 }
 
 int main()
