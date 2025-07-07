@@ -36,7 +36,7 @@
     <ClCompile Include="testShell_script_test.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="testShell_parser_test.cpp">
+    <ClCompile Include="testShell_cmd_executor_test.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

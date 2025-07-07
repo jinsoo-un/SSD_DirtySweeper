@@ -133,7 +133,7 @@
     <ClCompile Include="testShell_help_test.cpp">
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'"> %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
-    <ClCompile Include="testShell_parser_test.cpp">
+    <ClCompile Include="testShell_cmd_executor_test.cpp">
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'"> %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ClCompile Include="testShell_script_test.cpp">
