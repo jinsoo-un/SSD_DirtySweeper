@@ -22,7 +22,7 @@ public:
         commandExecutor = executor;
     }
 
-    std::string processCommand(const std::string& cmd) {
+    std::string executeCommand(const std::string& cmd) {
         if (commandExecutor == nullptr) {
             return "NO EXECUTOR SET";
         }
