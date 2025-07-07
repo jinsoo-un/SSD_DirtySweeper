@@ -4,13 +4,9 @@
 using namespace testing;
 using std::string;
 
-class MockTestShell : public TestShell {
-public:
-	MOCK_METHOD(void, help, (), ());
-};
-
 TEST(HelpTest, HelpCallTest) {
-	NiceMock<MockTestShell> mockShell;
+	SSDMock ssd;
+	NiceMock<MockTestShell> mockShell{&ssd};
 
 	EXPECT_CALL(mockShell, help())
 		.Times(1);
@@ -19,6 +15,7 @@ TEST(HelpTest, HelpCallTest) {
 }
 
 TEST(HelpTest, HelpCallTest2) {
-	TestShell ts;
+	SSDMock ssd;
+	TestShell ts{&ssd};
 	EXPECT_NO_THROW(ts.help());
 }

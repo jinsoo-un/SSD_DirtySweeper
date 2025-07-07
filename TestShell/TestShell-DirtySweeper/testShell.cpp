@@ -1,5 +1,10 @@
 #include <iostream>
 #include <string>
+#include <stdexcept>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include "gmock/gmock.h"
 
 using namespace std;
 
@@ -14,9 +19,20 @@ public:
     virtual std::string testScript() = 0;
 };
 
+class SSD {
+public:
+	virtual void read(int lba) = 0;
+};
+
+class SSDMock : public SSD {
+public:
+	MOCK_METHOD(void, read, (int lba), (override));
+};
+
 class TestShell {
 public:
     TestShell() : commandExecutor(nullptr) {}
+    TestShell(SSD* ssd) : ssd{ ssd } {}
 
     void setExecutor(CommandExecutor* executor) {
         commandExecutor = executor;
@@ -48,6 +64,43 @@ public:
         std::cout << "exit               : Exit the program." << std::endl;
         std::cout << "Note               : INVALID COMMAND will be shown if the input is unrecognized." << std::endl;
     }
+
+    void read(int lba) {
+        if (lba < 0 || lba > 99) throw std::exception();
+        ssd->read(lba);
+        std::string result = readOutputFile();
+        if (result == "ERROR") {
+            std::cout << "[Read] " << readOutputFile() << "\n";
+        }
+        else {
+            std::cout << "[Read] LBA " << lba << " : " << result << "\n";
+        }
+    }
+
+    virtual std::string readOutputFile() {
+        std::ifstream file("nand_output.txt");
+
+        if (!file.is_open()) throw std::exception();
+
+        std::ostringstream content;
+        std::string line;
+        while (std::getline(file, line)) {
+            content << line;
+        }
+        std::string result = content.str();
+
+        std::cout << result << "\n";
+        return result;
+    }
+
 private:
     CommandExecutor* commandExecutor;
+	SSD* ssd;
+};
+
+class MockTestShell : public TestShell {
+public:
+	MockTestShell(SSD* ssd) : TestShell(ssd) {}
+	MOCK_METHOD(void, help, (), ());
+	MOCK_METHOD(std::string, readOutputFile, (), ());
 };
