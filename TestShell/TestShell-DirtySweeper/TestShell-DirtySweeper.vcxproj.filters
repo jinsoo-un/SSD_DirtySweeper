@@ -30,7 +30,10 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\lib\native\src\gmock\gmock-all.cc">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="testShell__test.cpp">
+    <ClCompile Include="testShell_help_test.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="testShell_script_test.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
