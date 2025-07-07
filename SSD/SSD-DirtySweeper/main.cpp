@@ -21,6 +21,14 @@ TEST(TS, ARGPARSEWRITE)
     EXPECT_EQ(0x1298CDEF, ssd.value);
 }
 
+TEST(TS, ARGPARSEINVALID)
+{
+    SSD ssd;
+    string cmd = "S 3";
+    ssd.commandParser(cmd);
+    EXPECT_THROW(ssd.commandParser(cmd), std::exception);
+}
+
 int main()
 {
     ::testing::InitGoogleMock();
