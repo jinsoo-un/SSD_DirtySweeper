@@ -14,9 +14,15 @@ public:
     virtual std::string testScript() = 0;
 };
 
+class SSD {
+public:
+	virtual void read(int address) = 0;
+};
+
 class TestShell {
 public:
     TestShell() : commandExecutor(nullptr) {}
+    TestShell(SSD* ssd) : ssd{ ssd } {}
 
     void setExecutor(CommandExecutor* executor) {
         commandExecutor = executor;
@@ -37,6 +43,10 @@ public:
         return "INVALID COMMAND";
     }
 
+    void read(int address) {
+        ssd->read(address);
+    }
+
     void help() {
         std::cout << "Developed by: Team Members - Sooeon Jin, Euncho Bae, Kwangwon Min, Hyeongseok Choi, Yunbae Kim, Seongkyoon Lee" << std::endl;
         std::cout << "read (LBA)         : Read data from (LBA)." << std::endl;
@@ -48,6 +58,8 @@ public:
         std::cout << "exit               : Exit the program." << std::endl;
         std::cout << "Note               : INVALID COMMAND will be shown if the input is unrecognized." << std::endl;
     }
+
 private:
     CommandExecutor* commandExecutor;
+	SSD* ssd;
 };
