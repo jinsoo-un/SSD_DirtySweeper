@@ -25,7 +25,6 @@ TEST(TS, ARGPARSEINVALID)
 {
     SSD ssd;
     string cmd = "S 3";
-    ssd.commandParser(cmd);
     EXPECT_THROW(ssd.commandParser(cmd), std::exception);
 }
 

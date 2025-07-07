@@ -23,6 +23,9 @@ public:
 				value = std::stoul(arg, nullptr, 0);
 		}
 
+		if (op != "R" && op != "W")
+			throw std::exception();
+
 		argCount = cnt;
 	}
 	void readData(int address) {
