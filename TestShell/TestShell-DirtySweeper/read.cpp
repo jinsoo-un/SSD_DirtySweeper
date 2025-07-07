@@ -16,3 +16,13 @@ TEST(ReadTest, TC1) {
 
 	testShell.read(11);
 }
+
+TEST(ReadTest, InvalidAddress) {
+	SSDMock ssdMock;
+	TestShell testShell{ &ssdMock };
+
+	EXPECT_CALL(ssdMock, read(_))
+		.Times(0);
+
+	testShell.read(100);
+}
