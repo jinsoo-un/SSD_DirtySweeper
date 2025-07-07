@@ -12,33 +12,30 @@ public:
     MOCK_METHOD(std::string, testScript, (), (override));
 };
 
-TEST(TestShellTest, ValidCommand_Read) {
+class TestShellFixture : public ::testing::Test {
+protected:
+    TestShellFixture() : shell() {
+        shell.setExecutor(&mock);
+    }
     MockCommandExecutor mock;
     TestShell shell;
-	shell.setExecutor(&mock);
+};
 
+TEST_F(TestShellFixture, ValidCommand_Read) {
     EXPECT_CALL(mock, read()).WillOnce(::testing::Return("READ EXECUTED"));
 
     std::string result = shell.processCommand("read");
     EXPECT_EQ(result, "READ EXECUTED");
 }
 
-TEST(TestShellTest, ValidCommand_Help) {
-    MockCommandExecutor mock;
-    TestShell shell;
-    shell.setExecutor(&mock);
-
+TEST_F(TestShellFixture, ValidCommand_Help) {
     EXPECT_CALL(mock, help()).WillOnce(::testing::Return("HELP EXECUTED"));
 
     std::string result = shell.processCommand("help");
     EXPECT_EQ(result, "HELP EXECUTED");
 }
 
-TEST(TestShellTest, InvalidCommand_ShouldReturnInvalid) {
-    MockCommandExecutor mock;
-    TestShell shell;
-    shell.setExecutor(&mock);
-
+TEST_F(TestShellFixture, InvalidCommand_ShouldReturnInvalid) {
     std::string result = shell.processCommand("invalid_cmd");
     EXPECT_EQ(result, "INVALID COMMAND");
 }
