@@ -2,18 +2,15 @@
 #include "testShell.cpp"
 using namespace testing;
 
-class SSDMock : public SSD {
-public:
-	MOCK_METHOD(void, read, (int lba), (override));
-	MOCK_METHOD(std::string, readOutputFile, (), (override));
-};
-
 TEST(ReadTest, BasicRead) {
 	SSDMock ssdMock;
-	TestShell testShell{ &ssdMock };
+	MockTestShell testShell{ &ssdMock };
 
 	EXPECT_CALL(ssdMock, read(_))
 		.Times(1);
+
+	EXPECT_CALL(testShell, readOutputFile())
+		.WillRepeatedly(Return("0xAAAABBBB"));
 
 	testShell.read(11);
 }
@@ -27,12 +24,12 @@ TEST(ReadTest, InvalidAddress) {
 
 TEST(ReadTest, ReadSuccessTest) {
 	NiceMock<SSDMock> ssdMock;
-	TestShell testShell{ &ssdMock };
+	MockTestShell testShell{ &ssdMock };
 
 	EXPECT_CALL(ssdMock, read(_))
 		.Times(1);
 
-	EXPECT_CALL(ssdMock, readOutputFile())
+	EXPECT_CALL(testShell, readOutputFile())
 		.WillRepeatedly(Return("0xAAAABBBB"));
 
 	testShell.read(11);
@@ -41,12 +38,12 @@ TEST(ReadTest, ReadSuccessTest) {
 
 TEST(ReadTest, ReadFailTest) {
 	NiceMock<SSDMock> ssdMock;
-	TestShell testShell{ &ssdMock };
+	MockTestShell testShell{ &ssdMock };
 
 	EXPECT_CALL(ssdMock, read(_))
 		.Times(1);
 
-	EXPECT_CALL(ssdMock, readOutputFile())
+	EXPECT_CALL(testShell, readOutputFile())
 		.WillRepeatedly(Return("ERROR"));
 
 	testShell.read(11);
