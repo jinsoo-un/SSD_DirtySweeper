@@ -11,18 +11,17 @@ public:
 	void commandParser(string command) {
 
 	}
+
 	int readData(int address) {
 
         string data[100][20];
 
         //generate init ssd_nand file
-        if ((address < 0) || (address >= 100))
-        {
+        if ((address < 0) || (address >= 100)){
             //Error
             return -1;
         }
 
-        MakeTempFile();     // generate tempfile for test
 
         ifstream fin("ssd_nand.txt");
         ofstream fout2("ssd_output.txt");
@@ -46,17 +45,4 @@ public:
 	void writeData(int address, int data) {
 
 	}
-
-    void MakeTempFile()
-    {
-        ofstream fout("ssd_nand.txt");
-
-        for (int i = 0; i < 100; i++) {
-            string data;
-            fout << dec << i << "\t" << "0x" << hex << std::setw(8) << std::setfill('0') << i << "\n";
-
-        }
-        fout.close();
-    }
-
 };
