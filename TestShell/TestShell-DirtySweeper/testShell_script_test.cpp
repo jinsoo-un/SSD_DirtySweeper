@@ -1,6 +1,6 @@
 #include "gmock/gmock.h"
 #include "testShell.cpp"
 
-TEST(TestShellTest, TC1) {
+TEST(ScriptTest, TC1) {
 	EXPECT_EQ(1, 1);
 }
