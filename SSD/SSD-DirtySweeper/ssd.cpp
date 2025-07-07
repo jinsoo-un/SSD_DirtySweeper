@@ -19,12 +19,10 @@ public:
 			if (cnt == 2)
 				addr = std::stoi(arg);
 			if (cnt == 3)
-			{
 				value = std::stoul(arg, nullptr, 0);
-			}
 		}
 
-		argc = cnt;
+		argCount = cnt;
 	}
 	void readData(int address) {
 
@@ -33,7 +31,7 @@ public:
 
 	}
 
-	int argc;
+	int argCount;
 	string op;
 	int addr;
 	unsigned int value;
