@@ -29,6 +29,9 @@ public:
 
 		// Write data to ssd_nand.txt file
 		if (!writeFileFromData()) return false;
+
+		// Write ssd_output.txt file as null
+		createEmptyOutputFile();
 		
 		return true;
 	}
@@ -74,6 +77,11 @@ private:
 		file.close();
 
 		return true;
+	}
+
+	void createEmptyOutputFile() {
+		ofstream file("ssd_output.txt", ios::trunc);
+		file.close();
 	}
 
 	static const int MAX_ADDRESS = 100;
