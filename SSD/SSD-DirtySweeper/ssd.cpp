@@ -31,23 +31,32 @@ public:
             fout.close();
 
             ifstream fin("ssd_nand.txt");
-          //  string line;
-            for (int i = 0; i < 100; i++) {
+            ofstream fout2("ssd_output.txt");
+            
+            char line[20];
+
+
+            for (int i = 10; i < 20; i++) {
                 
-                fin.getline(data[i], 20);
-               // fin.getline(fout, 20);
-                    //fout.getloc(i);//getline
-                cout << data[i];
+                 fin.getline(line, 20);
+
+                if(i!= 15)                fout2 << line << "\n";
+                else {
+                    fout2 << dec << i << "\t" << "0x" << hex << std::setw(8) << std::setfill('0') << 0x4444 << "\n";
+                }
+
+                cout << line << "\n";
           
             }
 
             fin.close();
+            fout2.close();
             return 0;
         }
         else {
             return -1;
         }
-        
+
        //char ssd_file = "ssd_nand.txt";
        //char file="ssd_output.txt"
 
