@@ -126,10 +126,8 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="parser.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="read.cpp" />
-    <ClCompile Include="write.cpp" />
+    <ClCompile Include="ssd.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
