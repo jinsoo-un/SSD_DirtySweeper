@@ -1,6 +1,8 @@
 #include <iostream>
 #include <string>
 #include <stdexcept>
+#include <iostream>
+#include "gmock/gmock.h"
 
 using namespace std;
 
@@ -19,6 +21,12 @@ class SSD {
 public:
 	virtual void read(int lba) = 0;
 	virtual std::string readOutputFile(void) = 0;
+};
+
+class SSDMock : public SSD {
+public:
+	MOCK_METHOD(void, read, (int lba), (override));
+	MOCK_METHOD(std::string, readOutputFile, (), (override));
 };
 
 class TestShell {
@@ -62,7 +70,17 @@ public:
 		ssd->read(lba);
 	}
 
+	std::string readOutputFile() {
+		return ssd->readOutputFile();
+	}
+
 private:
     CommandExecutor* commandExecutor;
 	SSD* ssd;
+};
+
+class MockTestShell : public TestShell {
+public:
+	MockTestShell(SSD* ssd) : TestShell(ssd) {}
+	MOCK_METHOD(void, help, (), ());
 };

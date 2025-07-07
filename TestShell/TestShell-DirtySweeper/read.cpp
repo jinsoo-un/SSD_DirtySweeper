@@ -2,12 +2,6 @@
 #include "testShell.cpp"
 using namespace testing;
 
-class SSDMock : public SSD {
-public:
-	MOCK_METHOD(void, read, (int lba), (override));
-	MOCK_METHOD(std::string, readOutputFile, (), (override));
-};
-
 TEST(ReadTest, TC1) {
 	SSDMock ssdMock;
 	TestShell testShell{ &ssdMock };
