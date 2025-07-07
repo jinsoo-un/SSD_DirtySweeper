@@ -17,7 +17,6 @@ public:
 	string readData(int address) {
 		int readData = 0;
 		// TODO: Read data from the SSD at the specified address
-		return ssdData[address];
 	}
 
 	bool writeData(int address, string hexData) {
