@@ -22,6 +22,25 @@ TEST(TS, ReadTC_OutofRange)
     EXPECT_EQ(-1, actual_data);
 }
 
+
+TEST(TS, ReadTC_ReturnData01)
+{
+    SSD ssd;
+    int lba_addr = 50;
+    int actual_data;
+    actual_data = ssd.readData(lba_addr);
+    EXPECT_EQ(lba_addr, actual_data);
+}
+
+TEST(TS, ReadTC_ReturnData02)
+{
+    SSD ssd;
+    int lba_addr = 25;
+    int actual_data;
+    actual_data = ssd.readData(lba_addr);
+    EXPECT_EQ(lba_addr, actual_data);
+}
+
 int main()
 {
     ::testing::InitGoogleMock();

@@ -1,6 +1,9 @@
 #include<iostream>
 #include <fstream>
+#include <string>
+#include <iomanip>
 
+using namespace std;
 using std::string;
 
 class SSD {
@@ -10,8 +13,35 @@ public:
 	}
 	int readData(int address) {
 
+        string data[100][20];
+        //generate init ssd_nand file
         if ((address >= 0) && (address < 100))
         {
+            //ofstream fout;
+            ofstream fout("ssd_nand.txt");
+
+            //if(!fout){}
+            //if(fout.is_open()){}
+
+            for (int i = 0; i < 100; i++) {
+                string data;
+                fout << dec << i << "\t" << "0x" << hex << std::setw(8) << std::setfill('0') << i << "\n";
+
+            }
+            fout.close();
+
+            ifstream fin("ssd_nand.txt");
+          //  string line;
+            for (int i = 0; i < 100; i++) {
+                
+                fin.getline(data[i], 20);
+               // fin.getline(fout, 20);
+                    //fout.getloc(i);//getline
+                cout << data[i];
+          
+            }
+
+            fin.close();
             return 0;
         }
         else {
