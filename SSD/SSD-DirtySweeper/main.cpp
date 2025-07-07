@@ -10,9 +10,15 @@ TEST(TS, ARGPARSEREAD) {
     EXPECT_EQ(3, ssd.addr);
 }
 
-TEST(TS, TC1)
+TEST(TS, ARGPARSEWRITE)
 {
-
+    SSD ssd;
+    string cmd = "W 3 0x1298CDEF";
+    ssd.commandParser(cmd);
+    EXPECT_EQ(3, ssd.argc);
+    EXPECT_EQ("W", ssd.op);
+    EXPECT_EQ(3, ssd.addr);
+    EXPECT_EQ(0x1298CDEF, ssd.value);
 }
 
 int main()
