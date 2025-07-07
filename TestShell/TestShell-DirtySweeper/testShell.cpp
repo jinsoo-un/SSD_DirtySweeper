@@ -93,6 +93,12 @@ public:
         return result;
     }
 
+    void fullRead() {
+        for (int i = 0; i < 100; i++) {
+            read(i);
+        }
+    }
+
 private:
     CommandExecutor* commandExecutor;
 	SSD* ssd;
