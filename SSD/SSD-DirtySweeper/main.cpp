@@ -1,7 +1,6 @@
 #include <iostream>
 #include "ssd.cpp"
 #include "gmock/gmock.h"
-#include "ssd.cpp"
 
 using std::string;
 
@@ -23,7 +22,6 @@ TEST(TS, ReadTC_OutofRange)
     EXPECT_EQ(-1, actual_data);
 }
 
-
 TEST(TS, ReadTC_ReturnData01)
 {
     SSD ssd;
@@ -40,6 +38,8 @@ TEST(TS, ReadTC_ReturnData02)
     int actual_data;
     actual_data = ssd.readData(lba_addr);
     EXPECT_EQ(0, actual_data);
+
+}
 
 TEST(TS, ARGPARSEREAD) {
     SSD ssd;
@@ -68,6 +68,23 @@ TEST(TS, ARGPARSEINVALID)
     EXPECT_THROW(ssd.commandParser(cmd), std::exception);
 
 }
+
+class SSDTest : public ::testing::Test {
+public:
+    SSD ssd;
+};
+
+TEST_F(SSDTest, WritePass) {
+    bool isPass = ssd.writeData(0, "0xAAAABBBB");
+    EXPECT_TRUE(isPass);
+}
+
+TEST_F(SSDTest, WriteFailWithOutOfAddressRange) {
+    bool isPass = ssd.writeData(100, "0xAAAABBBB");
+
+    EXPECT_FALSE(isPass);
+}
+
 
 int main()
 {
