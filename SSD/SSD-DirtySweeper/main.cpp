@@ -18,7 +18,7 @@ TEST(TS, ARGPARSEWRITE)
     EXPECT_EQ(3, ssd.argCount);
     EXPECT_EQ("W", ssd.op);
     EXPECT_EQ(3, ssd.addr);
-    EXPECT_EQ(0x1298CDEF, ssd.value);
+    EXPECT_EQ("0x1298CDEF", ssd.value);
 }
 
 TEST(TS, ARGPARSEINVALID)

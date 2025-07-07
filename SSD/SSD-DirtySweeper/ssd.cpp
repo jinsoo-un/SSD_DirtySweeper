@@ -20,7 +20,7 @@ public:
 			if (cnt == 2)
 				addr = std::stoi(arg);
 			if (cnt == 3)
-				value = std::stoul(arg, nullptr, 0);
+				value = arg;
 		}
 		argCount = cnt;
 	}
@@ -40,5 +40,5 @@ public:
 	int argCount;
 	string op;
 	int addr;
-	unsigned int value;
+	string value;
 };
