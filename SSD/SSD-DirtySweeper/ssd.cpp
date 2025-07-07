@@ -38,7 +38,7 @@ public:
 private:
 	bool isAddressOutOfRange(int address)
 	{
-		return address < 0 || address >= MAX_ADDRESS;
+		return address < MIN_ADDRESS || address >= MAX_ADDRESS;
 	}
 
 	bool readFromFile() {
@@ -90,6 +90,7 @@ private:
 		fout2.close();
 	}
 
+	static const int MIN_ADDRESS = 0;
 	static const int MAX_ADDRESS = 100;
 	vector<string> ssdData; // Simulated SSD data storage
 	
