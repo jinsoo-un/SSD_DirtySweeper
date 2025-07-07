@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <stdexcept>
 
 using namespace std;
 
@@ -44,6 +45,7 @@ public:
     }
 
     void read(int address) {
+        if (address < 0 || address > 99) throw std::exception();
         ssd->read(address);
     }
 

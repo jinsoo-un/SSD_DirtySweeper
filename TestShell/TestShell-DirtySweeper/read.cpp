@@ -21,8 +21,5 @@ TEST(ReadTest, InvalidAddress) {
 	SSDMock ssdMock;
 	TestShell testShell{ &ssdMock };
 
-	EXPECT_CALL(ssdMock, read(_))
-		.Times(0);
-
-	testShell.read(100);
+	EXPECT_THROW(testShell.read(100), std::exception);
 }
