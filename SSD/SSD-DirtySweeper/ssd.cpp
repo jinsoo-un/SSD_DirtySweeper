@@ -16,16 +16,12 @@ public:
 		while (iss >> arg) {
 			cnt++;
 			if (cnt == 1)
-				op = arg;
+				checkOp(arg);
 			if (cnt == 2)
 				addr = std::stoi(arg);
 			if (cnt == 3)
 				value = std::stoul(arg, nullptr, 0);
 		}
-
-		if (op != "R" && op != "W")
-			throw std::exception();
-
 		argCount = cnt;
 	}
 	void readData(int address) {
@@ -33,6 +29,12 @@ public:
 	}
 	void writeData(int address, int data) {
 
+	}
+
+	void checkOp(string arg) {
+		if (arg != "R" && arg != "W")
+			throw std::exception();
+		op = arg;
 	}
 
 	int argCount;
