@@ -12,9 +12,7 @@ TEST_F(SSDTest, WritePass) {
     // Act
     bool isPass = ssd.writeData(0, "0xAAAABBBB");
     EXPECT_TRUE(isPass);
-    
-    //string readData = ssd.readData(0);
-   	//EXPECT_EQ(readData, "0xAAAABBBB");
+
 }
 
 TEST_F(SSDTest, WriteFailWithOutOfAddressRange) {
