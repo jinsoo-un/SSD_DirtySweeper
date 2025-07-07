@@ -32,3 +32,17 @@ TEST(ReadTest, ReadSuccessTest) {
 	testShell.read(11);
 	EXPECT_EQ(testShell.readOutputFile(), "0xAAAABBBB");
 }
+
+TEST(ReadTest, ReadFailTest) {
+	NiceMock<SSDMock> ssdMock;
+	TestShell testShell{ &ssdMock };
+
+	EXPECT_CALL(ssdMock, read(_))
+		.Times(1);
+
+	EXPECT_CALL(ssdMock, readOutputFile())
+		.WillRepeatedly(Return("ERROR"));
+
+	testShell.read(11);
+	EXPECT_EQ(testShell.readOutputFile(), "ERROR");
+}
