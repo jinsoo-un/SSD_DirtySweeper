@@ -18,6 +18,10 @@ public:
 				op = arg;
 			if (cnt == 2)
 				addr = std::stoi(arg);
+			if (cnt == 3)
+			{
+				value = std::stoul(arg, nullptr, 0);
+			}
 		}
 
 		argc = cnt;
@@ -32,4 +36,5 @@ public:
 	int argc;
 	string op;
 	int addr;
+	unsigned int value;
 };
