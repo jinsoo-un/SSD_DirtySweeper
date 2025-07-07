@@ -39,6 +39,7 @@ public:
 private:
 	bool isAddressOutOfRange(int address)
 	{
+		createErrorOutputFile();
 		return address < 0 || address >= MAX_ADDRESS;
 	}
 
@@ -82,6 +83,13 @@ private:
 	void createEmptyOutputFile() {
 		ofstream file("ssd_output.txt", ios::trunc);
 		file.close();
+	}
+
+	void createErrorOutputFile() {
+		string msg{ "ERROR" };
+		ofstream fout2("ssd_output.txt");
+		fout2 << msg;
+		fout2.close();
 	}
 
 	static const int MAX_ADDRESS = 100;
