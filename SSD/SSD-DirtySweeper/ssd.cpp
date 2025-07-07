@@ -4,14 +4,29 @@
 #include <iomanip> // 추가 필요
 #include <algorithm>
 #include <vector>
-
+#include <stdexcept>
 using namespace std;
+
 
 
 class SSD {
 public:
 	void commandParser(string command) {
+		std::istringstream iss(command);
+		string arg;
+		int cnt = 0;
 
+		/* scan the command line input */
+		while (iss >> arg) {
+			cnt++;
+			if (cnt == 1)
+				checkOp(arg);
+			if (cnt == 2)
+				addr = std::stoi(arg);
+			if (cnt == 3)
+				value = arg;
+		}
+		argCount = cnt;
 	}
 	
 	string readData(int address) {
@@ -34,6 +49,11 @@ public:
 		
 		return true;
 	}
+
+	int argCount;
+	string op;
+	int addr;
+	string value;
 
 private:
 	bool isAddressOutOfRange(int address)
@@ -88,6 +108,12 @@ private:
 		ofstream fout2("ssd_output.txt");
 		fout2 << msg;
 		fout2.close();
+	}
+
+	void checkOp(string arg) {
+		if (arg != "R" && arg != "W")
+			throw std::exception();
+		op = arg;
 	}
 
 	static const int MIN_ADDRESS = 0;
