@@ -2,7 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <iomanip> // 추가 필요
+#include <iomanip>
 #include <algorithm>
 #include <vector>
 #include <stdexcept>
@@ -79,6 +79,12 @@ public:
 		return true;
 	}
 
+	void checkOp(string arg) {
+		if (arg != "R" && arg != "W")
+			throw std::exception();
+		op = arg;
+	}
+
 	int argCount;
 	string op;
 	int addr;
@@ -137,12 +143,6 @@ private:
 		ofstream fout2("ssd_output.txt");
 		fout2 << msg;
 		fout2.close();
-	}
-
-	void checkOp(string arg) {
-		if (arg != "R" && arg != "W")
-			throw std::exception();
-		op = arg;
 	}
 
 	static const int MIN_ADDRESS = 0;
