@@ -1,11 +1,28 @@
-#include<iostream>
+#include <iostream>
+#include <sstream>
+#include <vector>
+#include <stdexcept>
 
 using std::string;
 
 class SSD {
 public:
 	void commandParser(string command) {
+		std::istringstream iss(command);
+		string arg;
+		int cnt = 0;
 
+		/* scan the command line input */
+		while (iss >> arg) {
+			cnt++;
+			if (cnt == 1)
+				checkOp(arg);
+			if (cnt == 2)
+				addr = std::stoi(arg);
+			if (cnt == 3)
+				value = arg;
+		}
+		argCount = cnt;
 	}
 	void readData(int address) {
 
@@ -13,4 +30,15 @@ public:
 	void writeData(int address, int data) {
 
 	}
+
+	void checkOp(string arg) {
+		if (arg != "R" && arg != "W")
+			throw std::exception();
+		op = arg;
+	}
+
+	int argCount;
+	string op;
+	int addr;
+	string value;
 };
