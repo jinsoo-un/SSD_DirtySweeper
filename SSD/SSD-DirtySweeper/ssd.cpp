@@ -20,9 +20,8 @@ public:
 	}
 
 	bool writeData(int address, string hexData) {
-		// Check if the address is within the valid range	
+		createErrorOutputFile();
 		if (isAddressOutOfRange(address))	return false; 
-
 		if (!readFromFile()) return false;
 		
 		ssdData[address] = hexData;
@@ -39,7 +38,6 @@ public:
 private:
 	bool isAddressOutOfRange(int address)
 	{
-		createErrorOutputFile();
 		return address < 0 || address >= MAX_ADDRESS;
 	}
 
