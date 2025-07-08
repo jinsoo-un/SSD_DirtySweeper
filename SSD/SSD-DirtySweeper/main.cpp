@@ -4,36 +4,42 @@
 
 using std::string;
 
-TEST(TS, ReadTC_InitialValue)
-{
+class SSDTest : public ::testing::Test {
+public:
     SSD ssd;
+
+    void SetUp() override {
+        ssd.erase();
+	}
+};
+
+
+TEST_F(SSDTest, ReadTC_InitialValue)
+{
     int lba_addr = 1;
     bool isPass;
     isPass = ssd.readData(lba_addr);
     EXPECT_EQ(true, isPass);
 }
 
-TEST(TS, ReadTC_OutofRange)
+TEST_F(SSDTest, ReadTC_OutofRange)
 {
-    SSD ssd;
     int lba_addr = 100;
     bool isPass;
     isPass = ssd.readData(lba_addr);
     EXPECT_EQ(false, isPass);
 }
 
-TEST(TS, ReadTC_ReturnData01)
+TEST_F(SSDTest, ReadTC_ReturnData01)
 {
-    SSD ssd;
     int lba_addr = 50;
     bool isPass;
     isPass = ssd.readData(lba_addr);
     EXPECT_EQ(true, isPass);
 }
 
-TEST(TS, ReadTC_ReturnData02)
+TEST_F(SSDTest, ReadTC_ReturnData02)
 {
-    SSD ssd;
     int lba_addr = 30;
     bool isPass;
     isPass = ssd.readData(lba_addr);
@@ -41,8 +47,7 @@ TEST(TS, ReadTC_ReturnData02)
 
 }
 
-TEST(TS, ARGPARSEREAD) {
-    SSD ssd;
+TEST_F(SSDTest, ARGPARSEREAD) {
     string cmd = "R 3";
     ssd.commandParser(cmd);
     EXPECT_EQ(2, ssd.argCount);
@@ -50,9 +55,8 @@ TEST(TS, ARGPARSEREAD) {
     EXPECT_EQ(3, ssd.addr);
 }
 
-TEST(TS, ARGPARSEWRITE)
+TEST_F(SSDTest, ARGPARSEWRITE)
 {
-    SSD ssd;
     string cmd = "W 3 0x1298CDEF";
     ssd.commandParser(cmd);
     EXPECT_EQ(3, ssd.argCount);
@@ -61,18 +65,13 @@ TEST(TS, ARGPARSEWRITE)
     EXPECT_EQ("0x1298CDEF", ssd.value);
 }
 
-TEST(TS, ARGPARSEINVALID)
+TEST_F(SSDTest, ARGPARSEINVALID)
 {
-    SSD ssd;
     string cmd = "S 3";
     EXPECT_THROW(ssd.commandParser(cmd), std::exception);
 
 }
 
-class SSDTest : public ::testing::Test {
-public:
-    SSD ssd;
-};
 
 TEST_F(SSDTest, WritePass) {
     bool isPass = ssd.writeData(0, "0xAAAABBBB");

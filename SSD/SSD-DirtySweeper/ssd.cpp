@@ -10,7 +10,6 @@ using namespace std;
 
 using std::string;
 
-// 파일명 상수들을 위한 namespace
 namespace FileNames {
 	const std::string DATA_FILE = "ssd_nand.txt";
 	const std::string OUTPUT_FILE = "ssd_output.txt";
@@ -19,6 +18,22 @@ namespace FileNames {
 
 class SSD {
 public:
+	void erase() {
+		ofstream file(FileNames::DATA_FILE);
+		if (!file.is_open()) {
+			cout << "Error opening file for writing." << endl;
+			return;
+		}
+		for (int i = 0; i < ssdData.size(); ++i) {
+			file << i << "\t" << "0x00000000" << endl;
+		}
+
+		file.close();
+
+		ssdData.clear();
+		ssdData.resize(MAX_ADDRESS, "0x00000000");
+	}
+
 	void commandParser(string command) {
 		std::istringstream iss(command);
 		string arg;
@@ -47,7 +62,7 @@ public:
 
 		if (true == isAddressOutOfRange(address))
 		{
-			createErrorOutputFile();
+			updateOutputFile("ERROR");
 			return false;
 		}
 
