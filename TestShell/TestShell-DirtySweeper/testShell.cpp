@@ -1,7 +1,6 @@
 #include <iostream>
 #include <string>
 #include <stdexcept>
-#include <iostream>
 #include <fstream>
 #include <sstream>
 #include <vector>
@@ -12,13 +11,13 @@ using namespace std;
 
 class CommandExecutor {
 public:
-    virtual std::string read(int lba) = 0;
-    virtual std::string write() = 0;
-    virtual std::string exit() = 0;
-    virtual std::string help() = 0;
-    virtual std::string fullRead() = 0;
-    virtual std::string fullWrite() = 0;
-    virtual std::string testScript() = 0;
+    virtual void read(int lba) = 0;
+    virtual void write(int lba, const std::string& data) = 0;
+    virtual void exit() = 0;
+    virtual void help() = 0;
+    virtual void fullRead() = 0;
+    virtual void fullWrite() = 0;
+    virtual void testScript() = 0;
 };
 
 class SSD {
@@ -40,14 +39,47 @@ public:
         commandExecutor = executor;
     }
 
-    std::string executeCommand(const std::string& cmd, std::vector<std::string> args) {
-        if (cmd == "read") return commandExecutor->read(0);
-        if (cmd == "write") return commandExecutor->write();
-        if (cmd == "exit") return commandExecutor->exit();
-        if (cmd == "help") return commandExecutor->help();
-        if (cmd == "fullread") return commandExecutor->fullRead();
-        if (cmd == "fullwrite") return commandExecutor->fullWrite();
-        if (cmd == "testscript") return commandExecutor->testScript();
+    std::string executeCommand(const std::string& cmd, const std::vector<std::string>& args) {
+        if (cmd == "read") {
+            if (args.size() < 1) return "INVALID COMMAND";
+            int lba = stoi(args[0]);
+            commandExecutor->read(lba);
+            return "READ DONE";
+        }
+
+        if (cmd == "write") {
+            if (args.size() < 2) return "INVALID COMMAND";
+            int lba = stoi(args[0]);
+            std::string data = args[1];
+            commandExecutor->write(lba, data);
+            return "WRITE DONE";
+        }
+
+        if (cmd == "exit") {
+            commandExecutor->exit();
+            return "EXIT DONE";
+        }
+
+        if (cmd == "help") {
+            commandExecutor->help();
+            return "HELP DONE";
+        }
+
+        if (cmd == "fullread") {
+            commandExecutor->fullRead();
+            return "FULL READ DONE";
+        }
+
+        if (cmd == "fullwrite") {
+            commandExecutor->fullWrite();
+            return "FULL WRITE DONE";
+        }
+
+        if (cmd == "testscript") {
+            commandExecutor->testScript();
+            return "TEST SCRIPT DONE";
+        }
+
         return "INVALID COMMAND";
     }
 
