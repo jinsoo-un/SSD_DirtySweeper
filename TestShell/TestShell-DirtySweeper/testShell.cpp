@@ -106,10 +106,11 @@ public:
         //    return;
         //}
 
-        //if (cmd == "fullwrite") {
-        //    this->fullWrite();
-        //    return;
-        //}
+        if (cmd == "fullwrite") {
+            std::string data = args[0];
+            this->fullWrite(data);
+            return;
+        }
 
         //if (cmd == "testscript") {
         //    this->testScript();
