@@ -13,6 +13,8 @@ namespace {
     static const string INVALID_DATA = "AHAHHAHAA";
     static const string WRITE_SUCCESS_RESULT = "[Write] Done";
     static const string WRITE_FAIL_RESULT = "[Write] ERROR";
+    static const string SSD_WRITE_DONE_VALUE= "";
+    static const string SSD_WRITE_ERROR_VALUE = "ERROR";
 }
 
 class TestShellWriteTest : public Test {
@@ -42,7 +44,7 @@ TEST_F(TestShellWriteTest, WriteFailWithInvalidLBA)
 
     EXPECT_CALL(sut, readOutputFile())
         .Times(1)
-        .WillOnce(Return("ERROR"));
+        .WillOnce(Return(SSD_WRITE_ERROR_VALUE));
 
     string result = sut.write(INVALID_LBA, VALID_DATA);
 
@@ -56,7 +58,7 @@ TEST_F(TestShellWriteTest, WriteFailWithInvalidData)
         .WillOnce(Return());
     EXPECT_CALL(sut, readOutputFile())
         .Times(1)
-        .WillOnce(Return("ERROR"));
+        .WillOnce(Return(SSD_WRITE_ERROR_VALUE));
 
     string result = sut.write(INVALID_LBA, INVALID_DATA);
 
@@ -64,7 +66,7 @@ TEST_F(TestShellWriteTest, WriteFailWithInvalidData)
 }
 TEST_F(TestShellWriteTest, FullWriteNormalCase)
 {
-    string actual = "";
+    string actual = SSD_WRITE_DONE_VALUE;
     for (int lba = START_LBA; lba <= END_LBA; lba++) actual += WRITE_SUCCESS_RESULT + "\n";
     EXPECT_CALL(ssdMock, write(_, VALID_DATA))
         .Times(100)
@@ -72,7 +74,7 @@ TEST_F(TestShellWriteTest, FullWriteNormalCase)
 
     EXPECT_CALL(sut, readOutputFile())
         .Times(100)
-        .WillRepeatedly(Return(""));
+        .WillRepeatedly(Return(SSD_WRITE_DONE_VALUE));
 
     string result = sut.fullWrite(VALID_DATA);
     EXPECT_EQ(actual, result);
@@ -85,7 +87,7 @@ TEST_F(TestShellWriteTest, FullWriteFailWithInvalidData)
 
     EXPECT_CALL(sut, readOutputFile())
         .Times(1)
-        .WillRepeatedly(Return("ERROR"));
+        .WillRepeatedly(Return(SSD_WRITE_ERROR_VALUE));
 
     string result = sut.fullWrite(INVALID_DATA);
     EXPECT_EQ(WRITE_FAIL_RESULT, result);
