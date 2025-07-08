@@ -85,6 +85,13 @@ public:
 		op = arg;
 	}
 
+	bool exec() {
+		if (op == "R")
+			return readData(addr);
+		if (op == "W")
+			return writeData(addr, value);
+	}
+
 	int argCount;
 	string op;
 	int addr;
