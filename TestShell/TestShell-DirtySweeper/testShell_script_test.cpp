@@ -10,17 +10,16 @@ TEST(WriteReadAging, CallTest) {
     testing::NiceMock<SSDMock> ssdMock;
     MockTestShell sut(&ssdMock);
     
-    const string actual = "[Write] Done";
     const string DATA = "0xAAAABBBB";
 
     EXPECT_CALL(ssdMock, write(0, DATA))
-        .Times(200);
+        .Times(TestShell::WRITE_READ_ITERATION);
     EXPECT_CALL(ssdMock, write(99, DATA))
-        .Times(200);
+        .Times(TestShell::WRITE_READ_ITERATION);
     EXPECT_CALL(ssdMock, read(0))
-        .Times(200);
+        .Times(TestShell::WRITE_READ_ITERATION);
     EXPECT_CALL(ssdMock, read(99))
-        .Times(200);
+        .Times(TestShell::WRITE_READ_ITERATION);
 
     EXPECT_CALL(sut, generateRandomHexString())
         .WillRepeatedly(Return("0xAAAABBBB"));
@@ -38,13 +37,13 @@ TEST(WriteReadAging, PassTest) {
     const string DATA = "0xAAAABBBB";
 
     EXPECT_CALL(ssdMock, write(0, _))
-        .Times(200);
+        .Times(TestShell::WRITE_READ_ITERATION);
     EXPECT_CALL(ssdMock, write(99, _))
-        .Times(200);
+        .Times(TestShell::WRITE_READ_ITERATION);
     EXPECT_CALL(ssdMock, read(0))
-        .Times(200);
+        .Times(TestShell::WRITE_READ_ITERATION);
     EXPECT_CALL(ssdMock, read(99))
-        .Times(200);
+        .Times(TestShell::WRITE_READ_ITERATION);
 
     EXPECT_CALL(sut, generateRandomHexString())
         .WillRepeatedly(Return("0xAAAABBBB"));

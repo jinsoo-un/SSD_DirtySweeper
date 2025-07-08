@@ -216,7 +216,7 @@ public:
     }
 
     void writeReadAging() {
-        for (int i = 0; i < 200; i++) {
+        for (int i = 0; i < WRITE_READ_ITERATION; i++) {
             string randomString = generateRandomHexString();
             ssd->write(0, randomString);
             ssd->read(0);
@@ -253,12 +253,15 @@ public:
         return result;
     }
 
+    static const int WRITE_READ_ITERATION = 200;
+
 private:
     SSD* ssd;
     bool isExitCmd{ false };
 
     const int LBA_START_ADDRESS = 0;
     const int LBA_END_ADDRESS = 99;
+
     const string WRITE_ERROR_MESSAGE = "[Write] ERROR";
     const string WRITE_SUCCESS_MESSAGE = "[Write] Done";
 
