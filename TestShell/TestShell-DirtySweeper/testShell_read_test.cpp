@@ -64,3 +64,19 @@ TEST(FullReadTest, TestIfReadCalled100Times) {
 
 	testShell.fullRead();
 }
+
+TEST(FullReadTest, FulLReadFail) {
+	NiceMock<SSDMock> ssdMock;
+	MockTestShell testShell{ &ssdMock };
+
+	EXPECT_CALL(ssdMock, read(_))
+		.Times(4);
+
+	EXPECT_CALL(testShell, readOutputFile())
+		.WillOnce(Return("0xAAAABBBB"))
+		.WillOnce(Return("0xAAAABBBB"))
+		.WillOnce(Return("0xAAAABBBB"))
+		.WillRepeatedly(Return("ERROR"));
+
+	testShell.fullRead();
+}
