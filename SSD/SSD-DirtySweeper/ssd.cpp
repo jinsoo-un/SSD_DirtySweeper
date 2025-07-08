@@ -15,7 +15,6 @@ namespace FileNames {
 	const std::string OUTPUT_FILE = "ssd_output.txt";
 }
 
-
 class SSD {
 public:
 	void erase() {
@@ -35,26 +34,11 @@ public:
 	}
 
 	void commandParser(string command) {
-		std::istringstream iss(command);
-		string arg;
-		int cnt = 0;
-
 		if (!isValidCommand(command)) {
 			updateOutputFile("ERROR");
 			return;
 		}
-
-		/* scan the command line input */
-		while (iss >> arg) {
-			cnt++;
-			if (cnt == 1)
-				op = arg;
-			if (cnt == 2)
-				addr = std::stoi(arg);
-			if (cnt == 3)
-				value = arg;
-		}
-		argCount = cnt;
+		storeParams(command);
 	}
 
 	bool readData(int address) {
@@ -62,7 +46,7 @@ public:
 		if (!readFromFile()) { updateOutputFile("ERROR");  return false; }
 
 		updateOutputFile(ssdData[address]);
-		return true;      
+		return true;
 	}
 
 	bool writeData(int address, string hexData) {
@@ -84,12 +68,41 @@ public:
 			return writeData(addr, value);
 	}
 
-	int argCount;
-	string op;
-	int addr;
-	string value;
+	int getArgCount() {
+		return argCount;
+	}
+
+	string getOp() {
+		return op;
+	}
+
+	int getAddr() {
+		return addr;
+	}
+
+	string getValue() {
+		return value;
+	}
 
 private:
+	void storeParams(string command)
+	{
+		std::istringstream iss(command);
+		string arg;
+		int cnt = 0;
+		/* scan the command line input */
+		while (iss >> arg) {
+			cnt++;
+			if (cnt == 1)
+				op = arg;
+			if (cnt == 2)
+				addr = std::stoi(arg);
+			if (cnt == 3)
+				value = arg;
+		}
+		argCount = cnt;
+	}
+
 	bool isAddressOutOfRange(int address)
 	{
 		return address < MIN_ADDRESS || address >= MAX_ADDRESS;
@@ -178,10 +191,13 @@ private:
 		return true;
 	}
 
+	int argCount;
+	string op;
+	int addr;
+	string value;
+
 	static const int MIN_ADDRESS = 0;
 	static const int MAX_ADDRESS = 100;
 
 	vector<string> ssdData; // Simulated SSD data storage
-	
-
 };

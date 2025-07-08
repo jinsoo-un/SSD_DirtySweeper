@@ -75,22 +75,22 @@ TEST_F(SSDTest, ReadTC_ReturnData02)
     EXPECT_TRUE(checkOutputFile(INITIAL_HEX_DATA));
 }
 
-TEST_F(SSDTest, ARGPARSEREAD) {
+TEST_F(SSDTest, ArgparseRead) {
     string cmd = buildCommand("R", 3);
     ssd.commandParser(cmd);
-    EXPECT_EQ(2, ssd.argCount);
-    EXPECT_EQ("R", ssd.op);
-    EXPECT_EQ(3, ssd.addr);
+    EXPECT_EQ(2, ssd.getArgCount());
+    EXPECT_EQ("R", ssd.getOp());
+    EXPECT_EQ(3, ssd.getAddr());
 }
 
-TEST_F(SSDTest, ARGPARSEWRITE)
+TEST_F(SSDTest, ArgparseWrite)
 {
     string cmd = buildCommand("W", 3, VALID_HEX_DATA);
     ssd.commandParser(cmd);
-    EXPECT_EQ(3, ssd.argCount);
-    EXPECT_EQ("W", ssd.op);
-    EXPECT_EQ(3, ssd.addr);
-    EXPECT_EQ(VALID_HEX_DATA, ssd.value);
+    EXPECT_EQ(3, ssd.getArgCount());
+    EXPECT_EQ("W", ssd.getOp());
+    EXPECT_EQ(3, ssd.getAddr());
+    EXPECT_EQ("0x1298CDEF", ssd.getValue());
 }
 
 TEST_F(SSDTest, ArgparseInvalidOp)
@@ -113,7 +113,6 @@ TEST_F(SSDTest, ArgparseInvalidValue)
     ssd.commandParser(cmd);
     EXPECT_TRUE(checkOutputFile("ERROR"));
 }
-
 
 TEST_F(SSDTest, WritePass) {
     bool isPass = ssd.writeData(VALID_TEST_ADDRESS, VALID_HEX_DATA);
