@@ -264,7 +264,7 @@ private:
 
     bool isValidCommand(const std::string& cmd) const {
         static const std::unordered_set<std::string> valid = {
-			"read", "write", "exit", "help", "fullread", "fullwrite", "testscript", "1_", "1_FullWriteAndReadCompare"
+           "read", "write", "exit", "help", "fullread", "fullwrite", "testscript", "1_", "1_FullWriteAndReadCompare"
         };
         return valid.count(cmd) > 0;
     }
