@@ -100,7 +100,7 @@ public:
             return;
         }
 
-        // ��� �̱������� �ӽ� disabled
+        // 아직 구현되지 않은 method에 대해서는 disabled
         //if (cmd == "exit") {
         //    this->exit();
         //    return;
