@@ -18,7 +18,7 @@ namespace {
 class TestShellWriteTest : public Test {
 public:
     NiceMock< SSDMock> ssdMock;
-    TestShell sut{ &ssdMock };
+    NiceMock< MockTestShell> sut{ &ssdMock };
 };
 
 TEST_F(TestShellWriteTest, Write)
@@ -26,6 +26,9 @@ TEST_F(TestShellWriteTest, Write)
     EXPECT_CALL(ssdMock, write(VALID_LBA, VALID_DATA))
         .Times(1);
 
+    EXPECT_CALL(sut, readOutputFile())
+        .Times(1)
+        .WillOnce(Return(""));
     string result = sut.write(VALID_LBA, VALID_DATA);
 
     EXPECT_EQ(WRITE_SUCCESS_RESULT, result);
@@ -36,7 +39,8 @@ TEST_F(TestShellWriteTest, WriteFailWithInvalidLBA)
     EXPECT_CALL(ssdMock, write(INVALID_LBA, VALID_DATA))
         .Times(1)
         .WillOnce(Return());
-    EXPECT_CALL(ssdMock, getResult())
+
+    EXPECT_CALL(sut, readOutputFile())
         .Times(1)
         .WillOnce(Return("ERROR"));
 
@@ -50,7 +54,7 @@ TEST_F(TestShellWriteTest, WriteFailWithInvalidData)
     EXPECT_CALL(ssdMock, write(INVALID_LBA, INVALID_DATA))
         .Times(1)
         .WillOnce(Return());
-     EXPECT_CALL(ssdMock, getResult())
+    EXPECT_CALL(sut, readOutputFile())
         .Times(1)
         .WillOnce(Return("ERROR"));
 
@@ -66,7 +70,7 @@ TEST_F(TestShellWriteTest, FullWriteNormalCase)
         .Times(100)
         .WillRepeatedly(Return());
 
-    EXPECT_CALL(ssdMock, getResult())
+    EXPECT_CALL(sut, readOutputFile())
         .Times(100)
         .WillRepeatedly(Return(""));
 
@@ -79,7 +83,7 @@ TEST_F(TestShellWriteTest, FullWriteFailWithInvalidData)
         .Times(1)
         .WillRepeatedly(Return());
 
-    EXPECT_CALL(ssdMock, getResult())
+    EXPECT_CALL(sut, readOutputFile())
         .Times(1)
         .WillRepeatedly(Return("ERROR"));
 

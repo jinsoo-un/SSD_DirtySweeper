@@ -32,7 +32,7 @@ TEST_F(TestShellLogicTest, FullReadShouldCallSSDReadForAllLBA) {
 
 TEST_F(TestShellLogicTest, WriteShouldCallSSDWriteAndReturnDoneOnSuccess) {
     EXPECT_CALL(ssd, write(5, "abc")).Times(1);
-    EXPECT_CALL(ssd, getResult()).WillOnce(Return("OK"));
+    EXPECT_CALL(shell, readOutputFile()).WillOnce(Return("OK"));
 
     std::string result = shell.write(5, "abc");
     EXPECT_EQ(result, "[Write] Done");
@@ -40,7 +40,7 @@ TEST_F(TestShellLogicTest, WriteShouldCallSSDWriteAndReturnDoneOnSuccess) {
 
 TEST_F(TestShellLogicTest, WriteShouldReturnErrorOnFailure) {
     EXPECT_CALL(ssd, write(5, "abc")).Times(1);
-    EXPECT_CALL(ssd, getResult()).WillOnce(Return("ERROR"));
+    EXPECT_CALL(shell, readOutputFile()).WillOnce(Return("ERROR"));
 
     std::string result = shell.write(5, "abc");
     EXPECT_EQ(result, "[Write] ERROR");
@@ -48,7 +48,7 @@ TEST_F(TestShellLogicTest, WriteShouldReturnErrorOnFailure) {
 
 TEST_F(TestShellLogicTest, ProcessInputWriteShouldCallSSDWrite) {
     EXPECT_CALL(ssd, write(5, "hello")).Times(1);
-    EXPECT_CALL(ssd, getResult()).WillOnce(Return("OK"));
+    EXPECT_CALL(shell, readOutputFile()).WillOnce(Return("OK"));
 
     shell.processInput("write 5 hello");
 }
