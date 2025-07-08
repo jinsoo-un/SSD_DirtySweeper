@@ -11,6 +11,20 @@ public:
     void SetUp() override {
         ssd.erase();
 	}
+
+    bool checkOutputFile(string expected) {
+        ifstream fin(FileNames::OUTPUT_FILE);
+        if (!fin.is_open()) {
+            cout << "OUTPUT file open failed\n";
+            return false;
+        }
+
+        string line;
+        getline(fin, line);
+        if (line != expected)
+            return false;
+        return true;
+    }
 };
 
 
@@ -65,11 +79,28 @@ TEST_F(SSDTest, ARGPARSEWRITE)
     EXPECT_EQ("0x1298CDEF", ssd.value);
 }
 
-TEST_F(SSDTest, ARGPARSEINVALID)
+TEST_F(SSDTest, ArgparseInvalidOp)
 {
     string cmd = "S 3";
-    EXPECT_THROW(ssd.commandParser(cmd), std::exception);
+    ssd.commandParser(cmd);
+    EXPECT_TRUE(checkOutputFile("ERROR"));
+}
 
+TEST_F(SSDTest, ArgparseInvalidAddr)
+{
+    SSD ssd;
+    string cmd = "R 300";
+    ssd.commandParser(cmd);
+    EXPECT_TRUE(checkOutputFile("ERROR"));
+}
+
+TEST_F(SSDTest, ArgparseInvalidValue)
+
+{
+    SSD ssd;
+    string cmd = "W 3 0xABCDEFGH";
+    ssd.commandParser(cmd);
+    EXPECT_TRUE(checkOutputFile("ERROR"));
 }
 
 
