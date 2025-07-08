@@ -34,26 +34,11 @@ public:
 	}
 
 	void commandParser(string command) {
-		std::istringstream iss(command);
-		string arg;
-		int cnt = 0;
-
 		if (!isValidCommand(command)) {
 			updateOutputFile("ERROR");
 			return;
 		}
-
-		/* scan the command line input */
-		while (iss >> arg) {
-			cnt++;
-			if (cnt == 1)
-				op = arg;
-			if (cnt == 2)
-				addr = std::stoi(arg);
-			if (cnt == 3)
-				value = arg;
-		}
-		argCount = cnt;
+		storeParams(command);
 	}
 
 	bool readData(int address) {
@@ -82,8 +67,8 @@ public:
 
 		ssd_file.close();
 		output_file.close();
+
         return true;
-      
 	}
 
 	bool writeData(int address, string hexData) {
@@ -122,6 +107,24 @@ public:
 	}
 
 private:
+	void storeParams(string command)
+	{
+		std::istringstream iss(command);
+		string arg;
+		int cnt = 0;
+		/* scan the command line input */
+		while (iss >> arg) {
+			cnt++;
+			if (cnt == 1)
+				op = arg;
+			if (cnt == 2)
+				addr = std::stoi(arg);
+			if (cnt == 3)
+				value = arg;
+		}
+		argCount = cnt;
+	}
+
 	bool isAddressOutOfRange(int address)
 	{
 		return address < MIN_ADDRESS || address >= MAX_ADDRESS;
@@ -219,6 +222,4 @@ private:
 	static const int MAX_ADDRESS = 100;
 
 	vector<string> ssdData; // Simulated SSD data storage
-	
-
 };
