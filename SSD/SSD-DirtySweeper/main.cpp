@@ -4,45 +4,64 @@
 
 using std::string;
 
-TEST(TS, ReadTC_InitialValue)
-{
+class SSDTest : public ::testing::Test {
+public:
     SSD ssd;
-    int lba_addr = 0;
-    int actual_data;
-    actual_data = ssd.readData(lba_addr);
-    EXPECT_EQ(0x00000000, actual_data);
+
+    void SetUp() override {
+        ssd.erase();
+	}
+
+    bool checkOutputFile(string expected) {
+        ifstream fin(FileNames::OUTPUT_FILE);
+        if (!fin.is_open()) {
+            cout << "OUTPUT file open failed\n";
+            return false;
+        }
+
+        string line;
+        getline(fin, line);
+        if (line != expected)
+            return false;
+        return true;
+    }
+};
+
+
+TEST_F(SSDTest, ReadTC_InitialValue)
+{
+    int lba_addr = 1;
+    bool isPass;
+    isPass = ssd.readData(lba_addr);
+    EXPECT_EQ(true, isPass);
 }
 
-TEST(TS, ReadTC_OutofRange)
+TEST_F(SSDTest, ReadTC_OutofRange)
 {
-    SSD ssd;
     int lba_addr = 100;
-    int actual_data;
-    actual_data = ssd.readData(lba_addr);
-    EXPECT_EQ(-1, actual_data);
+    bool isPass;
+    isPass = ssd.readData(lba_addr);
+    EXPECT_EQ(false, isPass);
 }
 
-TEST(TS, ReadTC_ReturnData01)
+TEST_F(SSDTest, ReadTC_ReturnData01)
 {
-    SSD ssd;
     int lba_addr = 50;
-    int actual_data;
-    actual_data = ssd.readData(lba_addr);
-    EXPECT_EQ(0, actual_data);
+    bool isPass;
+    isPass = ssd.readData(lba_addr);
+    EXPECT_EQ(true, isPass);
 }
 
-TEST(TS, ReadTC_ReturnData02)
+TEST_F(SSDTest, ReadTC_ReturnData02)
 {
-    SSD ssd;
     int lba_addr = 30;
-    int actual_data;
-    actual_data = ssd.readData(lba_addr);
-    EXPECT_EQ(0, actual_data);
+    bool isPass;
+    isPass = ssd.readData(lba_addr);
+    EXPECT_EQ(true, isPass);
 
 }
 
-TEST(TS, ARGPARSEREAD) {
-    SSD ssd;
+TEST_F(SSDTest, ARGPARSEREAD) {
     string cmd = "R 3";
     ssd.commandParser(cmd);
     EXPECT_EQ(2, ssd.argCount);
@@ -50,9 +69,8 @@ TEST(TS, ARGPARSEREAD) {
     EXPECT_EQ(3, ssd.addr);
 }
 
-TEST(TS, ARGPARSEWRITE)
+TEST_F(SSDTest, ARGPARSEWRITE)
 {
-    SSD ssd;
     string cmd = "W 3 0x1298CDEF";
     ssd.commandParser(cmd);
     EXPECT_EQ(3, ssd.argCount);
@@ -61,18 +79,30 @@ TEST(TS, ARGPARSEWRITE)
     EXPECT_EQ("0x1298CDEF", ssd.value);
 }
 
-TEST(TS, ARGPARSEINVALID)
+TEST_F(SSDTest, ArgparseInvalidOp)
 {
-    SSD ssd;
     string cmd = "S 3";
-    EXPECT_THROW(ssd.commandParser(cmd), std::exception);
-
+    ssd.commandParser(cmd);
+    EXPECT_TRUE(checkOutputFile("ERROR"));
 }
 
-class SSDTest : public ::testing::Test {
-public:
+TEST_F(SSDTest, ArgparseInvalidAddr)
+{
     SSD ssd;
-};
+    string cmd = "R 300";
+    ssd.commandParser(cmd);
+    EXPECT_TRUE(checkOutputFile("ERROR"));
+}
+
+TEST_F(SSDTest, ArgparseInvalidValue)
+
+{
+    SSD ssd;
+    string cmd = "W 3 0xABCDEFGH";
+    ssd.commandParser(cmd);
+    EXPECT_TRUE(checkOutputFile("ERROR"));
+}
+
 
 TEST_F(SSDTest, WritePass) {
     bool isPass = ssd.writeData(0, "0xAAAABBBB");

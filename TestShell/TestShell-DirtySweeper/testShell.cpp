@@ -1,9 +1,10 @@
-#include <iostream>
+ï»¿#include <iostream>
 #include <string>
 #include <stdexcept>
-#include <iostream>
 #include <fstream>
 #include <sstream>
+#include <vector>
+#include <unordered_set>
 #include <windows.h>
 #include <shellapi.h>
 #include "gmock/gmock.h"
@@ -12,13 +13,13 @@ using namespace std;
 
 class CommandExecutor {
 public:
-    virtual std::string read() = 0;
-    virtual std::string write() = 0;
-    virtual std::string exit() = 0;
-    virtual std::string help() = 0;
-    virtual std::string fullRead() = 0;
-    virtual std::string fullWrite() = 0;
-    virtual std::string testScript() = 0;
+    virtual void read(int lba) = 0;
+    virtual void write(int lba, const std::string& data) = 0;
+    virtual void exit() = 0;
+    virtual void help() = 0;
+    virtual void fullRead() = 0;
+    virtual void fullWrite() = 0;
+    virtual void testScript() = 0;
 };
 
 class SSD {
@@ -30,28 +31,37 @@ public:
 
 class SsdHelpler : public SSD {
 public:
-    void read(int lba)  override {}
-    void write(int lba, string data) override {
-        // 1. set cli
-        const string result = "";
-        const string filePath = "./ssd.exe";
-        const string writeCmd = "W";
-        const string commandLine = writeCmd + std::to_string(lba) + data;
+    string buildCommandLine(string rw, int lba, string data = "") {
+        string cmdLine = rw + " " + std::to_string(lba);
+        if (rw == "W") cmdLine = cmdLine + " " + data;
+        return cmdLine;
+    }
 
-        // 2. ssd.exe ½ÇÇà
-        HINSTANCE executeResult = ShellExecuteA( // ShellExecuteA´Â ANSI ¹®ÀÚ¿­¿ë, ShellExecuteW´Â À¯´ÏÄÚµå¿ë
-            nullptr,                      // ºÎ¸ğ À©µµ¿ì ÇÚµé
-            "open",                       // ¼öÇàÇÒ ÀÛ¾÷ (¿¹: "open", "runas")
-            filePath.c_str(),             // ½ÇÇàÇÒ ÆÄÀÏ °æ·Î
-            commandLine.c_str(),           // ÀÎÀÚ ¹®ÀÚ¿­
-            nullptr,                      // ½ÃÀÛ µğ·ºÅä¸®
-            SW_SHOWNORMAL                 // À©µµ¿ì º¸¿©ÁÖ±â »óÅÂ
+    void executeCommandLine(string& commandLine) {
+        const string filePath = "./ssd.exe";
+        HINSTANCE executeResult = ShellExecuteA( // ShellExecuteAëŠ” ANSI ë¬¸ìì—´ìš©, ShellExecuteWëŠ” ìœ ë‹ˆì½”ë“œìš©
+            nullptr,                      // ë¶€ëª¨ ìœˆë„ìš° í•¸ë“¤
+            "open",                       // ìˆ˜í–‰í•  ì‘ì—… (ì˜ˆ: "open", "runas")
+            filePath.c_str(),             // ì‹¤í–‰í•  íŒŒì¼ ê²½ë¡œ
+            commandLine.c_str(),           // ì¸ì ë¬¸ìì—´
+            nullptr,                      // ì‹œì‘ ë””ë ‰í† ë¦¬
+            SW_SHOWNORMAL                 // ìœˆë„ìš° ë³´ì—¬ì£¼ê¸° ìƒíƒœ
         );
 
         if (reinterpret_cast<long long>(executeResult) <= 32) {
             std::cerr << "Failed to launch: " << filePath << ". Error code: " << reinterpret_cast<long long>(executeResult) << std::endl;
             throw std::exception();
         }
+    }
+
+    void read(int lba)  override {
+        string commandLine = buildCommandLine("R", lba);
+        executeCommandLine(commandLine);
+    }
+
+    void write(int lba, string data) override {
+        string commandLine = buildCommandLine("W", lba, data);
+        executeCommandLine(commandLine);
     }
     string getResult() override {
         return "";
@@ -69,24 +79,80 @@ class TestShell {
 public:
     TestShell() : commandExecutor(nullptr) {}
     TestShell(SSD* ssd) : ssd{ ssd } {}
+    TestShell(CommandExecutor* executor, SSD* ssd = nullptr)
+        : commandExecutor(executor), ssd(ssd) {
+    }
 
     void setExecutor(CommandExecutor* executor) {
         commandExecutor = executor;
     }
 
-    std::string executeCommand(const std::string& cmd) {
-        if (commandExecutor == nullptr) {
-            return "NO EXECUTOR SET";
+    void executeCommand(const std::string& cmd, const std::vector<std::string>& args) {
+        if (cmd == "read") {
+            if (args.size() < 1) {
+                std::cout << "INVALID COMMAND\n";
+                return;
+            }
+            int lba = stoi(args[0]);
+            commandExecutor->read(lba);
+            return;
         }
 
-        if (cmd == "read") return commandExecutor->read();
-        if (cmd == "write") return commandExecutor->write();
-        if (cmd == "exit") return commandExecutor->exit();
-        if (cmd == "help") return commandExecutor->help();
-        if (cmd == "fullread") return commandExecutor->fullRead();
-        if (cmd == "fullwrite") return commandExecutor->fullWrite();
-        if (cmd == "testscript") return commandExecutor->testScript();
-        return "INVALID COMMAND";
+        if (cmd == "write") {
+            if (args.size() < 2) {
+                std::cout << "INVALID COMMAND\n";
+                return;
+            }
+            int lba = stoi(args[0]);
+            std::string data = args[1];
+            commandExecutor->write(lba, data);
+            return;
+        }
+
+        if (cmd == "exit") {
+            commandExecutor->exit();
+            return;
+        }
+
+        if (cmd == "help") {
+            commandExecutor->help();
+            return;
+        }
+
+        if (cmd == "fullread") {
+            commandExecutor->fullRead();
+            return;
+        }
+
+        if (cmd == "fullwrite") {
+            commandExecutor->fullWrite();
+            return;
+        }
+
+        if (cmd == "testscript") {
+            commandExecutor->testScript();
+            return;
+        }
+
+        std::cout << "INVALID COMMAND\n";
+    }
+
+    void processInput(const std::string& input) {
+        auto tokens = tokenize(input);
+        if (tokens.empty()) {
+            std::cout << "INVALID COMMAND\n";
+            return;
+        }
+
+        const std::string& cmd = tokens[0];
+        std::vector<std::string> args(tokens.begin() + 1, tokens.end());
+
+        if (!isValidCommand(cmd)) {
+            std::cout << "INVALID COMMAND\n";
+            return;
+        }
+
+        executeCommand(cmd, args);  // commandExecutorëŠ” í•­ìƒ ì¡´ì¬í•¨
     }
 
     void help() {
@@ -165,6 +231,23 @@ private:
 
         std::cout << result << "\n";
         return result;
+    }
+
+    std::vector<std::string> tokenize(const std::string& input) {
+        std::vector<std::string> tokens;
+        std::istringstream iss(input);
+        std::string token;
+        while (iss >> token) {
+            tokens.push_back(token);
+        }
+        return tokens;
+    }
+
+    bool isValidCommand(const std::string& cmd) const {
+        static const std::unordered_set<std::string> valid = {
+            "read", "write", "exit", "help", "fullread", "fullwrite", "testscript"
+        };
+        return valid.count(cmd) > 0;
     }
 
     void printErrorReadResult(std::string result) {
