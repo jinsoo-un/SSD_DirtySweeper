@@ -69,13 +69,28 @@ public:
         if (lba < 0 || lba > 99) throw std::exception();
         ssd->read(lba);
         std::string result = readOutputFile();
-        if (result == "ERROR") {
-            std::cout << "[Read] " << readOutputFile() << "\n";
-        }
-        else {
-            std::cout << "[Read] LBA " << lba << " : " << result << "\n";
+        if (result == "ERROR") printErrorReadResult(result);
+        else printSuccessReadResult(result, lba);
+    }
+
+    void fullRead() {
+        for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; lba++) {
+            ssd->read(lba);
+            std::string result = readOutputFile();
+            if (result == "ERROR") {
+                printErrorReadResult(result);
+                break;
+            }
+            printSuccessReadResult(result, lba);
         }
     }
+
+private:
+    CommandExecutor* commandExecutor;
+    SSD* ssd;
+
+    const int LBA_START_ADDRESS = 0;
+    const int LBA_END_ADDRESS = 99;
 
     virtual std::string readOutputFile() {
         std::ifstream file("nand_output.txt");
@@ -93,26 +108,13 @@ public:
         return result;
     }
 
-    void fullRead() {
-        for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; lba++) {
-            ssd->read(lba);
-            std::string result = readOutputFile();
-            if (result == "ERROR") {
-                std::cout << "[Read] " << readOutputFile() << "\n";
-                break;
-            }
-            else {
-                std::cout << "[Read] LBA " << lba << " : " << result << "\n";
-            }
-        }
+    void printErrorReadResult(std::string result) {
+        std::cout << "[Read] " << result << "\n";
     }
 
-private:
-    CommandExecutor* commandExecutor;
-    SSD* ssd;
-
-    const int LBA_START_ADDRESS = 0;
-    const int LBA_END_ADDRESS = 99;
+    void printSuccessReadResult(std::string result, int lba) {
+        std::cout << "[Read] LBA " << lba << " : " << result << "\n";
+    }
 };
 
 class MockTestShell : public TestShell {
