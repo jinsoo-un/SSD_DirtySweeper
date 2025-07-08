@@ -118,10 +118,10 @@ public:
             return;
         }
 
-        //if (cmd == "testscript") {
-        //    this->testScript();
-        //    return;
-        //}
+        if (cmd == "1_" || cmd == "1_FullWriteAndReadCompare") {
+            fullWriteAndReadCompare();
+            return;
+        }
 
         std::cout << "INVALID COMMAND\n";
     }
@@ -204,6 +204,26 @@ public:
         return totalResult;
     }
 
+    void fullWriteAndReadCompare() {
+        std::string evenData = "0xAAAABBBB";
+        std::string oddData = "0xCCCCDDDD";
+
+        for (int i = 0; i <= 99; ++i) {
+            std::string writeData = (i / 5 % 2 == 0) ? evenData : oddData;
+
+            ssd->write(i, writeData);
+            ssd->read(i);
+            std::string readData = readOutputFile();
+
+            if (readData != writeData) {
+                std::cout << "[Mismatch] LBA " << i << " Expected: " << writeData << " Got: " << readData << "\n";
+            }
+            else {
+                // std::cout << "[Match] LBA " << i << " Data: " << readData << "\n";
+            }
+        }
+    }
+
     void exit(void) {
         std::cout << "Set Exit Comannd...\n";
         isExitCmd = true;
@@ -221,7 +241,7 @@ private:
     const string WRITE_SUCCESS_MESSAGE = "[Write] Done";
 
     virtual std::string readOutputFile() {
-        std::ifstream file("C:\\Users\\User\\source\\repos\\SSD-DirtySweeper\\SSD\\x64\\Release\\ssd_output.txt");
+        std::ifstream file("..\\..\\SSD\\x64\\Release\\ssd_output.txt");
 
         if (!file.is_open()) throw std::exception();
 
@@ -247,7 +267,7 @@ private:
 
     bool isValidCommand(const std::string& cmd) const {
         static const std::unordered_set<std::string> valid = {
-            "read", "write", "exit", "help", "fullread", "fullwrite", "testscript"
+			"read", "write", "exit", "help", "fullread", "fullwrite", "testscript", "1_", "1_FullWriteAndReadCompare"
         };
         return valid.count(cmd) > 0;
     }

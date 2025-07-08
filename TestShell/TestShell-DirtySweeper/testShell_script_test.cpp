@@ -3,6 +3,7 @@
 
 using ::testing::_;
 using ::testing::Return;
+using ::testing::Sequence;
 
 class FullWriteReadTest : public ::testing::Test {
 protected:
@@ -24,9 +25,11 @@ TEST_F(FullWriteReadTest, FullWriteAndReadCompareShouldPass) {
     }
 
     // readOutputFile expectation (0~99)
+    Sequence seq;
     for (int i = 0; i <= 99; ++i) {
-        std::string expected = (i / 5 % 2 == 0) ? evenData : oddData;
+        std::string expected = (i / 5 % 2 == 0) ? "0xAAAABBBB" : "0xCCCCDDDD";
         EXPECT_CALL(shell, readOutputFile())
+            .InSequence(seq)
             .WillOnce(Return(expected));
     }
 
