@@ -10,7 +10,7 @@ using namespace std;
 
 using std::string;
 
-// ÆÄÀÏ¸í »ó¼öµéÀ» À§ÇÑ namespace
+// íŒŒì¼ëª… ìƒìˆ˜ë“¤ì„ ìœ„í•œ namespace
 namespace FileNames {
 	const std::string DATA_FILE = "ssd_nand.txt";
 	const std::string OUTPUT_FILE = "ssd_output.txt";
@@ -37,36 +37,34 @@ public:
 		argCount = cnt;
 	}
 
-	int readData(int address) {
+	bool readData(int address) {
+        ifstream ssd_file("ssd_nand.txt");
+		ofstream output_file("ssd_output.txt");
+        
+		if (!ssd_file.is_open() || !output_file.is_open()) {
+			throw std::exception();
+		}
 
-        //generate init ssd_nand file
-        if ((address < 0) || (address >= 100)){
-            //Error
-            string msg{ "ERROR" };
-            ofstream fout2(FileNames::OUTPUT_FILE);
-            fout2 << msg;
-            fout2.close();
-            return -1;
-        }
+		if (true == isAddressOutOfRange(address))
+		{
+			createErrorOutputFile();
+			return false;
+		}
 
 
-        ifstream fin(FileNames::DATA_FILE);
-        ofstream fout2(FileNames::OUTPUT_FILE);
-            
-        char line[20];
+		string line;
+        for (int addr = 0; addr < MAX_ADDRESS; addr++) {
+			getline(ssd_file, line);		
 
-        for (int i = 0; i < 100; i++) {
-            fin.getline(line, 20);
-
-            if (i == address)
+            if (addr == address)
             {
-                fout2 << line;
+				output_file << line;
             }                
         }
 
-        fin.close();
-        fout2.close();
-        return 0;
+		ssd_file.close();
+		output_file.close();
+        return true;
       
 	}
 
@@ -114,7 +112,7 @@ private:
 		}
 
 		ssdData.clear();
-		ssdData.resize(MAX_ADDRESS, "0x00000000"); // ±âº»°ª 0À¸·Î ÃÊ±âÈ­
+		ssdData.resize(MAX_ADDRESS, "0x00000000"); // ê¸°ë³¸ê°’ 0ìœ¼ë¡œ ì´ˆê¸°í™”
 
 		string line;
 		while (getline(file, line)) {
