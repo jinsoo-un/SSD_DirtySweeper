@@ -204,6 +204,10 @@ public:
             ssd->write(99, "0xAAAABBBB");
             ssd->read(99);
             string endLBAResult = readOutputFile();
+
+            if (firstLBAResult != endLBAResult) {
+                return;
+            }
         }
         cout << "PASS";
     }
