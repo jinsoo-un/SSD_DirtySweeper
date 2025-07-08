@@ -120,10 +120,15 @@ public:
             return;
         }
 
-        //if (cmd == "testscript") {
-        //    this->testScript();
-        //    return;
-        //}
+        if (cmd == "1_" || cmd == "1_FullWriteAndReadCompare") {
+            fullWriteAndReadCompare();
+            return;
+        }
+
+        if (cmd == "3_" || cmd == "3_WriteReadAging") {
+            writeReadAging();
+            return;
+        }
 
         std::cout << "INVALID COMMAND\n";
     }
@@ -205,6 +210,26 @@ public:
             printSuccessWriteResult();
         }
         return totalResult;
+    }
+
+    std::string getWriteDataInFullWriteAndReadCompareScript(int lba){
+        std::string evenData = "0xAAAABBBB";
+        std::string oddData = "0xCCCCDDDD";
+        return (lba / 5 % 2 == 0) ? evenData : oddData;
+    }
+
+    void fullWriteAndReadCompare() {
+        for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; ++lba) {
+            std::string writeData = getWriteDataInFullWriteAndReadCompareScript(lba);
+
+            ssd->write(lba, writeData);
+            ssd->read(lba);
+            std::string readData = readOutputFile();
+
+            if (readData != writeData) {
+                std::cout << "[Mismatch] LBA " << lba << " Expected: " << writeData << " Got: " << readData << "\n";
+            }
+        }
     }
 
     void exit(void) {
@@ -300,7 +325,7 @@ private:
     const string WRITE_SUCCESS_MESSAGE = "[Write] Done";
 
     virtual std::string readOutputFile() {
-        std::ifstream file("C:\\Users\\User\\source\\repos\\SSD-DirtySweeper\\SSD\\x64\\Release\\ssd_output.txt");
+        std::ifstream file("..\\..\\SSD\\x64\\Release\\ssd_output.txt");
 
         if (!file.is_open()) throw std::exception();
 
@@ -326,7 +351,7 @@ private:
 
     bool isValidCommand(const std::string& cmd) const {
         static const std::unordered_set<std::string> valid = {
-            "read", "write", "exit", "help", "fullread", "fullwrite", "testscript"
+			"read", "write", "exit", "help", "fullread", "fullwrite", "testscript", "1_", "1_FullWriteAndReadCompare", "3_", "3_WriteReadAging"
         };
         return valid.count(cmd) > 0;
     }
