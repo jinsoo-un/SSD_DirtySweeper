@@ -5,6 +5,8 @@
 #include <sstream>
 #include <vector>
 #include <unordered_set>
+#include <windows.h>
+#include <shellapi.h>
 #include "gmock/gmock.h"
 
 using namespace std;
@@ -23,11 +25,45 @@ public:
 class SSD {
 public:
 	virtual void read(int lba) = 0;
+    virtual void write(int lba, string data) = 0;
+    virtual string getResult() = 0;
+};
+
+class SsdHelpler : public SSD {
+public:
+    void read(int lba)  override {}
+    void write(int lba, string data) override {
+        // 1. set cli
+        string result = "";
+        string filePath = "./ssd.exe";
+        string writeCmd = "W";
+        string commandLine = writeCmd + std::to_string(lba) + data;
+
+        // 2. ssd.exe 실행
+        HINSTANCE executeResult = ShellExecuteA( // ShellExecuteA는 ANSI 문자열용, ShellExecuteW는 유니코드용
+            nullptr,                      // 부모 윈도우 핸들
+            "open",                       // 수행할 작업 (예: "open", "runas")
+            filePath.c_str(),             // 실행할 파일 경로
+            commandLine.c_str(),           // 인자 문자열
+            nullptr,                      // 시작 디렉토리
+            SW_SHOWNORMAL                 // 윈도우 보여주기 상태
+        );
+
+        if (reinterpret_cast<long long>(executeResult) <= 32) {
+            std::cerr << "Failed to launch: " << filePath << ". Error code: " << reinterpret_cast<long long>(executeResult) << std::endl;
+            throw std::exception();
+        }
+    }
+    string getResult() override {
+        return "";
+    }
 };
 
 class SSDMock : public SSD {
 public:
 	MOCK_METHOD(void, read, (int lba), (override));
+	MOCK_METHOD(void, write, (int, string), (override));
+	MOCK_METHOD(string, getResult, (), (override));
 };
 
 class TestShell {
@@ -140,6 +176,15 @@ public:
             }
             printSuccessReadResult(result, lba);
         }
+    }
+    string write(int lba, string data)
+    {
+        ssd->write(lba, data);
+        string result = ssd->getResult();
+        if (result == "ERROR") {
+            return "[Write] ERROR";
+        }
+        return "[Write] Done";
     }
 
 private:
