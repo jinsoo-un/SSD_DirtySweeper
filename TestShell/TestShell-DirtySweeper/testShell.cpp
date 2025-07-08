@@ -223,6 +223,7 @@ public:
             string endLBAResult = readOutputFile();
 
             if (firstLBAResult != endLBAResult) {
+                cout << "FAIL";
                 return;
             }
         }
