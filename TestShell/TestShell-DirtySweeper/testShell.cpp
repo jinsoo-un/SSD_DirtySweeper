@@ -218,9 +218,6 @@ public:
             if (readData != writeData) {
                 std::cout << "[Mismatch] LBA " << i << " Expected: " << writeData << " Got: " << readData << "\n";
             }
-            else {
-                // std::cout << "[Match] LBA " << i << " Data: " << readData << "\n";
-            }
         }
     }
 
