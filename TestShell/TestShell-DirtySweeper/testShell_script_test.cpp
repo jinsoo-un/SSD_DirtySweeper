@@ -1,10 +1,19 @@
-#include "gmock/gmock.h"
+﻿#include "gmock/gmock.h"
 #include "testShell.cpp"
 using namespace testing;
 
-TEST(ScriptTest, TC1) {
-	EXPECT_EQ(1, 1);
-}
+class FullWriteReadTest : public ::testing::Test {
+public:
+    const std::string EVEN_DATA = "0xAAAABBBB";
+    const std::string ODD_DATA = "0xCCCCDDDD";
+    const int START_LBA = 0;
+    const int END_LBA = 99;
+protected:
+    SSDMock ssd;
+    MockTestShell shell;
+
+    FullWriteReadTest() : shell(&ssd) {}
+};
 
 class WriteReadAgingFixture : public Test {
 public:
@@ -24,6 +33,58 @@ public:
         return output;
     }
 };
+
+TEST_F(FullWriteReadTest, FullWriteAndReadCompareShouldPass) {
+    std::string evenData = EVEN_DATA;
+    std::string oddData = ODD_DATA;
+
+    for (int lbaIndex = START_LBA; lbaIndex <= END_LBA; ++lbaIndex) {
+        std::string data = (lbaIndex / 5 % 2 == 0) ? evenData : oddData;
+        EXPECT_CALL(ssd, write(lbaIndex, data)).Times(1);
+        EXPECT_CALL(ssd, read(lbaIndex)).Times(1);
+    }
+
+    Sequence seq;
+    for (int lbaIndex = START_LBA; lbaIndex <= END_LBA; ++lbaIndex) {
+        std::string expected = (lbaIndex / 5 % 2 == 0) ? "0xAAAABBBB" : "0xCCCCDDDD";
+        EXPECT_CALL(shell, readOutputFile())
+            .InSequence(seq)
+            .WillOnce(Return(expected));
+    }
+
+    shell.processInput("1_");
+}
+
+TEST_F(FullWriteReadTest, FullWriteAndReadCompareShouldFail) {
+    std::string evenData = EVEN_DATA;
+    std::string oddData = ODD_DATA;
+
+    for (int lbaIndex = START_LBA; lbaIndex <= END_LBA; ++lbaIndex) {
+        std::string data = (lbaIndex / 5 % 2 == 0) ? evenData : oddData;
+        EXPECT_CALL(ssd, write(lbaIndex, data)).Times(1);
+        EXPECT_CALL(ssd, read(lbaIndex)).Times(1);
+    }
+
+    Sequence seq;
+    for (int lbaIndex = START_LBA; lbaIndex <= END_LBA; ++lbaIndex) {
+        std::string expected;
+
+        if (lbaIndex == 13) {
+            // 일부러 실패하도록 의도적으로 잘못된 값
+            expected = "0xWRONGDATA";
+        }
+        else {
+            expected = (lbaIndex / 5 % 2 == 0) ? "0xAAAABBBB" : "0xCCCCDDDD";
+        }
+
+        EXPECT_CALL(shell, readOutputFile())
+            .InSequence(seq)
+            .WillOnce(Return(expected));
+    }
+
+    // 실제 테스트
+    shell.processInput("1_");
+}
 
 TEST_F(WriteReadAgingFixture, CallTest) {
     EXPECT_CALL(ssdMock, write(0, DATA))
