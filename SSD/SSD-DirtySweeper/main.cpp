@@ -85,9 +85,27 @@ TEST_F(SSDTest, WriteFailWithOutOfAddressRange) {
     EXPECT_FALSE(isPass);
 }
 
+#ifdef NDEBUG
+int main(int argc, char *argv[])
+{
+    SSD ssd;
+    string inputLine;
 
+    // skip ssd.exe myself
+    for (int i = 1; i < argc; ++i) {
+        if (i > 1) inputLine += " ";
+        inputLine += argv[i];
+    }
+
+    ssd.commandParser(inputLine);
+    ssd.exec();
+
+    return 0;
+}
+#else
 int main()
 {
     ::testing::InitGoogleMock();
     return RUN_ALL_TESTS();
 }
+#endif
