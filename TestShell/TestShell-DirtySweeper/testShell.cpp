@@ -125,6 +125,10 @@ public:
             return;
         }
 
+        if (cmd == "2_PartialLBAWrite" || cmd == "2_") {
+            this->partialLBAWrite();
+            return;
+        }
         if (cmd == "3_" || cmd == "3_WriteReadAging") {
             writeReadAging();
             return;
@@ -351,7 +355,10 @@ private:
 
     bool isValidCommand(const std::string& cmd) const {
         static const std::unordered_set<std::string> valid = {
-			"read", "write", "exit", "help", "fullread", "fullwrite", "testscript", "1_", "1_FullWriteAndReadCompare", "3_", "3_WriteReadAging"
+			"read", "write", "exit", "help", "fullread", "fullwrite", 
+            "testscript", "1_", "1_FullWriteAndReadCompare",
+            "2_","2_PartialLBAWrite",
+            "3_", "3_WriteReadAging"
         };
         return valid.count(cmd) > 0;
     }
