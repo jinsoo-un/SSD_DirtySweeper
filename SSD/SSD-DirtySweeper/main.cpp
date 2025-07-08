@@ -29,6 +29,12 @@ public:
             return false;
         return true;
     }
+
+    string buildCommand(string rw, int lba, string data = "") {
+        string cmdLine = rw + " " + std::to_string(lba);
+        if (rw == "W") cmdLine = cmdLine + " " + data;
+        return cmdLine;
+    }
 };
 
 
@@ -66,7 +72,7 @@ TEST_F(SSDTest, ReadTC_ReturnData02)
 }
 
 TEST_F(SSDTest, ARGPARSEREAD) {
-    string cmd = "R 3";
+    string cmd = buildCommand("R", 3);
     ssd.commandParser(cmd);
     EXPECT_EQ(2, ssd.argCount);
     EXPECT_EQ("R", ssd.op);
@@ -75,34 +81,31 @@ TEST_F(SSDTest, ARGPARSEREAD) {
 
 TEST_F(SSDTest, ARGPARSEWRITE)
 {
-    string cmd = "W 3 0x1298CDEF";
+    string cmd = buildCommand("W", 3, VALID_HEX_DATA);
     ssd.commandParser(cmd);
     EXPECT_EQ(3, ssd.argCount);
     EXPECT_EQ("W", ssd.op);
     EXPECT_EQ(3, ssd.addr);
-    EXPECT_EQ("0x1298CDEF", ssd.value);
+    EXPECT_EQ(VALID_HEX_DATA, ssd.value);
 }
 
 TEST_F(SSDTest, ArgparseInvalidOp)
 {
-    string cmd = "S 3";
+    string cmd = buildCommand("S", 3);
     ssd.commandParser(cmd);
     EXPECT_TRUE(checkOutputFile("ERROR"));
 }
 
 TEST_F(SSDTest, ArgparseInvalidAddr)
 {
-    SSD ssd;
-    string cmd = "R 300";
+    string cmd = buildCommand("R", 300);
     ssd.commandParser(cmd);
     EXPECT_TRUE(checkOutputFile("ERROR"));
 }
 
 TEST_F(SSDTest, ArgparseInvalidValue)
-
 {
-    SSD ssd;
-    string cmd = "W 3 0xABCDEFGH";
+    string cmd = buildCommand("W", 3, INVALID_HEX_DATA);
     ssd.commandParser(cmd);
     EXPECT_TRUE(checkOutputFile("ERROR"));
 }
