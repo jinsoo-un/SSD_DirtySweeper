@@ -175,8 +175,10 @@ public:
         ssd->write(lba, data);
         string result = ssd->getResult();
         if (result == "ERROR") {
+            std::cout << WRITE_FAIL_LOG << "\n";
             return WRITE_FAIL_LOG;
         }
+        std::cout << WRITE_SUCCESS_LOG << "\n";
         return WRITE_SUCCESS_LOG;
     }
 
@@ -188,9 +190,11 @@ public:
             string currentResult = ssd->getResult();
             if (currentResult == "ERROR") {
                 totalResult += WRITE_FAIL_LOG;
+                std::cout << WRITE_FAIL_LOG << "\n";
                 break;
             }
             totalResult += WRITE_SUCCESS_LOG + "\n";
+            std::cout << WRITE_SUCCESS_LOG << "\n";
         }
         return totalResult;
     }
