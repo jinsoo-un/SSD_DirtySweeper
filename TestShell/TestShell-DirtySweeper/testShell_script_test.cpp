@@ -17,14 +17,12 @@ TEST_F(FullWriteReadTest, FullWriteAndReadCompareShouldPass) {
     std::string evenData = "0xAAAABBBB";
     std::string oddData = "0xCCCCDDDD";
 
-    // write¿Í getResult expectation (0~99)
     for (int i = 0; i <= 99; ++i) {
         std::string data = (i / 5 % 2 == 0) ? evenData : oddData;
         EXPECT_CALL(ssd, write(i, data)).Times(1);
         EXPECT_CALL(ssd, read(i)).Times(1);
     }
 
-    // readOutputFile expectation (0~99)
     Sequence seq;
     for (int i = 0; i <= 99; ++i) {
         std::string expected = (i / 5 % 2 == 0) ? "0xAAAABBBB" : "0xCCCCDDDD";
