@@ -95,7 +95,15 @@ public:
 
     void fullRead() {
         for (int lba = 0; lba < LBA_COUNT; lba++) {
-            read(lba);
+            ssd->read(lba);
+            std::string result = readOutputFile();
+            if (result == "ERROR") {
+                std::cout << "[Read] " << readOutputFile() << "\n";
+                break;
+            }
+            else {
+                std::cout << "[Read] LBA " << lba << " : " << result << "\n";
+            }
         }
     }
 
