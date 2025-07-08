@@ -11,17 +11,6 @@
 
 using namespace std;
 
-class CommandExecutor {
-public:
-    virtual void read(int lba) = 0;
-    virtual void write(int lba, const std::string& data) = 0;
-    virtual void exit() = 0;
-    virtual void help() = 0;
-    virtual void fullRead() = 0;
-    virtual void fullWrite() = 0;
-    virtual void testScript() = 0;
-};
-
 class SSD {
 public:
     virtual void read(int lba) = 0;
@@ -77,15 +66,7 @@ public:
 
 class TestShell {
 public:
-    TestShell() : commandExecutor(nullptr) {}
     TestShell(SSD* ssd) : ssd{ ssd } {}
-    TestShell(CommandExecutor* executor, SSD* ssd = nullptr)
-        : commandExecutor(executor), ssd(ssd) {
-    }
-
-    void setExecutor(CommandExecutor* executor) {
-        commandExecutor = executor;
-    }
 
     void executeCommand(const std::string& cmd, const std::vector<std::string>& args) {
         if (cmd == "read") {
@@ -94,7 +75,12 @@ public:
                 return;
             }
             int lba = stoi(args[0]);
-            commandExecutor->read(lba);
+            this->read(lba);
+            return;
+        }
+
+        if (cmd == "fullread") {
+            this->fullRead();
             return;
         }
 
@@ -105,34 +91,30 @@ public:
             }
             int lba = stoi(args[0]);
             std::string data = args[1];
-            commandExecutor->write(lba, data);
-            return;
-        }
-
-        if (cmd == "exit") {
-            commandExecutor->exit();
+            this->write(lba, data);
             return;
         }
 
         if (cmd == "help") {
-            commandExecutor->help();
+            this->help();
             return;
         }
 
-        if (cmd == "fullread") {
-            commandExecutor->fullRead();
-            return;
-        }
+        // 아직 구현되지 않은 method에 대해서는 disabled
+        //if (cmd == "exit") {
+        //    this->exit();
+        //    return;
+        //}
 
-        if (cmd == "fullwrite") {
-            commandExecutor->fullWrite();
-            return;
-        }
+        //if (cmd == "fullwrite") {
+        //    this->fullWrite();
+        //    return;
+        //}
 
-        if (cmd == "testscript") {
-            commandExecutor->testScript();
-            return;
-        }
+        //if (cmd == "testscript") {
+        //    this->testScript();
+        //    return;
+        //}
 
         std::cout << "INVALID COMMAND\n";
     }
@@ -211,7 +193,6 @@ public:
         return totalResult;
     }
 private:
-    CommandExecutor* commandExecutor;
     SSD* ssd;
 
     const int LBA_START_ADDRESS = 0;
