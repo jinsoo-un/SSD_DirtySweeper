@@ -7,6 +7,10 @@ using std::string;
 class SSDTest : public ::testing::Test {
 public:
     SSD ssd;
+    string VALID_HEX_DATA = "0x1298CDEF";
+    string INVALID_HEX_DATA = "0xABCDEFGH";
+    static const int VALID_TEST_ADDRESS = 0;
+    static const int INVALID_TEST_ADDRESS = 100;
 
     void SetUp() override {
         ssd.erase();
@@ -105,13 +109,12 @@ TEST_F(SSDTest, ArgparseInvalidValue)
 
 
 TEST_F(SSDTest, WritePass) {
-    bool isPass = ssd.writeData(0, "0xAAAABBBB");
+    bool isPass = ssd.writeData(VALID_TEST_ADDRESS, VALID_HEX_DATA);
     EXPECT_TRUE(isPass);
 }
 
 TEST_F(SSDTest, WriteFailWithOutOfAddressRange) {
-    bool isPass = ssd.writeData(100, "0xAAAABBBB");
-
+    bool isPass = ssd.writeData(INVALID_TEST_ADDRESS, VALID_HEX_DATA);
     EXPECT_FALSE(isPass);
 }
 
