@@ -174,6 +174,7 @@ public:
             printSuccessReadResult(result, lba);
         }
     }
+
     string write(int lba, string data)
     {
         ssd->write(lba, data);
@@ -211,6 +212,11 @@ public:
     bool isExit() const {
         return isExitCmd;
     }
+
+    void writeReadAging() {
+
+    }
+
 private:
     SSD* ssd;
     bool isExitCmd{ false };
