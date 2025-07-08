@@ -52,6 +52,7 @@ public:
 
 	bool writeData(int address, string hexData) {
 		if (isAddressOutOfRange(address)) { updateOutputFile("ERROR");  return false; }
+        if (!isValidWriteData(hexData)) { updateOutputFile("ERROR");  return false; }
 		if (!readFromFile()) { updateOutputFile("ERROR");  return false; }
 
 		ssdData[address] = hexData;
@@ -182,6 +183,33 @@ private:
 		return true;
 	}
 
+    bool isValidWriteData(const std::string& str) {
+
+        if (str.substr(0, 2) != "0x") return false;
+
+        int length;
+        for (length = 2; length < str.size(); length++) {
+            char ch = static_cast<unsigned char>(str[length]);
+
+            if (!(IsNumber(ch) || IsHexCharicter(ch))) { return false; }
+
+        }
+
+        if (length != VALID_DATA_LENGTH) { return false; }
+
+        return true;
+    }
+
+    bool IsHexCharicter(char ch)
+    {
+        return ((ch >= 'A') && (ch <= 'F'));
+    }
+
+    bool IsNumber(char ch)
+    {
+        return ((ch >= '0') && (ch <= '9'));
+    }
+
 	bool isHexWithPrefix(const std::string& str) {
 		if (str.size() < 3 || str.substr(0, 2) != "0x")
 			return false;
@@ -199,6 +227,6 @@ private:
 
 	static const int MIN_ADDRESS = 0;
 	static const int MAX_ADDRESS = 100;
-
+    static const int VALID_DATA_LENGTH = 10;
 	vector<string> ssdData; // Simulated SSD data storage
 };
