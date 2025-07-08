@@ -6,6 +6,11 @@ using ::testing::Return;
 using ::testing::Sequence;
 
 class FullWriteReadTest : public ::testing::Test {
+public:
+    const std::string EVEN_DATA = "0xAAAABBBB";
+    const std::string ODD_DATA = "0xCCCCDDDD";
+    const int START_LBA = 0;
+    const int END_LBA = 99;
 protected:
     SSDMock ssd;
     MockTestShell shell;
@@ -14,18 +19,18 @@ protected:
 };
 
 TEST_F(FullWriteReadTest, FullWriteAndReadCompareShouldPass) {
-    std::string evenData = "0xAAAABBBB";
-    std::string oddData = "0xCCCCDDDD";
+    std::string evenData = EVEN_DATA;
+    std::string oddData = ODD_DATA;
 
-    for (int i = 0; i <= 99; ++i) {
-        std::string data = (i / 5 % 2 == 0) ? evenData : oddData;
-        EXPECT_CALL(ssd, write(i, data)).Times(1);
-        EXPECT_CALL(ssd, read(i)).Times(1);
+    for (int lbaIndex = START_LBA; lbaIndex <= END_LBA; ++lbaIndex) {
+        std::string data = (lbaIndex / 5 % 2 == 0) ? evenData : oddData;
+        EXPECT_CALL(ssd, write(lbaIndex, data)).Times(1);
+        EXPECT_CALL(ssd, read(lbaIndex)).Times(1);
     }
 
     Sequence seq;
-    for (int i = 0; i <= 99; ++i) {
-        std::string expected = (i / 5 % 2 == 0) ? "0xAAAABBBB" : "0xCCCCDDDD";
+    for (int lbaIndex = START_LBA; lbaIndex <= END_LBA; ++lbaIndex) {
+        std::string expected = (lbaIndex / 5 % 2 == 0) ? "0xAAAABBBB" : "0xCCCCDDDD";
         EXPECT_CALL(shell, readOutputFile())
             .InSequence(seq)
             .WillOnce(Return(expected));
