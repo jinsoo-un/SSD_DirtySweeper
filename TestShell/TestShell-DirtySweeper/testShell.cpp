@@ -185,7 +185,7 @@ private:
     const int LBA_END_ADDRESS = 99;
 
     virtual std::string readOutputFile() {
-        std::ifstream file("nand_output.txt");
+        std::ifstream file("C:\\Users\\User\\source\\repos\\SSD-DirtySweeper\\SSD\\x64\\Release\\ssd_output.txt");
 
         if (!file.is_open()) throw std::exception();
 
