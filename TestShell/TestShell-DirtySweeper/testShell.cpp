@@ -15,7 +15,6 @@ class SSD {
 public:
     virtual void read(int lba) = 0;
     virtual void write(int lba, string data) = 0;
-    virtual string getResult() = 0;
 };
 
 class SsdHelpler : public SSD {
@@ -54,16 +53,12 @@ public:
         string commandLine = buildCommandLine("W", lba, data);
         executeCommandLine(commandLine);
     }
-    string getResult() override {
-        return "";
-    }
 };
 
 class SSDMock : public SSD {
 public:
     MOCK_METHOD(void, read, (int lba), (override));
     MOCK_METHOD(void, write, (int, string), (override));
-    MOCK_METHOD(string, getResult, (), (override));
 };
 
 class TestShell {
@@ -173,7 +168,7 @@ public:
     string write(int lba, string data)
     {
         ssd->write(lba, data);
-        string result = ssd->getResult();
+        string result = readOutputFile();
         if (result == "ERROR") {
             printErrorWriteResult();
             return WRITE_ERROR_MESSAGE;
@@ -187,7 +182,7 @@ public:
         string totalResult = "";
         for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; lba++) {
             ssd->write(lba, data);
-            string currentResult = ssd->getResult();
+            string currentResult = readOutputFile();
             if (currentResult == "ERROR") {
                 totalResult += WRITE_ERROR_MESSAGE;
                 printErrorWriteResult();
