@@ -124,10 +124,10 @@ public:
     {
         ssd->write(lba, data);
         string result = ssd->getResult();
-        if (result == "ERROR") {
-            return "[Write] ERROR";
+        if (result == "") {
+            return "[Write] Done";
         }
-        return "[Write] Done";
+        return "[Write] ERROR";
     }
 
 private:
