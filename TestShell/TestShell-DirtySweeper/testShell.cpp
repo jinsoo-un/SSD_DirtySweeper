@@ -31,7 +31,29 @@ public:
 
 class SsdHelpler : public SSD {
 public:
-    void read(int lba)  override {}
+    void read(int lba)  override {
+        // 1. set cli
+        string result = "";
+        string filePath = "./ssd.exe";
+        string readCmd = "R";
+        string commandLine = readCmd + std::to_string(lba);
+
+        // 2. ssd.exe 실행
+        HINSTANCE executeResult = ShellExecuteA( // ShellExecuteA는 ANSI 문자열용, ShellExecuteW는 유니코드용
+            nullptr,                      // 부모 윈도우 핸들
+            "open",                       // 수행할 작업 (예: "open", "runas")
+            filePath.c_str(),             // 실행할 파일 경로
+            commandLine.c_str(),           // 인자 문자열
+            nullptr,                      // 시작 디렉토리
+            SW_SHOWNORMAL                 // 윈도우 보여주기 상태
+        );
+
+        if (reinterpret_cast<long long>(executeResult) <= 32) {
+            std::cerr << "Failed to launch: " << filePath << ". Error code: " << reinterpret_cast<long long>(executeResult) << std::endl;
+            throw std::exception();
+        }
+    }
+
     void write(int lba, string data) override {
         // 1. set cli
         string result = "";
