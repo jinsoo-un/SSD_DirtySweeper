@@ -2,50 +2,72 @@
 #include "testShell.cpp"
 using namespace testing;
 
-TEST(ReadTest, BasicRead) {
-	SSDMock ssdMock;
+class ReadTestFixture : public Test {
+public:
+	NiceMock<SSDMock> ssdMock;
 	MockTestShell testShell{ &ssdMock };
 
+	const std::string RANDOM_VALUE = "0xAAAABBBB";
+	const std::string ERROR_RESULT = "ERROR";
+	const int RANDOM_LBA = 11;
+	const int LBA_COUNT = 100;
+};
+
+TEST_F(ReadTestFixture, BasicRead) {
 	EXPECT_CALL(ssdMock, read(_))
 		.Times(1);
 
 	EXPECT_CALL(testShell, readOutputFile())
-		.WillRepeatedly(Return("0xAAAABBBB"));
+		.WillRepeatedly(Return(RANDOM_VALUE));
 
-	testShell.read(11);
+	testShell.read(RANDOM_LBA);
 }
 
-TEST(ReadTest, InvalidAddress) {
-	SSDMock ssdMock;
-	TestShell testShell{ &ssdMock };
-
+TEST_F(ReadTestFixture, InvalidAddress) {
 	EXPECT_THROW(testShell.read(100), std::exception);
 }
 
-TEST(ReadTest, ReadSuccessTest) {
-	NiceMock<SSDMock> ssdMock;
-	MockTestShell testShell{ &ssdMock };
-
+TEST_F(ReadTestFixture, ReadSuccessTest) {
 	EXPECT_CALL(ssdMock, read(_))
 		.Times(1);
 
 	EXPECT_CALL(testShell, readOutputFile())
-		.WillRepeatedly(Return("0xAAAABBBB"));
+		.WillRepeatedly(Return(RANDOM_VALUE));
 
-	testShell.read(11);
-	EXPECT_EQ(testShell.readOutputFile(), "0xAAAABBBB");
+	testShell.read(RANDOM_LBA);
+	EXPECT_EQ(testShell.readOutputFile(), RANDOM_VALUE);
 }
 
-TEST(ReadTest, ReadFailTest) {
-	NiceMock<SSDMock> ssdMock;
-	MockTestShell testShell{ &ssdMock };
-
+TEST_F(ReadTestFixture, ReadFailTest) {
 	EXPECT_CALL(ssdMock, read(_))
 		.Times(1);
 
 	EXPECT_CALL(testShell, readOutputFile())
-		.WillRepeatedly(Return("ERROR"));
+		.WillRepeatedly(Return(ERROR_RESULT));
 
 	testShell.read(11);
-	EXPECT_EQ(testShell.readOutputFile(), "ERROR");
+	EXPECT_EQ(testShell.readOutputFile(), ERROR_RESULT);
+}
+
+TEST_F(ReadTestFixture, TestIfReadCalled100Times) {
+	EXPECT_CALL(ssdMock, read(_))
+		.Times(LBA_COUNT);
+
+	EXPECT_CALL(testShell, readOutputFile())
+		.WillRepeatedly(Return(RANDOM_VALUE));
+
+	testShell.fullRead();
+}
+
+TEST_F(ReadTestFixture, FulLReadFail) {
+	EXPECT_CALL(ssdMock, read(_))
+		.Times(4);
+
+	EXPECT_CALL(testShell, readOutputFile())
+		.WillOnce(Return(RANDOM_VALUE))
+		.WillOnce(Return(RANDOM_VALUE))
+		.WillOnce(Return(RANDOM_VALUE))
+		.WillRepeatedly(Return(ERROR_RESULT));
+
+	testShell.fullRead();
 }
