@@ -39,61 +39,77 @@ public:
         commandExecutor = executor;
     }
 
-    std::string executeCommand(const std::string& cmd, const std::vector<std::string>& args) {
+    void executeCommand(const std::string& cmd, const std::vector<std::string>& args) {
         if (cmd == "read") {
-            if (args.size() < 1) return "INVALID COMMAND";
+            if (args.size() < 1) {
+                std::cout << "INVALID COMMAND\n";
+                return;
+            }
             int lba = stoi(args[0]);
             commandExecutor->read(lba);
-            return "READ DONE";
+            return;
         }
 
         if (cmd == "write") {
-            if (args.size() < 2) return "INVALID COMMAND";
+            if (args.size() < 2) {
+                std::cout << "INVALID COMMAND\n";
+                return;
+            }
             int lba = stoi(args[0]);
             std::string data = args[1];
             commandExecutor->write(lba, data);
-            return "WRITE DONE";
+            return;
         }
 
         if (cmd == "exit") {
             commandExecutor->exit();
-            return "EXIT DONE";
+            return;
         }
 
         if (cmd == "help") {
             commandExecutor->help();
-            return "HELP DONE";
+            return;
         }
 
         if (cmd == "fullread") {
             commandExecutor->fullRead();
-            return "FULL READ DONE";
+            return;
         }
 
         if (cmd == "fullwrite") {
             commandExecutor->fullWrite();
-            return "FULL WRITE DONE";
+            return;
         }
 
         if (cmd == "testscript") {
             commandExecutor->testScript();
-            return "TEST SCRIPT DONE";
+            return;
         }
 
-        return "INVALID COMMAND";
+        std::cout << "INVALID COMMAND\n";
     }
 
-    std::string processInput(const std::string& input) {
+    void processInput(const std::string& input) {
         auto tokens = tokenize(input);
-        if (tokens.empty()) return "INVALID COMMAND";
+        if (tokens.empty()) {
+            std::cout << "INVALID COMMAND\n";
+            return;
+        }
 
         const std::string& cmd = tokens[0];
         std::vector<std::string> args(tokens.begin() + 1, tokens.end());
 
-        if (!isValidCommand(cmd)) return "INVALID COMMAND";
-        if (commandExecutor == nullptr) return "NO EXECUTOR SET";
+        if (!isValidCommand(cmd)) {
+            std::cout << "INVALID COMMAND\n";
+            return;
+        }
 
-		return executeCommand(cmd, args);
+        if (commandExecutor == nullptr) {
+            std::cout << "NO EXECUTOR SET\n";
+            return;
+        }
+
+        executeCommand(cmd, args);
     }
 
     void help() {

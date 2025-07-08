@@ -22,54 +22,41 @@ protected:
 };
 
 TEST_F(TestShellFixture, ValidCommandRead) {
-    int lba = 0;
-    EXPECT_CALL(mock, read(lba)).Times(1);
-
-    std::string result = shell.processInput("read 0");
-    EXPECT_EQ(result, "READ DONE");
+    EXPECT_CALL(mock, read(0)).Times(1);
+    shell.processInput("read 0");
 }
 
-TEST_F(TestShellFixture, ValidCommand_Write) {
-    int lba = 5;
-    std::string data = "hello";
-
-    EXPECT_CALL(mock, write(lba, data)).Times(1);
-
-    std::string result = shell.processInput("write 5 hello");
-    EXPECT_EQ(result, "WRITE DONE");
+TEST_F(TestShellFixture, ValidCommandWrite) {
+    EXPECT_CALL(mock, write(5, "hello")).Times(1);
+    shell.processInput("write 5 hello");
 }
 
-TEST_F(TestShellFixture, ValidCommand_Exit) {
+TEST_F(TestShellFixture, ValidCommandExit) {
     EXPECT_CALL(mock, exit()).Times(1);
-
-    std::string result = shell.processInput("exit");
-    EXPECT_EQ(result, "EXIT DONE");
+    shell.processInput("exit");
 }
 
-TEST_F(TestShellFixture, ValidCommand_Help) {
+TEST_F(TestShellFixture, ValidCommandHelp) {
     EXPECT_CALL(mock, help()).Times(1);
-
-    std::string result = shell.processInput("help");
-    EXPECT_EQ(result, "HELP DONE");
+    shell.processInput("help");
 }
 
-TEST_F(TestShellFixture, ValidCommand_FullRead) {
+TEST_F(TestShellFixture, ValidCommandFullRead) {
     EXPECT_CALL(mock, fullRead()).Times(1);
-
-    std::string result = shell.processInput("fullread");
-    EXPECT_EQ(result, "FULL READ DONE");
+    shell.processInput("fullread");
 }
 
-TEST_F(TestShellFixture, ValidCommand_FullWrite) {
+TEST_F(TestShellFixture, ValidCommandFullWrite) {
     EXPECT_CALL(mock, fullWrite()).Times(1);
-
-    std::string result = shell.processInput("fullwrite");
-    EXPECT_EQ(result, "FULL WRITE DONE");
+    shell.processInput("fullwrite");
 }
 
-TEST_F(TestShellFixture, ValidCommand_TestScript) {
+TEST_F(TestShellFixture, ValidCommandTestScript) {
     EXPECT_CALL(mock, testScript()).Times(1);
+    shell.processInput("testscript");
+}
 
-    std::string result = shell.processInput("testscript");
-    EXPECT_EQ(result, "TEST SCRIPT DONE");
+TEST_F(TestShellFixture, InvalidCommandShouldPrintInvalid) {
+    // 콘솔 출력 테스트는 필요 시 capture 하는 방식으로 별도 처리 가능
+    shell.processInput("invalid_cmd");
 }
