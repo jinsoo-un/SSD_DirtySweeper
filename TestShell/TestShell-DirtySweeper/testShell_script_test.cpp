@@ -63,6 +63,7 @@ TEST(WriteReadAging, FailTest) {
         .WillOnce(Return(DATA))
         .WillOnce(Return(DATA))
         .WillOnce(Return(DATA))
+        .WillOnce(Return(DATA))
         .WillRepeatedly(Return("ERROR"));
 
     testing::internal::CaptureStdout();
