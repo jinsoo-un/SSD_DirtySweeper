@@ -12,22 +12,22 @@ public:
     const int INVALID_LBA = 100;
     const string VALID_DATA = "0x12345678";
     const string INVALID_DATA = "AHAHHAHAA";
+    const string WRITE_SUCCESS_RESULT = "[Write] Done\n";
+    const string WRITE_FAIL_RESULT = "[Write] ERROR\n";
 };
 
 TEST_F(TestShellWriteTest, Write)
 {
-    const string actual = "[Write] Done";
     EXPECT_CALL(ssdMock, write(VALID_LBA, VALID_DATA))
         .Times(1);
 
     string result = sut.write(VALID_LBA, VALID_DATA);
 
-    EXPECT_EQ(actual, result);
+    EXPECT_EQ(WRITE_SUCCESS_RESULT, result);
 }
 
 TEST_F(TestShellWriteTest, WriteFailWithInvalidLBA)
 {
-    const string actual = "[Write] ERROR";
     EXPECT_CALL(ssdMock, write(INVALID_LBA, VALID_DATA))
         .Times(1)
         .WillOnce(Return());
@@ -37,12 +37,11 @@ TEST_F(TestShellWriteTest, WriteFailWithInvalidLBA)
 
     string result = sut.write(INVALID_LBA, VALID_DATA);
 
-    EXPECT_EQ(actual, result);
+    EXPECT_EQ(WRITE_FAIL_RESULT, result);
 }
 
 TEST_F(TestShellWriteTest, WriteFailWithInvalidData)
 {
-    const string actual = "[Write] ERROR";
     EXPECT_CALL(ssdMock, write(INVALID_LBA, INVALID_DATA))
         .Times(1)
         .WillOnce(Return());
@@ -52,7 +51,35 @@ TEST_F(TestShellWriteTest, WriteFailWithInvalidData)
 
     string result = sut.write(INVALID_LBA, INVALID_DATA);
 
+    EXPECT_EQ(WRITE_FAIL_RESULT, result);
+}
+TEST_F(TestShellWriteTest, FullWriteNormalCase)
+{
+    string actual = "";
+    for (int i = 0; i < 100; i++) actual += WRITE_SUCCESS_RESULT;
+    EXPECT_CALL(ssdMock, write(_, VALID_DATA))
+        .Times(100)
+        .WillRepeatedly(Return());
+
+    EXPECT_CALL(ssdMock, getResult())
+        .Times(100)
+        .WillRepeatedly(Return(""));
+
+    string result = sut.fullWrite(VALID_DATA);
     EXPECT_EQ(actual, result);
+}
+TEST_F(TestShellWriteTest, FullWriteFailWithInvalidData)
+{
+    EXPECT_CALL(ssdMock, write(_, INVALID_DATA))
+        .Times(1)
+        .WillRepeatedly(Return());
+
+    EXPECT_CALL(ssdMock, getResult())
+        .Times(1)
+        .WillRepeatedly(Return("ERROR"));
+
+    string result = sut.fullWrite(INVALID_DATA);
+    EXPECT_EQ(WRITE_FAIL_RESULT, result);
 }
 
 
