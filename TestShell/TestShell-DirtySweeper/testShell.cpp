@@ -15,7 +15,6 @@ class SSD {
 public:
     virtual void read(int lba) = 0;
     virtual void write(int lba, string data) = 0;
-    virtual string getResult() = 0;
 };
 
 class SsdHelpler : public SSD {
@@ -64,16 +63,12 @@ public:
         string commandLine = buildCommandLine("W", lba, data);
         executeCommandLine(commandLine);
     }
-    string getResult() override {
-        return "";
-    }
 };
 
 class SSDMock : public SSD {
 public:
     MOCK_METHOD(void, read, (int lba), (override));
     MOCK_METHOD(void, write, (int, string), (override));
-    MOCK_METHOD(string, getResult, (), (override));
 };
 
 class TestShell {
@@ -183,16 +178,14 @@ public:
     string write(int lba, string data)
     {
         ssd->write(lba, data);
-        string result = ssd->getResult();
+        string result = readOutputFile();
         if (result == "ERROR") {
-            // 추후 호출부에서 return 받아 Print되게 변경 필요
-            std::cout << WRITE_FAIL_LOG << std::endl;
-            return WRITE_FAIL_LOG;
+            printErrorWriteResult();
+            return WRITE_ERROR_MESSAGE;
         }
 
-        // 추후 호출부에서 return 받아 Print되게 변경 필요
-        std::cout << WRITE_SUCCESS_LOG << std::endl;
-        return WRITE_SUCCESS_LOG;
+        printSuccessWriteResult();
+        return WRITE_SUCCESS_MESSAGE;
     }
 
     string fullWrite(string data)
@@ -200,12 +193,14 @@ public:
         string totalResult = "";
         for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; lba++) {
             ssd->write(lba, data);
-            string currentResult = ssd->getResult();
+            string currentResult = readOutputFile();
             if (currentResult == "ERROR") {
-                totalResult += WRITE_FAIL_LOG;
+                totalResult += WRITE_ERROR_MESSAGE;
+                printErrorWriteResult();
                 break;
             }
-            totalResult += WRITE_SUCCESS_LOG + "\n";
+            totalResult += WRITE_SUCCESS_MESSAGE + "\n";
+            printSuccessWriteResult();
         }
         return totalResult;
     }
@@ -214,8 +209,8 @@ private:
 
     const int LBA_START_ADDRESS = 0;
     const int LBA_END_ADDRESS = 99;
-    const string WRITE_FAIL_LOG = "[Write] ERROR";
-    const string WRITE_SUCCESS_LOG = "[Write] Done";
+    const string WRITE_ERROR_MESSAGE = "[Write] ERROR";
+    const string WRITE_SUCCESS_MESSAGE = "[Write] Done";
 
     virtual std::string readOutputFile() {
         std::ifstream file("C:\\Users\\User\\source\\repos\\SSD-DirtySweeper\\SSD\\x64\\Release\\ssd_output.txt");
@@ -255,6 +250,12 @@ private:
 
     void printSuccessReadResult(std::string result, int lba) {
         std::cout << "[Read] LBA " << lba << " : " << result << "\n";
+    }
+    void printSuccessWriteResult() {
+        std::cout << WRITE_SUCCESS_MESSAGE << "\n";
+    }
+    void printErrorWriteResult() {
+        std::cout << WRITE_ERROR_MESSAGE << "\n";
     }
 };
 
