@@ -22,6 +22,9 @@ TEST(WriteReadAging, CallTest) {
     EXPECT_CALL(ssdMock, read(99))
         .Times(200);
 
+    EXPECT_CALL(sut, generateRandomHexString())
+        .WillRepeatedly(Return("0xAAAABBBB"));
+
     EXPECT_CALL(sut, readOutputFile())
         .WillRepeatedly(Return("0xAAAABBBB"));
 
@@ -34,14 +37,18 @@ TEST(WriteReadAging, PassTest) {
 
     const string DATA = "0xAAAABBBB";
 
-    EXPECT_CALL(ssdMock, write(0, DATA))
+    EXPECT_CALL(ssdMock, write(0, _))
         .Times(200);
-    EXPECT_CALL(ssdMock, write(99, DATA))
+    EXPECT_CALL(ssdMock, write(99, _))
         .Times(200);
     EXPECT_CALL(ssdMock, read(0))
         .Times(200);
     EXPECT_CALL(ssdMock, read(99))
         .Times(200);
+
+    EXPECT_CALL(sut, generateRandomHexString())
+        .WillRepeatedly(Return("0xAAAABBBB"));
+
     EXPECT_CALL(sut, readOutputFile())
         .WillRepeatedly(Return("0xAAAABBBB"));
 
@@ -57,6 +64,9 @@ TEST(WriteReadAging, FailTest) {
     MockTestShell sut(&ssdMock);
 
     const string DATA = "0xAAAABBBB";
+
+    EXPECT_CALL(sut, generateRandomHexString())
+        .WillRepeatedly(Return(DATA));
 
     EXPECT_CALL(sut, readOutputFile())
         .WillOnce(Return(DATA))

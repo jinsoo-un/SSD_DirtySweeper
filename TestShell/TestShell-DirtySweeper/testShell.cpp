@@ -7,6 +7,8 @@
 #include <unordered_set>
 #include <windows.h>
 #include <shellapi.h>
+#include <cstdlib>
+#include <ctime>
 #include "gmock/gmock.h"
 
 using namespace std;
@@ -215,10 +217,11 @@ public:
 
     void writeReadAging() {
         for (int i = 0; i < 200; i++) {
-            ssd->write(0, "0xAAAABBBB");
+            string randomString = generateRandomHexString();
+            ssd->write(0, randomString);
             ssd->read(0);
             string firstLBAResult = readOutputFile();
-            ssd->write(99, "0xAAAABBBB");
+            ssd->write(99, randomString);
             ssd->read(99);
             string endLBAResult = readOutputFile();
 
@@ -228,6 +231,26 @@ public:
             }
         }
         cout << "PASS";
+    }
+
+    virtual std::string generateRandomHexString() {
+        static const char* hexDigits = "0123456789ABCDEF";
+
+        static bool seeded = false;
+        if (!seeded) {
+            std::srand(static_cast<unsigned int>(std::time(nullptr)));
+            seeded = true;
+        }
+
+        unsigned int value = (static_cast<unsigned int>(std::rand()) << 16) | std::rand();
+
+        std::string result = "0x";
+        for (int i = 7; i >= 0; --i) {
+            int digit = (value >> (i * 4)) & 0xF;
+            result += hexDigits[digit];
+        }
+
+        return result;
     }
 
 private:
@@ -291,4 +314,5 @@ public:
 	MockTestShell(SSD* ssd) : TestShell(ssd) {}
 	MOCK_METHOD(void, help, (), ());
 	MOCK_METHOD(std::string, readOutputFile, (), ());
+    MOCK_METHOD(std::string, generateRandomHexString, (), ());
 };
