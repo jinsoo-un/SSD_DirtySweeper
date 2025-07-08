@@ -77,7 +77,7 @@ TEST_F(SSDTest, ReadTC_ReturnData02)
 
 TEST_F(SSDTest, ArgparseRead) {
     string cmd = buildCommand("R", 3);
-    ssd.commandParser(cmd);
+    ssd.parseCommand(cmd);
     EXPECT_EQ(2, ssd.getArgCount());
     EXPECT_EQ("R", ssd.getOp());
     EXPECT_EQ(3, ssd.getAddr());
@@ -86,7 +86,7 @@ TEST_F(SSDTest, ArgparseRead) {
 TEST_F(SSDTest, ArgparseWrite)
 {
     string cmd = buildCommand("W", 3, VALID_HEX_DATA);
-    ssd.commandParser(cmd);
+    ssd.parseCommand(cmd);
     EXPECT_EQ(3, ssd.getArgCount());
     EXPECT_EQ("W", ssd.getOp());
     EXPECT_EQ(3, ssd.getAddr());
@@ -96,21 +96,21 @@ TEST_F(SSDTest, ArgparseWrite)
 TEST_F(SSDTest, ArgparseInvalidOp)
 {
     string cmd = buildCommand("S", 3);
-    ssd.commandParser(cmd);
+    ssd.parseCommand(cmd);
     EXPECT_TRUE(checkOutputFile("ERROR"));
 }
 
 TEST_F(SSDTest, ArgparseInvalidAddr)
 {
     string cmd = buildCommand("R", 300);
-    ssd.commandParser(cmd);
+    ssd.parseCommand(cmd);
     EXPECT_TRUE(checkOutputFile("ERROR"));
 }
 
 TEST_F(SSDTest, ArgparseInvalidValue)
 {
     string cmd = buildCommand("W", 3, INVALID_HEX_DATA);
-    ssd.commandParser(cmd);
+    ssd.parseCommand(cmd);
     EXPECT_TRUE(checkOutputFile("ERROR"));
 }
 
@@ -136,7 +136,8 @@ int main(int argc, char *argv[])
         inputLine += argv[i];
     }
 
-    ssd.commandParser(inputLine);
+    if (!ssd.parseCommand(inputLine))
+        return -1;
     ssd.exec();
 
     return 0;
