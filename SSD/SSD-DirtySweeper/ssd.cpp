@@ -19,7 +19,7 @@ namespace FileNames {
     const std::string OUTPUT_FILE = "ssd_output.txt";
 }
 
-class Command {
+class SSDCommand {
 public:
 	virtual bool run(int addr, string val) = 0;
 
@@ -59,7 +59,7 @@ protected:
 	vector<string> ssdData;
 };
 
-class ReadCommand : public Command {
+class ReadCommand : public SSDCommand {
 public:
 	bool run(int addr, string val = "0x00000000") override {
 		return readData(addr, val);
@@ -74,7 +74,7 @@ private:
 	}
 };
 
-class WriteCommand : public Command {
+class WriteCommand : public SSDCommand {
 public:
 	bool run(int addr, string val) override {
 		return writeData(addr, val);
@@ -259,7 +259,7 @@ private:
         return true;
 	}
 
-	void setCommand(Command* cmd) {
+	void setCommand(SSDCommand* cmd) {
 		command = cmd;
 	}
 
@@ -268,5 +268,5 @@ private:
 	int addr;
 	string value;
 
-	Command* command = nullptr;
+	SSDCommand* command = nullptr;
 };
