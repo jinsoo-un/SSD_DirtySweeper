@@ -107,11 +107,10 @@ public:
             return;
         }
 
-        // 아직 구현되지 않은 method에 대해서는 disabled
-        //if (cmd == "exit") {
-        //    this->exit();
-        //    return;
-        //}
+        if (cmd == "exit") {
+            this->exit();
+            return;
+        }
 
         if (cmd == "fullwrite") {
             std::string data = args[0];
@@ -204,8 +203,17 @@ public:
         }
         return totalResult;
     }
+
+    void exit(void) {
+        std::cout << "Set Exit Comannd...\n";
+        isExitCmd = true;
+    }
+    bool isExit() const {
+        return isExitCmd;
+    }
 private:
     SSD* ssd;
+    bool isExitCmd{ false };
 
     const int LBA_START_ADDRESS = 0;
     const int LBA_END_ADDRESS = 99;
