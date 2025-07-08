@@ -10,10 +10,101 @@ using namespace std;
 
 using std::string;
 
+namespace Addresses {
+	const int MIN_ADDRESS = 0;
+	const int MAX_ADDRESS = 100;
+}
+
+using Addresses::MAX_ADDRESS;
+using Addresses::MIN_ADDRESS;
+
 namespace FileNames {
 	const std::string DATA_FILE = "ssd_nand.txt";
 	const std::string OUTPUT_FILE = "ssd_output.txt";
 }
+
+class Command {
+public:
+	virtual bool run(int addr, string val) = 0;
+
+protected:
+	bool readFromFile() {
+		ifstream file(FileNames::DATA_FILE);
+		if (!file.is_open()) {
+			return false;
+		}
+
+		ssdData.clear();
+		ssdData.resize(MAX_ADDRESS, "0x00000000"); // 기본값 0으로 초기화
+
+		string line;
+		while (getline(file, line)) {
+			istringstream iss(line);
+			int fileAddress;
+			string hexData;
+			if (iss >> fileAddress >> hexData) {
+				string value = hexData;
+				ssdData[fileAddress] = value;
+			}
+		}
+		file.close();
+	}
+
+	void updateOutputFile(string msg) {
+		ofstream fout(FileNames::OUTPUT_FILE);
+		fout << msg;
+		fout.close();
+	}
+
+	vector<string> ssdData;
+};
+
+class ReadCommand : public Command {
+public:
+	bool run(int addr, string val = "0x00000000") override {
+		return readData(addr, val);
+	}
+private:
+	bool readData(int address, string value) {
+		if (!readFromFile()) { updateOutputFile("ERROR");  return false; }
+
+		updateOutputFile(ssdData[address]);
+		return true;
+	}
+};
+
+class WriteCommand : public Command {
+public:
+	bool run(int addr, string val) override {
+		return writeData(addr, val);
+	}
+private:
+	bool writeData(int address, string hexData) {
+		if (!readFromFile()) { updateOutputFile("ERROR");  return false; }
+
+		ssdData[address] = hexData;
+		if (!writeFileFromData()) { updateOutputFile("ERROR");  return false; };
+
+		updateOutputFile("");
+
+		return true;
+	}
+
+	bool writeFileFromData(void)
+	{
+		ofstream file(FileNames::DATA_FILE);
+		if (!file.is_open()) {
+			cout << "Error opening file for writing." << endl;
+			return false;
+		}
+		for (int i = 0; i < ssdData.size(); ++i) {
+			file << i << "\t" << ssdData[i] << endl;
+		}
+		file.close();
+
+		return true;
+	}
+};
 
 class SSD {
 public:
@@ -29,8 +120,8 @@ public:
 
 		file.close();
 
-		ssdData.clear();
-		ssdData.resize(MAX_ADDRESS, "0x00000000");
+		//ssdData.clear();
+		//ssdData.resize(MAX_ADDRESS, "0x00000000");
 	}
 
 	bool parseCommand(string command) {
@@ -42,31 +133,16 @@ public:
 		return true;
 	}
 
-	bool readData(int address) {
-		if (isAddressOutOfRange(address)) { updateOutputFile("ERROR");  return false; }
-		if (!readFromFile()) { updateOutputFile("ERROR");  return false; }
-
-		updateOutputFile(ssdData[address]);
-		return true;
-	}
-
-	bool writeData(int address, string hexData) {
-		if (isAddressOutOfRange(address)) { updateOutputFile("ERROR");  return false; }
-		if (!readFromFile()) { updateOutputFile("ERROR");  return false; }
-
-		ssdData[address] = hexData;
-		if (!writeFileFromData()) { updateOutputFile("ERROR");  return false; };
-
-		updateOutputFile("");
-
-		return true;
-	}
-
 	bool exec() {
+		ReadCommand readCmd;
+		WriteCommand writeCmd;
+
 		if (op == "R")
-			return readData(addr);
+			setCommand(&readCmd);
 		if (op == "W")
-			return writeData(addr, value);
+			setCommand(&writeCmd);
+
+		command->run(addr, value);
 	}
 
 	int getArgCount() {
@@ -104,47 +180,8 @@ private:
 		argCount = cnt;
 	}
 
-	bool isAddressOutOfRange(int address)
-	{
+	bool isAddressOutOfRange(int address) {
 		return address < MIN_ADDRESS || address >= MAX_ADDRESS;
-	}
-
-	bool readFromFile() {
-
-		ifstream file(FileNames::DATA_FILE);
-		if (!file.is_open()) {
-			return false;
-		}
-
-		ssdData.clear();
-		ssdData.resize(MAX_ADDRESS, "0x00000000"); // 기본값 0으로 초기화
-
-		string line;
-		while (getline(file, line)) {
-			istringstream iss(line);
-			int fileAddress;
-			string hexData;
-			if (iss >> fileAddress >> hexData) {
-				string value = hexData;
-				ssdData[fileAddress] = value;
-			}
-		}
-		file.close();
-	}
-
-	bool writeFileFromData(void)
-	{
-		ofstream file(FileNames::DATA_FILE);
-		if (!file.is_open()) {
-			cout << "Error opening file for writing." << endl;
-			return false;
-		}
-		for (int i = 0; i < ssdData.size(); ++i) {
-			file << i << "\t" << ssdData[i] << endl;
-		}
-		file.close();
-
-		return true;
 	}
 
 	void updateOutputFile(string msg) {
@@ -192,13 +229,14 @@ private:
 		return true;
 	}
 
+	void setCommand(Command* cmd) {
+		command = cmd;
+	}
+
 	int argCount;
 	string op;
 	int addr;
 	string value;
 
-	static const int MIN_ADDRESS = 0;
-	static const int MAX_ADDRESS = 100;
-
-	vector<string> ssdData; // Simulated SSD data storage
+	Command* command = nullptr;
 };
