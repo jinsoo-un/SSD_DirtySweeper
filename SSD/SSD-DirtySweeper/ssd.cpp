@@ -50,6 +50,10 @@ protected:
 		file.close();
 	}
 
+	bool isAddressOutOfRange(int address) {
+		return address < MIN_ADDRESS || address >= MAX_ADDRESS;
+	}
+
 	void updateOutputFile(string msg) {
 		ofstream fout(FileNames::OUTPUT_FILE);
 		fout << msg;
@@ -66,6 +70,7 @@ public:
 	}
 private:
 	bool readData(int address, string value) {
+		if (isAddressOutOfRange(address)) { updateOutputFile("ERROR");  return false; }
 		if (!readFromFile()) { updateOutputFile("ERROR");  return false; }
 
 		updateOutputFile(ssdData[address]);
@@ -80,6 +85,7 @@ public:
 	}
 private:
 	bool writeData(int address, string hexData) {
+		if (isAddressOutOfRange(address)) { updateOutputFile("ERROR");  return false; }
 		if (!readFromFile()) { updateOutputFile("ERROR");  return false; }
 
 		ssdData[address] = hexData;
@@ -133,7 +139,7 @@ public:
 		return true;
 	}
 
-	bool exec() {
+	void exec() {
 		ReadCommand readCmd;
 		WriteCommand writeCmd;
 

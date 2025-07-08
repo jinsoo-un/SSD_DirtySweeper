@@ -50,14 +50,14 @@ TEST_F(SSDTest, ReadTC_InitialValue)
 	EXPECT_TRUE(checkOutputFile(INITIAL_HEX_DATA));
 }
 
-//TEST_F(SSDTest, ReadTC_OutofRange)
-//{
-//    int lba_addr = 100;
-//    bool isPass;
-//    isPass = readcmd.run(lba_addr);
-//    EXPECT_EQ(false, isPass);
-//    EXPECT_TRUE(checkOutputFile("ERROR"));
-//}
+TEST_F(SSDTest, ReadTC_OutofRange)
+{
+    int lba_addr = 100;
+    bool isPass;
+    isPass = readcmd.run(lba_addr);
+    EXPECT_EQ(false, isPass);
+    EXPECT_TRUE(checkOutputFile("ERROR"));
+}
 
 TEST_F(SSDTest, ReadTC_ReturnData01)
 {
@@ -121,10 +121,10 @@ TEST_F(SSDTest, WritePass) {
     EXPECT_TRUE(isPass);
 }
 
-//TEST_F(SSDTest, WriteFailWithOutOfAddressRange) {
-//    bool isPass = writecmd.run(INVALID_TEST_ADDRESS, VALID_HEX_DATA);
-//    EXPECT_FALSE(isPass);
-//}
+TEST_F(SSDTest, WriteFailWithOutOfAddressRange) {
+    bool isPass = writecmd.run(INVALID_TEST_ADDRESS, VALID_HEX_DATA);
+    EXPECT_FALSE(isPass);
+}
 
 #ifdef NDEBUG
 int main(int argc, char *argv[])
