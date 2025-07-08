@@ -4,16 +4,19 @@
 using std::string;
 using namespace testing;
 
+namespace {
+    static const int VALID_LBA = 0;
+    static const int INVALID_LBA = 100;
+    static const string VALID_DATA = "0x12345678";
+    static const string INVALID_DATA = "AHAHHAHAA";
+    static const string WRITE_SUCCESS_RESULT = "[Write] Done";
+    static const string WRITE_FAIL_RESULT = "[Write] ERROR";
+}
+
 class TestShellWriteTest : public Test {
 public:
     NiceMock< SSDMock> ssdMock;
     TestShell sut{ &ssdMock };
-    const int VALID_LBA = 0;
-    const int INVALID_LBA = 100;
-    const string VALID_DATA = "0x12345678";
-    const string INVALID_DATA = "AHAHHAHAA";
-    const string WRITE_SUCCESS_RESULT = "[Write] Done";
-    const string WRITE_FAIL_RESULT = "[Write] ERROR";
 };
 
 TEST_F(TestShellWriteTest, Write)
