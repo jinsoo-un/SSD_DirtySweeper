@@ -70,5 +70,5 @@ TEST(WriteReadAging, FailTest) {
     sut.writeReadAging();
     std::string output = testing::internal::GetCapturedStdout();
     cout << output;
-    EXPECT_THAT(output, ::testing::Not(::testing::HasSubstr("PASS")));
+    EXPECT_THAT(output, ::testing::HasSubstr("FAIL"));
 }
