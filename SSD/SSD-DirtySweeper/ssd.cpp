@@ -10,6 +10,13 @@ using namespace std;
 
 using std::string;
 
+// 파일명 상수들을 위한 namespace
+namespace FileNames {
+	const std::string DATA_FILE = "ssd_nand.txt";
+	const std::string OUTPUT_FILE = "ssd_output.txt";
+}
+
+
 class SSD {
 public:
 	void commandParser(string command) {
@@ -36,15 +43,15 @@ public:
         if ((address < 0) || (address >= 100)){
             //Error
             string msg{ "ERROR" };
-            ofstream fout2("ssd_output.txt");
+            ofstream fout2(FileNames::OUTPUT_FILE);
             fout2 << msg;
             fout2.close();
             return -1;
         }
 
 
-        ifstream fin("ssd_nand.txt");
-        ofstream fout2("ssd_output.txt");
+        ifstream fin(FileNames::DATA_FILE);
+        ofstream fout2(FileNames::OUTPUT_FILE);
             
         char line[20];
 
@@ -100,7 +107,8 @@ private:
 	}
 
 	bool readFromFile() {
-		ifstream file("ssd_nand.txt");
+
+		ifstream file(FileNames::DATA_FILE);
 		if (!file.is_open()) {
 			return false;
 		}
@@ -123,7 +131,7 @@ private:
 
 	bool writeFileFromData(void)
 	{
-		ofstream file("ssd_nand.txt");
+		ofstream file(FileNames::DATA_FILE);
 		if (!file.is_open()) {
 			cout << "Error opening file for writing." << endl;
 			return false;
@@ -137,8 +145,7 @@ private:
 	}
 
 	void updateOutputFile(string msg) {
-		string OUTPUT_FILE = "ssd_output.txt";
-		ofstream fout(OUTPUT_FILE);
+		ofstream fout(FileNames::OUTPUT_FILE);
 		fout << msg;
 		fout.close();
 	}
