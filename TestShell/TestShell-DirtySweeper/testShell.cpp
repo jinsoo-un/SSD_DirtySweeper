@@ -173,10 +173,10 @@ public:
     {
         ssd->write(lba, data);
         string result = ssd->getResult();
-        if (result == "") {
-            return WRITE_SUCCESS_LOG;
+        if (result == "ERROR") {
+            return WRITE_FAIL_LOG;
         }
-        return WRITE_FAIL_LOG;
+        return WRITE_SUCCESS_LOG;
     }
 
     string fullWrite(string data)
@@ -189,7 +189,7 @@ public:
                 totalResult += WRITE_FAIL_LOG;
                 break;
             }
-            totalResult += WRITE_SUCCESS_LOG;
+            totalResult += WRITE_SUCCESS_LOG + "\n";
         }
         return totalResult;
     }
@@ -198,8 +198,8 @@ private:
 
     const int LBA_START_ADDRESS = 0;
     const int LBA_END_ADDRESS = 99;
-    const string WRITE_FAIL_LOG = "[Write] ERROR\n";
-    const string WRITE_SUCCESS_LOG = "[Write] Done\n";
+    const string WRITE_FAIL_LOG = "[Write] ERROR";
+    const string WRITE_SUCCESS_LOG = "[Write] Done";
 
     virtual std::string readOutputFile() {
         std::ifstream file("nand_output.txt");

@@ -12,8 +12,8 @@ public:
     const int INVALID_LBA = 100;
     const string VALID_DATA = "0x12345678";
     const string INVALID_DATA = "AHAHHAHAA";
-    const string WRITE_SUCCESS_RESULT = "[Write] Done\n";
-    const string WRITE_FAIL_RESULT = "[Write] ERROR\n";
+    const string WRITE_SUCCESS_RESULT = "[Write] Done";
+    const string WRITE_FAIL_RESULT = "[Write] ERROR";
 };
 
 TEST_F(TestShellWriteTest, Write)
@@ -56,7 +56,7 @@ TEST_F(TestShellWriteTest, WriteFailWithInvalidData)
 TEST_F(TestShellWriteTest, FullWriteNormalCase)
 {
     string actual = "";
-    for (int i = 0; i < 100; i++) actual += WRITE_SUCCESS_RESULT;
+    for (int i = 0; i < 100; i++) actual += WRITE_SUCCESS_RESULT + "\n";
     EXPECT_CALL(ssdMock, write(_, VALID_DATA))
         .Times(100)
         .WillRepeatedly(Return());
