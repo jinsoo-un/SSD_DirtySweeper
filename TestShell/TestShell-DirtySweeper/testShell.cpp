@@ -137,9 +137,26 @@ public:
         return result;
     }
 
+    void fullRead() {
+        for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; lba++) {
+            ssd->read(lba);
+            std::string result = readOutputFile();
+            if (result == "ERROR") {
+                std::cout << "[Read] " << readOutputFile() << "\n";
+                break;
+            }
+            else {
+                std::cout << "[Read] LBA " << lba << " : " << result << "\n";
+            }
+        }
+    }
+
 private:
     CommandExecutor* commandExecutor;
-	SSD* ssd;
+    SSD* ssd;
+
+    const int LBA_START_ADDRESS = 0;
+    const int LBA_END_ADDRESS = 99;
 };
 
 class MockTestShell : public TestShell {
