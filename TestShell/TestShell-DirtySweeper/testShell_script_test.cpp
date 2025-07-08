@@ -81,3 +81,56 @@ TEST(WriteReadAging, FailTest) {
     cout << output;
     EXPECT_THAT(output, ::testing::HasSubstr("FAIL"));
 }
+
+TEST(PartialLBAWrite, PassCase) {
+    testing::NiceMock<SSDMock> ssdMock;
+    MockTestShell sut(&ssdMock);
+
+    const string DATA = "0xAAAABBBB";
+    EXPECT_CALL(ssdMock, write(_, _))
+        .Times(5 * 30)
+        .WillRepeatedly(Return());
+
+    EXPECT_CALL(ssdMock, read(_))
+        .Times(5 * 30)
+        .WillRepeatedly(Return());
+
+    EXPECT_CALL(sut, readOutputFile())
+        .Times(5 * 30)
+        .WillRepeatedly(Return(DATA));
+
+
+    testing::internal::CaptureStdout();
+    sut.partialLBAWrite();
+    std::string output = testing::internal::GetCapturedStdout();
+    cout << output;
+    EXPECT_THAT(output, ::testing::HasSubstr("PASS"));
+}
+
+TEST(PartialLBAWrite, FailCase) {
+    testing::NiceMock<SSDMock> ssdMock;
+    MockTestShell sut(&ssdMock);
+
+    const string DATA = "0xAAAABBBB";
+    const string MISMATCHED_DATA = "0xCCCCDDDD";
+
+    EXPECT_CALL(ssdMock, write(_, _))
+        .WillRepeatedly(Return());
+
+    EXPECT_CALL(ssdMock, read(_))
+        .WillRepeatedly(Return());
+
+    EXPECT_CALL(sut, readOutputFile())
+        .WillOnce(Return(DATA))
+        .WillOnce(Return(DATA))
+        .WillOnce(Return(DATA))
+        .WillOnce(Return(DATA))
+        .WillOnce(Return(MISMATCHED_DATA));
+
+
+    testing::internal::CaptureStdout();
+    sut.partialLBAWrite();
+    std::string output = testing::internal::GetCapturedStdout();
+    cout << output;
+    EXPECT_THAT(output, ::testing::HasSubstr("FAIL\n"));
+}
