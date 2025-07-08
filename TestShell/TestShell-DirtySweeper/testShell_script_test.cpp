@@ -6,12 +6,26 @@ TEST(ScriptTest, TC1) {
 	EXPECT_EQ(1, 1);
 }
 
-TEST(WriteReadAging, CallTest) {
-    testing::NiceMock<SSDMock> ssdMock;
-    MockTestShell sut(&ssdMock);
-    
-    const string DATA = "0xAAAABBBB";
+class WriteReadAgingFixture : public Test {
+public:
+    WriteReadAgingFixture()
+        : sut(&ssdMock), DATA("0xAAAABBBB") {
+    }
 
+    NiceMock<SSDMock> ssdMock;
+    MockTestShell sut;
+
+    const string DATA;
+
+    string getWriteReadAgingResult() {
+        testing::internal::CaptureStdout();
+        sut.writeReadAging();
+        string output = testing::internal::GetCapturedStdout();
+        return output;
+    }
+};
+
+TEST_F(WriteReadAgingFixture, CallTest) {
     EXPECT_CALL(ssdMock, write(0, DATA))
         .Times(TestShell::WRITE_READ_ITERATION);
     EXPECT_CALL(ssdMock, write(99, DATA))
@@ -22,20 +36,15 @@ TEST(WriteReadAging, CallTest) {
         .Times(TestShell::WRITE_READ_ITERATION);
 
     EXPECT_CALL(sut, generateRandomHexString())
-        .WillRepeatedly(Return("0xAAAABBBB"));
+        .WillRepeatedly(Return(DATA));
 
     EXPECT_CALL(sut, readOutputFile())
-        .WillRepeatedly(Return("0xAAAABBBB"));
+        .WillRepeatedly(Return(DATA));
 
     sut.writeReadAging();
 }
 
-TEST(WriteReadAging, PassTest) {
-    testing::NiceMock<SSDMock> ssdMock;
-    MockTestShell sut(&ssdMock);
-
-    const string DATA = "0xAAAABBBB";
-
+TEST_F(WriteReadAgingFixture, PassTest) {
     EXPECT_CALL(ssdMock, write(0, _))
         .Times(TestShell::WRITE_READ_ITERATION);
     EXPECT_CALL(ssdMock, write(99, _))
@@ -46,24 +55,15 @@ TEST(WriteReadAging, PassTest) {
         .Times(TestShell::WRITE_READ_ITERATION);
 
     EXPECT_CALL(sut, generateRandomHexString())
-        .WillRepeatedly(Return("0xAAAABBBB"));
+        .WillRepeatedly(Return(DATA));
 
     EXPECT_CALL(sut, readOutputFile())
-        .WillRepeatedly(Return("0xAAAABBBB"));
+        .WillRepeatedly(Return(DATA));
 
-    testing::internal::CaptureStdout();
-    sut.writeReadAging();
-    std::string output = testing::internal::GetCapturedStdout();
-    cout << output;
-    EXPECT_THAT(output, ::testing::HasSubstr("PASS"));
+    EXPECT_THAT(getWriteReadAgingResult(), ::testing::HasSubstr("PASS"));
 }
 
-TEST(WriteReadAging, FailTest) {
-    testing::NiceMock<SSDMock> ssdMock;
-    MockTestShell sut(&ssdMock);
-
-    const string DATA = "0xAAAABBBB";
-
+TEST_F(WriteReadAgingFixture, FailTest) {
     EXPECT_CALL(sut, generateRandomHexString())
         .WillRepeatedly(Return(DATA));
 
@@ -75,9 +75,5 @@ TEST(WriteReadAging, FailTest) {
         .WillOnce(Return(DATA))
         .WillRepeatedly(Return("ERROR"));
 
-    testing::internal::CaptureStdout();
-    sut.writeReadAging();
-    std::string output = testing::internal::GetCapturedStdout();
-    cout << output;
-    EXPECT_THAT(output, ::testing::HasSubstr("FAIL"));
+    EXPECT_THAT(getWriteReadAgingResult(), ::testing::HasSubstr("FAIL"));
 }
