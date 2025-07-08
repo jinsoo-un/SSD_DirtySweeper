@@ -194,6 +194,7 @@ public:
     }
 
     void exit(void) {
+        std::cout << "Set Exit Comannd...\n";
         isExitCmd = true;
     }
     bool isExit() const {

@@ -10,14 +10,9 @@ int main() {
 
     std::cout << "TestShell started. Type 'help' for commands.\n";
 
-    while (true) {
+    while (!shell.isExit()) {
         std::cout << "Shell> ";
         std::getline(std::cin, input);
-
-        if (input == "exit") {
-            std::cout << "Exiting...\n";
-            break;
-        }
 
         try {
             shell.processInput(input);
