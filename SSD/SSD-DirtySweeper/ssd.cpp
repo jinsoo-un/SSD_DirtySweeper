@@ -35,11 +35,7 @@ public:
 		ofstream output_file("ssd_output.txt");
         
 		if (!ssd_file.is_open() || !output_file.is_open()) {
-			cout << "Error opening file." << endl;
-			
 			throw std::exception();
-
-			return false;
 		}
 
 		if (true == isAddressOutOfRange(address))
