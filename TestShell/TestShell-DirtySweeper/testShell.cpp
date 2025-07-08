@@ -27,7 +27,7 @@ public:
     }
 
     void executeCommandLine(string& commandLine) {
-        const string filePath = "C:\\Users\\User\\source\\repos\\SSD-DirtySweeper\\SSD\\x64\\Release\\SSD-DirtySweeper.exe";
+        const string filePath = "C:\\Users\\User\\source\\repos\\SSD_DirtySweeper\\SSD\\x64\\Release\\ssd.exe";
         HINSTANCE executeResult = ShellExecuteA( // ShellExecuteA는 ANSI 문자열용, ShellExecuteW는 유니코드용
             nullptr,                      // 부모 윈도우 핸들
             "open",                       // 수행할 작업 (예: "open", "runas")
