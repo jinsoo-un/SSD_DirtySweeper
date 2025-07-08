@@ -23,7 +23,7 @@ public:
 
 class SSD {
 public:
-	virtual void read(int lba) = 0;
+    virtual void read(int lba) = 0;
     virtual void write(int lba, string data) = 0;
     virtual string getResult() = 0;
 };
@@ -60,9 +60,9 @@ public:
 
 class SSDMock : public SSD {
 public:
-	MOCK_METHOD(void, read, (int lba), (override));
-	MOCK_METHOD(void, write, (int, string), (override));
-	MOCK_METHOD(string, getResult, (), (override));
+    MOCK_METHOD(void, read, (int lba), (override));
+    MOCK_METHOD(void, write, (int, string), (override));
+    MOCK_METHOD(string, getResult, (), (override));
 };
 
 class TestShell {
