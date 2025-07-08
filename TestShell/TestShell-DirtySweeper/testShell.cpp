@@ -26,23 +26,33 @@ public:
         return cmdLine;
     }
 
-    void executeCommandLine(string& commandLine) {
-        const string filePath = "C:\\Users\\User\\source\\repos\\SSD-DirtySweeper\\SSD\\x64\\Release\\SSD-DirtySweeper.exe";
-        HINSTANCE executeResult = ShellExecuteA( // ShellExecuteA는 ANSI 문자열용, ShellExecuteW는 유니코드용
-            nullptr,                      // 부모 윈도우 핸들
-            "open",                       // 수행할 작업 (예: "open", "runas")
-            filePath.c_str(),             // 실행할 파일 경로
-            commandLine.c_str(),          // 인자 문자열
-            nullptr,                      // 시작 디렉토리
-            SW_SHOWNORMAL                 // 윈도우 보여주기 상태
+    void executeCommandLine(std::string commandLine) {
+        const std::string filePath = "..\\..\\SSD\\x64\\Release\\ssd.exe";
+        const std::string workingDir = "..\\..\\SSD\\x64\\Release";
+
+        std::string fullCommand = "\"" + filePath + "\" " + commandLine;
+
+        STARTUPINFOA si = { sizeof(STARTUPINFOA) };
+        PROCESS_INFORMATION pi;
+
+        BOOL success = CreateProcessA(
+            nullptr,
+            &fullCommand[0],        // commandLine (비 const)
+            nullptr, nullptr, FALSE,
+            0,
+            nullptr,
+            workingDir.c_str(),     // working directory 명시
+            &si, &pi
         );
 
-        if (reinterpret_cast<long long>(executeResult) <= 32) {
-            std::cerr << "Failed to launch: " << filePath << ". Error code: " << reinterpret_cast<long long>(executeResult) << std::endl;
-            throw std::exception();
+        if (!success) {
+            std::cerr << "CreateProcess failed with error: " << GetLastError() << std::endl;
+            return;
         }
 
-		std::cout << "Command executed: " << commandLine << std::endl;
+        WaitForSingleObject(pi.hProcess, INFINITE);
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
     }
 
     void read(int lba)  override {
@@ -175,8 +185,13 @@ public:
         ssd->write(lba, data);
         string result = ssd->getResult();
         if (result == "ERROR") {
+            // 추후 호출부에서 return 받아 Print되게 변경 필요
+            std::cout << WRITE_FAIL_LOG << std::endl;
             return WRITE_FAIL_LOG;
         }
+
+        // 추후 호출부에서 return 받아 Print되게 변경 필요
+        std::cout << WRITE_SUCCESS_LOG << std::endl;
         return WRITE_SUCCESS_LOG;
     }
 
@@ -214,7 +229,6 @@ private:
         }
         std::string result = content.str();
 
-        std::cout << result << "\n";
         return result;
     }
 
