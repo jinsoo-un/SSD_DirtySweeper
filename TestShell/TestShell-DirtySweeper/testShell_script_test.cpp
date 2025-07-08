@@ -136,5 +136,59 @@ TEST_F(WriteReadAgingFixture, FailTest) {
         .WillOnce(Return(DATA))
         .WillRepeatedly(Return("ERROR"));
 
-    EXPECT_THAT(getWriteReadAgingResult(), ::testing::HasSubstr("FAIL"));
+    testing::internal::CaptureStdout();
+    sut.writeReadAging();
+    std::string output = testing::internal::GetCapturedStdout();
+    cout << output;
+    EXPECT_THAT(output, ::testing::HasSubstr("FAIL"));
+}
+
+class PartialLBAWrite : public Test {
+public:
+    NiceMock<SSDMock> ssdMock;
+    MockTestShell sut{ &ssdMock };
+
+    const string DATA = "0xAAAABBBB";
+
+    string getPartialLBAWriteResult() {
+        testing::internal::CaptureStdout();
+        sut.partialLBAWrite();
+        return testing::internal::GetCapturedStdout();
+    }
+};
+
+TEST_F(PartialLBAWrite, PassCase) {
+
+    EXPECT_CALL(ssdMock, write(_, _))
+        .Times(5 * 30)
+        .WillRepeatedly(Return());
+
+    EXPECT_CALL(ssdMock, read(_))
+        .Times(5 * 30)
+        .WillRepeatedly(Return());
+
+    EXPECT_CALL(sut, readOutputFile())
+        .Times(5 * 30)
+        .WillRepeatedly(Return(DATA));
+
+    EXPECT_THAT(getPartialLBAWriteResult(), ::testing::HasSubstr("PASS"));
+}
+
+TEST_F(PartialLBAWrite, FailCase) {
+    const string MISMATCHED_DATA = "0xCCCCDDDD";
+
+    EXPECT_CALL(ssdMock, write(_, _))
+        .WillRepeatedly(Return());
+
+    EXPECT_CALL(ssdMock, read(_))
+        .WillRepeatedly(Return());
+
+    EXPECT_CALL(sut, readOutputFile())
+        .WillOnce(Return(DATA))
+        .WillOnce(Return(DATA))
+        .WillOnce(Return(DATA))
+        .WillOnce(Return(DATA))
+        .WillOnce(Return(MISMATCHED_DATA));
+
+    EXPECT_THAT(getPartialLBAWriteResult(), ::testing::HasSubstr("FAIL\n"));
 }

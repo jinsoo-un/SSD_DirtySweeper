@@ -125,6 +125,10 @@ public:
             return;
         }
 
+        if (cmd == "2_" || cmd == "2_PartialLBAWrite") {
+            this->partialLBAWrite();
+            return;
+        }
         if (cmd == "3_" || cmd == "3_WriteReadAging") {
             writeReadAging();
             return;
@@ -280,6 +284,40 @@ public:
 
     static const int WRITE_READ_ITERATION = 200;
 
+    void partialLBAWrite() {
+        const string testValue = "0x12345678";
+        const int repeatCnt = 30;
+        for (int count = 1; count <= repeatCnt; count++) {
+            ssd->write(4, testValue);
+            ssd->write(0, testValue);
+            ssd->write(3, testValue);
+            ssd->write(1, testValue);
+            ssd->write(2, testValue);
+
+            vector<string> result;
+            ssd->read(4);
+            result.push_back(readOutputFile());
+            ssd->read(0);
+            result.push_back(readOutputFile());
+            ssd->read(3);
+            result.push_back(readOutputFile());
+            ssd->read(1);
+            result.push_back(readOutputFile());
+            ssd->read(2);
+            result.push_back(readOutputFile());
+
+            auto firstData = result[0];
+            result.erase(result.begin());
+            for (auto nextData : result) {
+                if (firstData != nextData) {
+                    std::cout << "FAIL\n";
+                    return;
+                }
+            }
+        }
+        std::cout << "PASS\n";
+    }
+
 private:
     SSD* ssd;
     bool isExitCmd{ false };
@@ -317,7 +355,10 @@ private:
 
     bool isValidCommand(const std::string& cmd) const {
         static const std::unordered_set<std::string> valid = {
-			"read", "write", "exit", "help", "fullread", "fullwrite", "testscript", "1_", "1_FullWriteAndReadCompare", "3_", "3_WriteReadAging"
+			"read", "write", "exit", "help", "fullread", "fullwrite", 
+            "testscript", "1_", "1_FullWriteAndReadCompare",
+            "2_","2_PartialLBAWrite",
+            "3_", "3_WriteReadAging"
         };
         return valid.count(cmd) > 0;
     }
