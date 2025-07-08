@@ -1,6 +1,34 @@
 #include "gmock/gmock.h"
 #include "testShell.cpp"
 
-TEST(ScriptTest, TC1) {
-	EXPECT_EQ(1, 1);
+using ::testing::_;
+using ::testing::Return;
+
+class FullWriteReadTest : public ::testing::Test {
+protected:
+    SSDMock ssd;
+    MockTestShell shell;
+
+    FullWriteReadTest() : shell(&ssd) {}
+};
+
+TEST_F(FullWriteReadTest, FullWriteAndReadCompareShouldPass) {
+    std::string evenData = "0xAAAABBBB";
+    std::string oddData = "0xCCCCDDDD";
+
+    // write¿Í getResult expectation (0~99)
+    for (int i = 0; i <= 99; ++i) {
+        std::string data = (i / 5 % 2 == 0) ? evenData : oddData;
+        EXPECT_CALL(ssd, write(i, data)).Times(1);
+        EXPECT_CALL(ssd, read(i)).Times(1);
+    }
+
+    // readOutputFile expectation (0~99)
+    for (int i = 0; i <= 99; ++i) {
+        std::string expected = (i / 5 % 2 == 0) ? evenData : oddData;
+        EXPECT_CALL(shell, readOutputFile())
+            .WillOnce(Return(expected));
+    }
+
+    shell.processInput("1_");
 }
