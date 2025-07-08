@@ -7,6 +7,10 @@ using std::string;
 class SSDTest : public ::testing::Test {
 public:
     SSD ssd;
+
+    void SetUp() override {
+        ssd.erase();
+	}
 };
 
 
