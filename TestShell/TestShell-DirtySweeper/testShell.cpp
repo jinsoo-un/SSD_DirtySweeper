@@ -27,12 +27,12 @@ public:
     }
 
     void executeCommandLine(string& commandLine) {
-        const string filePath = "./ssd.exe";
+        const string filePath = "C:\\Users\\User\\source\\repos\\SSD-DirtySweeper\\SSD\\x64\\Release\\SSD-DirtySweeper.exe";
         HINSTANCE executeResult = ShellExecuteA( // ShellExecuteA는 ANSI 문자열용, ShellExecuteW는 유니코드용
             nullptr,                      // 부모 윈도우 핸들
             "open",                       // 수행할 작업 (예: "open", "runas")
             filePath.c_str(),             // 실행할 파일 경로
-            commandLine.c_str(),           // 인자 문자열
+            commandLine.c_str(),          // 인자 문자열
             nullptr,                      // 시작 디렉토리
             SW_SHOWNORMAL                 // 윈도우 보여주기 상태
         );
@@ -41,6 +41,8 @@ public:
             std::cerr << "Failed to launch: " << filePath << ". Error code: " << reinterpret_cast<long long>(executeResult) << std::endl;
             throw std::exception();
         }
+
+		std::cout << "Command executed: " << commandLine << std::endl;
     }
 
     void read(int lba)  override {
@@ -123,7 +125,6 @@ public:
     void processInput(const std::string& input) {
         auto tokens = tokenize(input);
         if (tokens.empty()) {
-            std::cout << "INVALID COMMAND\n";
             return;
         }
 
@@ -135,7 +136,7 @@ public:
             return;
         }
 
-        executeCommand(cmd, args);  // commandExecutor는 항상 존재함
+        executeCommand(cmd, args);
     }
 
     void help() {
