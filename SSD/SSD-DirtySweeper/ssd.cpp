@@ -23,7 +23,7 @@ public:
 			cout << "Error opening file for writing." << endl;
 			return;
 		}
-		for (int i = 0; i < ssdData.size(); ++i) {
+		for (int i = MIN_ADDRESS; i < MAX_ADDRESS; ++i) {
 			file << i << "\t" << "0x00000000" << endl;
 		}
 
@@ -42,33 +42,11 @@ public:
 	}
 
 	bool readData(int address) {
-        ifstream ssd_file("ssd_nand.txt");
-		ofstream output_file("ssd_output.txt");
-        
-		if (!ssd_file.is_open() || !output_file.is_open()) {
-			throw std::exception();
-		}
+		if (isAddressOutOfRange(address)) { updateOutputFile("ERROR");  return false; }
+		if (!readFromFile()) { updateOutputFile("ERROR");  return false; }
 
-		if (true == isAddressOutOfRange(address))
-		{
-			updateOutputFile("ERROR");
-			return false;
-		}
-
-		string line;
-        for (int addr = 0; addr < MAX_ADDRESS; addr++) {
-			getline(ssd_file, line);		
-
-            if (addr == address)
-            {
-				output_file << line;
-            }                
-        }
-
-		ssd_file.close();
-		output_file.close();
-
-        return true;
+		updateOutputFile(ssdData[address]);
+		return true;
 	}
 
 	bool writeData(int address, string hexData) {

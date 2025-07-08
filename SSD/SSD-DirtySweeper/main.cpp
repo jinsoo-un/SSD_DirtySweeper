@@ -7,10 +7,15 @@ using std::string;
 class SSDTest : public ::testing::Test {
 public:
     SSD ssd;
+    string VALID_HEX_DATA = "0x1298CDEF";
+    string INVALID_HEX_DATA = "0xABCDEFGH";
+    string INITIAL_HEX_DATA = "0x00000000";
+    static const int VALID_TEST_ADDRESS = 0;
+    static const int INVALID_TEST_ADDRESS = 100;
 
     void SetUp() override {
         ssd.erase();
-	}
+    }
 
     bool checkOutputFile(string expected) {
         ifstream fin(FileNames::OUTPUT_FILE);
@@ -25,6 +30,12 @@ public:
             return false;
         return true;
     }
+
+    string buildCommand(string rw, int lba, string data = "") {
+        string cmdLine = rw + " " + std::to_string(lba);
+        if (rw == "W") cmdLine = cmdLine + " " + data;
+        return cmdLine;
+    }
 };
 
 
@@ -34,6 +45,7 @@ TEST_F(SSDTest, ReadTC_InitialValue)
     bool isPass;
     isPass = ssd.readData(lba_addr);
     EXPECT_EQ(true, isPass);
+	EXPECT_TRUE(checkOutputFile(INITIAL_HEX_DATA));
 }
 
 TEST_F(SSDTest, ReadTC_OutofRange)
@@ -42,6 +54,7 @@ TEST_F(SSDTest, ReadTC_OutofRange)
     bool isPass;
     isPass = ssd.readData(lba_addr);
     EXPECT_EQ(false, isPass);
+    EXPECT_TRUE(checkOutputFile("ERROR"));
 }
 
 TEST_F(SSDTest, ReadTC_ReturnData01)
@@ -50,6 +63,7 @@ TEST_F(SSDTest, ReadTC_ReturnData01)
     bool isPass;
     isPass = ssd.readData(lba_addr);
     EXPECT_EQ(true, isPass);
+    EXPECT_TRUE(checkOutputFile(INITIAL_HEX_DATA));
 }
 
 TEST_F(SSDTest, ReadTC_ReturnData02)
@@ -58,11 +72,11 @@ TEST_F(SSDTest, ReadTC_ReturnData02)
     bool isPass;
     isPass = ssd.readData(lba_addr);
     EXPECT_EQ(true, isPass);
-
+    EXPECT_TRUE(checkOutputFile(INITIAL_HEX_DATA));
 }
 
 TEST_F(SSDTest, ArgparseRead) {
-    string cmd = "R 3";
+    string cmd = buildCommand("R", 3);
     ssd.commandParser(cmd);
     EXPECT_EQ(2, ssd.getArgCount());
     EXPECT_EQ("R", ssd.getOp());
@@ -71,7 +85,7 @@ TEST_F(SSDTest, ArgparseRead) {
 
 TEST_F(SSDTest, ArgparseWrite)
 {
-    string cmd = "W 3 0x1298CDEF";
+    string cmd = buildCommand("W", 3, VALID_HEX_DATA);
     ssd.commandParser(cmd);
     EXPECT_EQ(3, ssd.getArgCount());
     EXPECT_EQ("W", ssd.getOp());
@@ -81,35 +95,32 @@ TEST_F(SSDTest, ArgparseWrite)
 
 TEST_F(SSDTest, ArgparseInvalidOp)
 {
-    string cmd = "S 3";
+    string cmd = buildCommand("S", 3);
     ssd.commandParser(cmd);
     EXPECT_TRUE(checkOutputFile("ERROR"));
 }
 
 TEST_F(SSDTest, ArgparseInvalidAddr)
 {
-    SSD ssd;
-    string cmd = "R 300";
+    string cmd = buildCommand("R", 300);
     ssd.commandParser(cmd);
     EXPECT_TRUE(checkOutputFile("ERROR"));
 }
 
 TEST_F(SSDTest, ArgparseInvalidValue)
 {
-    SSD ssd;
-    string cmd = "W 3 0xABCDEFGH";
+    string cmd = buildCommand("W", 3, INVALID_HEX_DATA);
     ssd.commandParser(cmd);
     EXPECT_TRUE(checkOutputFile("ERROR"));
 }
 
 TEST_F(SSDTest, WritePass) {
-    bool isPass = ssd.writeData(0, "0xAAAABBBB");
+    bool isPass = ssd.writeData(VALID_TEST_ADDRESS, VALID_HEX_DATA);
     EXPECT_TRUE(isPass);
 }
 
 TEST_F(SSDTest, WriteFailWithOutOfAddressRange) {
-    bool isPass = ssd.writeData(100, "0xAAAABBBB");
-
+    bool isPass = ssd.writeData(INVALID_TEST_ADDRESS, VALID_HEX_DATA);
     EXPECT_FALSE(isPass);
 }
 
