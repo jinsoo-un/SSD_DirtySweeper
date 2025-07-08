@@ -33,10 +33,10 @@ public:
     void read(int lba)  override {}
     void write(int lba, string data) override {
         // 1. set cli
-        string result = "";
-        string filePath = "./ssd.exe";
-        string writeCmd = "W";
-        string commandLine = writeCmd + std::to_string(lba) + data;
+        const string result = "";
+        const string filePath = "./ssd.exe";
+        const string writeCmd = "W";
+        const string commandLine = writeCmd + std::to_string(lba) + data;
 
         // 2. ssd.exe 실행
         HINSTANCE executeResult = ShellExecuteA( // ShellExecuteA는 ANSI 문자열용, ShellExecuteW는 유니코드용
