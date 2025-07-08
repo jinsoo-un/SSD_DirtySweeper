@@ -85,12 +85,6 @@ public:
 		return true;
 	}
 
-	bool isValidOp(string arg) {
-		if (arg != "R" && arg != "W")
-			return false;
-		return true;
-	}
-
 	bool exec() {
 		if (op == "R")
 			return readData(addr);
@@ -187,6 +181,12 @@ private:
 				return false;
 		}
 
+		return true;
+	}
+
+	bool isValidOp(string arg) {
+		if (arg != "R" && arg != "W")
+			return false;
 		return true;
 	}
 
