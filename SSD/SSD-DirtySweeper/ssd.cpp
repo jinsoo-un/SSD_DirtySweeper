@@ -107,20 +107,6 @@ public:
 			return writeData(addr, value);
 	}
 
-	bool checkOutputFile(string expected) {
-		ifstream fin(FileNames::OUTPUT_FILE);
-		if (!fin.is_open()) {
-			cout << "OUTPUT file open failed\n";
-			return false;
-		}
-
-		string line;
-		getline(fin, line);
-		if (line != expected)
-			return false;
-		return true;
-	}
-
 	int argCount;
 	string op;
 	int addr;
