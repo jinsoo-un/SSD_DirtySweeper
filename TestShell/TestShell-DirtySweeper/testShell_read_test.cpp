@@ -54,8 +54,10 @@ TEST(FullReadTest, TestIfReadCalled100Times) {
 	NiceMock<SSDMock> ssdMock;
 	MockTestShell testShell{ &ssdMock };
 
+	const int LBA_COUNT = 100;
+
 	EXPECT_CALL(ssdMock, read(_))
-		.Times(100);
+		.Times(LBA_COUNT);
 
 	EXPECT_CALL(testShell, readOutputFile())
 		.WillRepeatedly(Return("0xAAAABBBB"));

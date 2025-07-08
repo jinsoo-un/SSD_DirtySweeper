@@ -94,14 +94,16 @@ public:
     }
 
     void fullRead() {
-        for (int i = 0; i < 100; i++) {
-            read(i);
+        for (int lba = 0; lba < LBA_COUNT; lba++) {
+            read(lba);
         }
     }
 
 private:
     CommandExecutor* commandExecutor;
-	SSD* ssd;
+    SSD* ssd;
+
+    const int LBA_COUNT = 100;
 };
 
 class MockTestShell : public TestShell {
