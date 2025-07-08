@@ -61,12 +61,28 @@ TEST(TS, ARGPARSEWRITE)
     EXPECT_EQ("0x1298CDEF", ssd.value);
 }
 
-TEST(TS, ARGPARSEINVALID)
+TEST(TS, ArgparseInvalidOp)
 {
     SSD ssd;
     string cmd = "S 3";
-    EXPECT_THROW(ssd.commandParser(cmd), std::exception);
+    ssd.commandParser(cmd);
+    EXPECT_TRUE(ssd.checkOutputFile("ERROR"));
+}
 
+TEST(TS, ArgparseInvalidAddr)
+{
+    SSD ssd;
+    string cmd = "R 300";
+    ssd.commandParser(cmd);
+    EXPECT_TRUE(ssd.checkOutputFile("ERROR"));
+}
+
+TEST(TS, ArgparseInvalidValue)
+{
+    SSD ssd;
+    string cmd = "W 3 0xABCDEFGH";
+    ssd.commandParser(cmd);
+    EXPECT_TRUE(ssd.checkOutputFile("ERROR"));
 }
 
 class SSDTest : public ::testing::Test {

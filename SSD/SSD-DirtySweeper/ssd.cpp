@@ -24,11 +24,16 @@ public:
 		string arg;
 		int cnt = 0;
 
+		if (!isValidCommand(command)) {
+			updateOutputFile("ERROR");
+			return;
+		}
+
 		/* scan the command line input */
 		while (iss >> arg) {
 			cnt++;
 			if (cnt == 1)
-				checkOp(arg);
+				op = arg;
 			if (cnt == 2)
 				addr = std::stoi(arg);
 			if (cnt == 3)
@@ -47,7 +52,7 @@ public:
 
 		if (true == isAddressOutOfRange(address))
 		{
-			createErrorOutputFile();
+			updateOutputFile("ERROR");
 			return false;
 		}
 
@@ -80,10 +85,10 @@ public:
 		return true;
 	}
 
-	void checkOp(string arg) {
+	bool isValidOp(string arg) {
 		if (arg != "R" && arg != "W")
-			throw std::exception();
-		op = arg;
+			return false;
+		return true;
 	}
 
 	bool exec() {
@@ -91,6 +96,20 @@ public:
 			return readData(addr);
 		if (op == "W")
 			return writeData(addr, value);
+	}
+
+	bool checkOutputFile(string expected) {
+		ifstream fin(FileNames::OUTPUT_FILE);
+		if (!fin.is_open()) {
+			cout << "OUTPUT file open failed\n";
+			return false;
+		}
+
+		string line;
+		getline(fin, line);
+		if (line != expected)
+			return false;
+		return true;
 	}
 
 	int argCount;
@@ -146,6 +165,39 @@ private:
 		ofstream fout(FileNames::OUTPUT_FILE);
 		fout << msg;
 		fout.close();
+	}
+
+	bool isValidCommand(string command) {
+		std::istringstream iss(command);
+		string arg;
+		int cnt = 0;
+
+		while (iss >> arg) {
+			cnt++;
+			if (cnt == 1) {
+				if (!isValidOp(arg)) return false;
+			}
+			else if (cnt == 2) {
+				if (isAddressOutOfRange(stoi(arg))) return false;
+			}
+			else if (cnt == 3) {
+				if (!isHexWithPrefix(arg)) return false;
+			}
+			else
+				return false;
+		}
+
+		return true;
+	}
+
+	bool isHexWithPrefix(const std::string& str) {
+		if (str.size() < 3 || str.substr(0, 2) != "0x")
+			return false;
+		for (size_t i = 2; i < str.size(); ++i) {
+			if (!std::isxdigit(static_cast<unsigned char>(str[i])))
+				return false;
+		}
+		return true;
 	}
 
 	static const int MIN_ADDRESS = 0;
