@@ -51,3 +51,23 @@ TEST(WriteReadAging, PassTest) {
     cout << output;
     EXPECT_THAT(output, ::testing::HasSubstr("PASS"));
 }
+
+TEST(WriteReadAging, FailTest) {
+    testing::NiceMock<SSDMock> ssdMock;
+    MockTestShell sut(&ssdMock);
+
+    const string DATA = "0xAAAABBBB";
+
+    EXPECT_CALL(sut, readOutputFile())
+        .WillOnce(Return(DATA))
+        .WillOnce(Return(DATA))
+        .WillOnce(Return(DATA))
+        .WillOnce(Return(DATA))
+        .WillRepeatedly(Return("ERROR"));
+
+    testing::internal::CaptureStdout();
+    sut.writeReadAging();
+    std::string output = testing::internal::GetCapturedStdout();
+    cout << output;
+    EXPECT_THAT(output, ::testing::Not(::testing::HasSubstr("PASS")));
+}
