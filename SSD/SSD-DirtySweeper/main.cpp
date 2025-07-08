@@ -9,6 +9,7 @@ public:
     SSD ssd;
     string VALID_HEX_DATA = "0x1298CDEF";
     string INVALID_HEX_DATA = "0xABCDEFGH";
+	string INITIAL_HEX_DATA = "0x00000000";
     static const int VALID_TEST_ADDRESS = 0;
     static const int INVALID_TEST_ADDRESS = 100;
 
@@ -44,6 +45,7 @@ TEST_F(SSDTest, ReadTC_InitialValue)
     bool isPass;
     isPass = ssd.readData(lba_addr);
     EXPECT_EQ(true, isPass);
+	EXPECT_TRUE(checkOutputFile(INITIAL_HEX_DATA));
 }
 
 TEST_F(SSDTest, ReadTC_OutofRange)
@@ -52,6 +54,7 @@ TEST_F(SSDTest, ReadTC_OutofRange)
     bool isPass;
     isPass = ssd.readData(lba_addr);
     EXPECT_EQ(false, isPass);
+    EXPECT_TRUE(checkOutputFile("ERROR"));
 }
 
 TEST_F(SSDTest, ReadTC_ReturnData01)
@@ -60,6 +63,7 @@ TEST_F(SSDTest, ReadTC_ReturnData01)
     bool isPass;
     isPass = ssd.readData(lba_addr);
     EXPECT_EQ(true, isPass);
+    EXPECT_TRUE(checkOutputFile(INITIAL_HEX_DATA));
 }
 
 TEST_F(SSDTest, ReadTC_ReturnData02)
@@ -68,7 +72,7 @@ TEST_F(SSDTest, ReadTC_ReturnData02)
     bool isPass;
     isPass = ssd.readData(lba_addr);
     EXPECT_EQ(true, isPass);
-
+    EXPECT_TRUE(checkOutputFile(INITIAL_HEX_DATA));
 }
 
 TEST_F(SSDTest, ARGPARSEREAD) {
