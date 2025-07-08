@@ -7,6 +7,9 @@ using std::string;
 class SSDTest : public ::testing::Test {
 public:
     SSD ssd;
+    ReadCommand readCmd;
+    WriteCommand writeCmd;
+    EraseCommand eraseCmd;
     string VALID_HEX_DATA = "0x1298CDEF";
     string INVALID_HEX_DATA = "0xABCDEFGH";
     string INITIAL_HEX_DATA = "0x00000000";
@@ -14,7 +17,7 @@ public:
     static const int INVALID_TEST_ADDRESS = 100;
 
     void SetUp() override {
-        ssd.erase();
+        eraseCmd.run();
     }
 
     bool checkOutputFile(string expected) {
@@ -43,7 +46,7 @@ TEST_F(SSDTest, ReadTC_InitialValue)
 {
     int lba_addr = 1;
     bool isPass;
-    isPass = ssd.readData(lba_addr);
+    isPass = readCmd.run(lba_addr);
     EXPECT_EQ(true, isPass);
 	EXPECT_TRUE(checkOutputFile(INITIAL_HEX_DATA));
 }
@@ -52,7 +55,7 @@ TEST_F(SSDTest, ReadTC_OutofRange)
 {
     int lba_addr = 100;
     bool isPass;
-    isPass = ssd.readData(lba_addr);
+    isPass = readCmd.run(lba_addr);
     EXPECT_EQ(false, isPass);
     EXPECT_TRUE(checkOutputFile("ERROR"));
 }
@@ -61,7 +64,7 @@ TEST_F(SSDTest, ReadTC_ReturnData01)
 {
     int lba_addr = 50;
     bool isPass;
-    isPass = ssd.readData(lba_addr);
+    isPass = readCmd.run(lba_addr);
     EXPECT_EQ(true, isPass);
     EXPECT_TRUE(checkOutputFile(INITIAL_HEX_DATA));
 }
@@ -70,7 +73,7 @@ TEST_F(SSDTest, ReadTC_ReturnData02)
 {
     int lba_addr = 30;
     bool isPass;
-    isPass = ssd.readData(lba_addr);
+    isPass = readCmd.run(lba_addr);
     EXPECT_EQ(true, isPass);
     EXPECT_TRUE(checkOutputFile(INITIAL_HEX_DATA));
 }
@@ -115,12 +118,12 @@ TEST_F(SSDTest, ArgparseInvalidValue)
 }
 
 TEST_F(SSDTest, WritePass) {
-    bool isPass = ssd.writeData(VALID_TEST_ADDRESS, VALID_HEX_DATA);
+    bool isPass = writeCmd.run(VALID_TEST_ADDRESS, VALID_HEX_DATA);
     EXPECT_TRUE(isPass);
 }
 
 TEST_F(SSDTest, WriteFailWithOutOfAddressRange) {
-    bool isPass = ssd.writeData(INVALID_TEST_ADDRESS, VALID_HEX_DATA);
+    bool isPass = writeCmd.run(INVALID_TEST_ADDRESS, VALID_HEX_DATA);
     EXPECT_FALSE(isPass);
 }
 
@@ -128,49 +131,49 @@ TEST_F(SSDTest, WriteFailWithOutOfAddressRange) {
 TEST_F(SSDTest, WriteInvalidData00) {
 
     string invalidData = "0x1234567890000";
-    bool isPass = ssd.writeData(VALID_TEST_ADDRESS, invalidData);
+    bool isPass = writeCmd.run(VALID_TEST_ADDRESS, invalidData);
     EXPECT_FALSE(isPass);
 }
 
 TEST_F(SSDTest, WriteInvalidData01) {
 
     string invalidData = "0x1234";
-    bool isPass = ssd.writeData(VALID_TEST_ADDRESS, invalidData);
+    bool isPass = writeCmd.run(VALID_TEST_ADDRESS, invalidData);
     EXPECT_FALSE(isPass);
 }
 
 TEST_F(SSDTest, WriteInvalidData02) {
 
     string invalidData = "12345678";
-    bool isPass = ssd.writeData(VALID_TEST_ADDRESS, invalidData);
+    bool isPass = writeCmd.run(VALID_TEST_ADDRESS, invalidData);
     EXPECT_FALSE(isPass);
 }
 
 TEST_F(SSDTest, WriteInvalidData03) {
 
     string invalidData = "0x1234ABzE";
-    bool isPass = ssd.writeData(VALID_TEST_ADDRESS, invalidData);
+    bool isPass = writeCmd.run(VALID_TEST_ADDRESS, invalidData);
     EXPECT_FALSE(isPass);
 }
 
 TEST_F(SSDTest, WriteInvalidData04) {
 
     string invalidData = "0xA5CCH012";
-    bool isPass = ssd.writeData(VALID_TEST_ADDRESS, invalidData);
+    bool isPass = writeCmd.run(VALID_TEST_ADDRESS, invalidData);
     EXPECT_FALSE(isPass);
 }
 
 TEST_F(SSDTest, WriteReadVerify00) {
 
-    bool isPass = ssd.readData(VALID_TEST_ADDRESS);
+    bool isPass = readCmd.run(VALID_TEST_ADDRESS);
 
     EXPECT_EQ(true, isPass);
     EXPECT_TRUE(checkOutputFile(INITIAL_HEX_DATA));
 
-    isPass = ssd.writeData(VALID_TEST_ADDRESS, VALID_HEX_DATA);
+    isPass = writeCmd.run(VALID_TEST_ADDRESS, VALID_HEX_DATA);
     EXPECT_TRUE(isPass);
 
-    isPass = ssd.readData(VALID_TEST_ADDRESS);
+    isPass = readCmd.run(VALID_TEST_ADDRESS);
     EXPECT_EQ(true, isPass);
     EXPECT_TRUE(checkOutputFile(VALID_HEX_DATA));
 }
