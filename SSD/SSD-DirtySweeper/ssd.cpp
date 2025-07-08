@@ -10,6 +10,13 @@ using namespace std;
 
 using std::string;
 
+// 파일명 상수들을 위한 namespace
+namespace FileNames {
+	const std::string DATA_FILE = "ssd_nand.txt";
+	const std::string OUTPUT_FILE = "ssd_output.txt";
+}
+
+
 class SSD {
 public:
 	void commandParser(string command) {
@@ -44,6 +51,7 @@ public:
 			return false;
 		}
 
+
 		string line;
         for (int addr = 0; addr < MAX_ADDRESS; addr++) {
 			getline(ssd_file, line);		
@@ -61,18 +69,14 @@ public:
 	}
 
 	bool writeData(int address, string hexData) {
-		createErrorOutputFile();
-		if (isAddressOutOfRange(address)) return false; 
-		if (!readFromFile()) return false;
-		
+		if (isAddressOutOfRange(address)) { updateOutputFile("ERROR");  return false; }
+		if (!readFromFile()) { updateOutputFile("ERROR");  return false; }
+
 		ssdData[address] = hexData;
+		if (!writeFileFromData()) { updateOutputFile("ERROR");  return false; };
 
-		// Write data to ssd_nand.txt file
-		if (!writeFileFromData()) return false;
+		updateOutputFile("");
 
-		// Write ssd_output.txt file as null
-		createEmptyOutputFile();
-		
 		return true;
 	}
 
@@ -101,13 +105,14 @@ private:
 	}
 
 	bool readFromFile() {
-		ifstream file("ssd_nand.txt");
+
+		ifstream file(FileNames::DATA_FILE);
 		if (!file.is_open()) {
 			return false;
 		}
 
 		ssdData.clear();
-		ssdData.resize(MAX_ADDRESS, "0x00000000"); // �⺻�� 0���� �ʱ�ȭ
+		ssdData.resize(MAX_ADDRESS, "0x00000000"); // 기본값 0으로 초기화
 
 		string line;
 		while (getline(file, line)) {
@@ -124,7 +129,7 @@ private:
 
 	bool writeFileFromData(void)
 	{
-		ofstream file("ssd_nand.txt");
+		ofstream file(FileNames::DATA_FILE);
 		if (!file.is_open()) {
 			cout << "Error opening file for writing." << endl;
 			return false;
@@ -137,20 +142,15 @@ private:
 		return true;
 	}
 
-	void createEmptyOutputFile() {
-		ofstream file("ssd_output.txt", ios::trunc);
-		file.close();
-	}
-
-	void createErrorOutputFile() {
-		string msg{ "ERROR" };
-		ofstream fout2("ssd_output.txt");
-		fout2 << msg;
-		fout2.close();
+	void updateOutputFile(string msg) {
+		ofstream fout(FileNames::OUTPUT_FILE);
+		fout << msg;
+		fout.close();
 	}
 
 	static const int MIN_ADDRESS = 0;
 	static const int MAX_ADDRESS = 100;
+
 	vector<string> ssdData; // Simulated SSD data storage
 	
 
