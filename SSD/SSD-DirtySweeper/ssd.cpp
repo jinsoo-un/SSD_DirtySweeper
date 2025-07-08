@@ -190,7 +190,7 @@ private:
         for (length = 2; length < str.size(); length++) {
             char ch = static_cast<unsigned char>(str[length]);
 
-            if (!(IsNumber(ch) || IsHexCharicter(ch))) { return false; }
+            if (!(isNumber(ch) || isHexCharacter(ch))) { return false; }
 
         }
 
@@ -199,12 +199,12 @@ private:
         return true;
     }
 
-    bool IsHexCharicter(char ch)
+    bool isHexCharacter(char ch)
     {
         return ((ch >= 'A') && (ch <= 'F'));
     }
 
-    bool IsNumber(char ch)
+    bool isNumber(char ch)
     {
         return ((ch >= '0') && (ch <= '9'));
     }
