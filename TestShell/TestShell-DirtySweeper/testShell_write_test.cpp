@@ -5,7 +5,9 @@ using std::string;
 using namespace testing;
 
 namespace {
-    static const int VALID_LBA = 0;
+    static const int START_LBA = 0;
+    static const int END_LBA = 99;
+    static const int VALID_LBA = 2;
     static const int INVALID_LBA = 100;
     static const string VALID_DATA = "0x12345678";
     static const string INVALID_DATA = "AHAHHAHAA";
@@ -59,7 +61,7 @@ TEST_F(TestShellWriteTest, WriteFailWithInvalidData)
 TEST_F(TestShellWriteTest, FullWriteNormalCase)
 {
     string actual = "";
-    for (int i = 0; i < 100; i++) actual += WRITE_SUCCESS_RESULT + "\n";
+    for (int lba = START_LBA; lba <= END_LBA; lba++) actual += WRITE_SUCCESS_RESULT + "\n";
     EXPECT_CALL(ssdMock, write(_, VALID_DATA))
         .Times(100)
         .WillRepeatedly(Return());
