@@ -15,7 +15,6 @@ namespace FileNames {
 	const std::string OUTPUT_FILE = "ssd_output.txt";
 }
 
-
 class SSD {
 public:
 	void erase() {
@@ -71,7 +70,6 @@ public:
 			return false;
 		}
 
-
 		string line;
         for (int addr = 0; addr < MAX_ADDRESS; addr++) {
 			getline(ssd_file, line);		
@@ -107,10 +105,21 @@ public:
 			return writeData(addr, value);
 	}
 
-	int argCount;
-	string op;
-	int addr;
-	string value;
+	int getArgCount() {
+		return argCount;
+	}
+
+	string getOp() {
+		return op;
+	}
+
+	int getAddr() {
+		return addr;
+	}
+
+	string getValue() {
+		return value;
+	}
 
 private:
 	bool isAddressOutOfRange(int address)
@@ -200,6 +209,11 @@ private:
 		}
 		return true;
 	}
+
+	int argCount;
+	string op;
+	int addr;
+	string value;
 
 	static const int MIN_ADDRESS = 0;
 	static const int MAX_ADDRESS = 100;
