@@ -10,17 +10,13 @@ using namespace std;
 
 using std::string;
 
-namespace Addresses {
-	const int MIN_ADDRESS = 0;
-	const int MAX_ADDRESS = 100;
-}
-
-using Addresses::MAX_ADDRESS;
-using Addresses::MIN_ADDRESS;
+const int VALID_DATA_LENGTH = 10;
+const int MIN_ADDRESS = 0;
+const int MAX_ADDRESS = 100;
 
 namespace FileNames {
-	const std::string DATA_FILE = "ssd_nand.txt";
-	const std::string OUTPUT_FILE = "ssd_output.txt";
+    const std::string DATA_FILE = "ssd_nand.txt";
+    const std::string OUTPUT_FILE = "ssd_output.txt";
 }
 
 class Command {
@@ -86,6 +82,7 @@ public:
 private:
 	bool writeData(int address, string hexData) {
 		if (isAddressOutOfRange(address)) { updateOutputFile("ERROR");  return false; }
+		if (!isValidWriteData(hexData)) { updateOutputFile("ERROR");  return false; }
 		if (!readFromFile()) { updateOutputFile("ERROR");  return false; }
 
 		ssdData[address] = hexData;
@@ -110,33 +107,60 @@ private:
 
 		return true;
 	}
+
+	bool isValidWriteData(const std::string& str) {
+
+		if (str.substr(0, 2) != "0x") return false;
+
+		int length;
+		for (length = 2; length < str.size(); length++) {
+			char ch = static_cast<unsigned char>(str[length]);
+
+			if (!(isNumber(ch) || isHexCharacter(ch))) { return false; }
+
+		}
+
+		if (length != VALID_DATA_LENGTH) { return false; }
+
+		return true;
+	}
+
+	bool isHexCharacter(char ch)
+	{
+		return ((ch >= 'A') && (ch <= 'F'));
+	}
+
+	bool isNumber(char ch)
+	{
+		return ((ch >= '0') && (ch <= '9'));
+	}
 };
 
 class SSD {
 public:
 	void erase() {
-		ofstream file(FileNames::DATA_FILE);
-		if (!file.is_open()) {
-			cout << "Error opening file for writing." << endl;
-			return;
-		}
-		for (int i = MIN_ADDRESS; i < MAX_ADDRESS; ++i) {
-			file << i << "\t" << "0x00000000" << endl;
-		}
+        ofstream file(FileNames::DATA_FILE);
+        if (!file.is_open()) {
+	        cout << "Error opening file for writing." << endl;
+	        return;
+        }
+        for (int i = MIN_ADDRESS; i < MAX_ADDRESS; ++i) {
+	        file << i << "\t" << "0x00000000" << endl;
+        }
 
-		file.close();
+        file.close();
 
 		//ssdData.clear();
 		//ssdData.resize(MAX_ADDRESS, "0x00000000");
 	}
 
 	bool parseCommand(string command) {
-		if (!isValidCommand(command)) {
-			updateOutputFile("ERROR");
-			return false;
-		}
-		storeParams(command);
-		return true;
+        if (!isValidCommand(command)) {
+	        updateOutputFile("ERROR");
+	        return false;
+        }
+        storeParams(command);
+        return true;
 	}
 
 	void exec() {
@@ -170,20 +194,20 @@ public:
 private:
 	void storeParams(string command)
 	{
-		std::istringstream iss(command);
-		string arg;
-		int cnt = 0;
-		/* scan the command line input */
-		while (iss >> arg) {
-			cnt++;
-			if (cnt == 1)
-				op = arg;
-			if (cnt == 2)
-				addr = std::stoi(arg);
-			if (cnt == 3)
-				value = arg;
-		}
-		argCount = cnt;
+        std::istringstream iss(command);
+        string arg;
+        int cnt = 0;
+        /* scan the command line input */
+        while (iss >> arg) {
+	        cnt++;
+	        if (cnt == 1)
+		        op = arg;
+	        if (cnt == 2)
+		        addr = std::stoi(arg);
+	        if (cnt == 3)
+		        value = arg;
+        }
+        argCount = cnt;
 	}
 
 	bool isAddressOutOfRange(int address) {
@@ -191,48 +215,48 @@ private:
 	}
 
 	void updateOutputFile(string msg) {
-		ofstream fout(FileNames::OUTPUT_FILE);
-		fout << msg;
-		fout.close();
+        ofstream fout(FileNames::OUTPUT_FILE);
+        fout << msg;
+        fout.close();
 	}
 
 	bool isValidCommand(string command) {
-		std::istringstream iss(command);
-		string arg;
-		int cnt = 0;
+        std::istringstream iss(command);
+        string arg;
+        int cnt = 0;
 
-		while (iss >> arg) {
-			cnt++;
-			if (cnt == 1) {
-				if (!isValidOp(arg)) return false;
-			}
-			else if (cnt == 2) {
-				if (isAddressOutOfRange(stoi(arg))) return false;
-			}
-			else if (cnt == 3) {
-				if (!isHexWithPrefix(arg)) return false;
-			}
-			else
-				return false;
-		}
+        while (iss >> arg) {
+	        cnt++;
+	        if (cnt == 1) {
+		        if (!isValidOp(arg)) return false;
+	        }
+	        else if (cnt == 2) {
+		        if (isAddressOutOfRange(stoi(arg))) return false;
+	        }
+	        else if (cnt == 3) {
+		        if (!isHexWithPrefix(arg)) return false;
+	        }
+	        else
+		        return false;
+        }
 
-		return true;
+        return true;
 	}
 
 	bool isValidOp(string arg) {
-		if (arg != "R" && arg != "W")
-			return false;
-		return true;
+        if (arg != "R" && arg != "W")
+	        return false;
+        return true;
 	}
 
 	bool isHexWithPrefix(const std::string& str) {
-		if (str.size() < 3 || str.substr(0, 2) != "0x")
-			return false;
-		for (size_t i = 2; i < str.size(); ++i) {
-			if (!std::isxdigit(static_cast<unsigned char>(str[i])))
-				return false;
-		}
-		return true;
+        if (str.size() < 3 || str.substr(0, 2) != "0x")
+	        return false;
+        for (size_t i = 2; i < str.size(); ++i) {
+	        if (!std::isxdigit(static_cast<unsigned char>(str[i])))
+		        return false;
+        }
+        return true;
 	}
 
 	void setCommand(Command* cmd) {

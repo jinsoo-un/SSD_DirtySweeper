@@ -7,6 +7,8 @@
 #include <unordered_set>
 #include <windows.h>
 #include <shellapi.h>
+#include <cstdlib>
+#include <ctime>
 #include "gmock/gmock.h"
 
 using namespace std;
@@ -118,10 +120,15 @@ public:
             return;
         }
 
-        //if (cmd == "testscript") {
-        //    this->testScript();
-        //    return;
-        //}
+        if (cmd == "1_" || cmd == "1_FullWriteAndReadCompare") {
+            fullWriteAndReadCompare();
+            return;
+        }
+
+        if (cmd == "3_" || cmd == "3_WriteReadAging") {
+            writeReadAging();
+            return;
+        }
 
         std::cout << "INVALID COMMAND\n";
     }
@@ -174,6 +181,7 @@ public:
             printSuccessReadResult(result, lba);
         }
     }
+
     string write(int lba, string data)
     {
         ssd->write(lba, data);
@@ -204,6 +212,26 @@ public:
         return totalResult;
     }
 
+    std::string getWriteDataInFullWriteAndReadCompareScript(int lba){
+        std::string evenData = "0xAAAABBBB";
+        std::string oddData = "0xCCCCDDDD";
+        return (lba / 5 % 2 == 0) ? evenData : oddData;
+    }
+
+    void fullWriteAndReadCompare() {
+        for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; ++lba) {
+            std::string writeData = getWriteDataInFullWriteAndReadCompareScript(lba);
+
+            ssd->write(lba, writeData);
+            ssd->read(lba);
+            std::string readData = readOutputFile();
+
+            if (readData != writeData) {
+                std::cout << "[Mismatch] LBA " << lba << " Expected: " << writeData << " Got: " << readData << "\n";
+            }
+        }
+    }
+
     void exit(void) {
         std::cout << "Set Exit Comannd...\n";
         isExitCmd = true;
@@ -211,17 +239,59 @@ public:
     bool isExit() const {
         return isExitCmd;
     }
+
+    void writeReadAging() {
+        for (int i = 0; i < WRITE_READ_ITERATION; i++) {
+            string randomString = generateRandomHexString();
+            ssd->write(0, randomString);
+            ssd->read(0);
+            string firstLBAResult = readOutputFile();
+            ssd->write(99, randomString);
+            ssd->read(99);
+            string endLBAResult = readOutputFile();
+
+            if (firstLBAResult != endLBAResult) {
+                cout << "FAIL";
+                return;
+            }
+        }
+        cout << "PASS";
+    }
+
+    virtual std::string generateRandomHexString() {
+        static const char* hexDigits = "0123456789ABCDEF";
+
+        static bool seeded = false;
+        if (!seeded) {
+            std::srand(static_cast<unsigned int>(std::time(nullptr)));
+            seeded = true;
+        }
+
+        unsigned int value = (static_cast<unsigned int>(std::rand()) << 16) | std::rand();
+
+        std::string result = "0x";
+        for (int i = 7; i >= 0; --i) {
+            int digit = (value >> (i * 4)) & 0xF;
+            result += hexDigits[digit];
+        }
+
+        return result;
+    }
+
+    static const int WRITE_READ_ITERATION = 200;
+
 private:
     SSD* ssd;
     bool isExitCmd{ false };
 
     const int LBA_START_ADDRESS = 0;
     const int LBA_END_ADDRESS = 99;
+
     const string WRITE_ERROR_MESSAGE = "[Write] ERROR";
     const string WRITE_SUCCESS_MESSAGE = "[Write] Done";
 
     virtual std::string readOutputFile() {
-        std::ifstream file("C:\\Users\\User\\source\\repos\\SSD-DirtySweeper\\SSD\\x64\\Release\\ssd_output.txt");
+        std::ifstream file("..\\..\\SSD\\x64\\Release\\ssd_output.txt");
 
         if (!file.is_open()) throw std::exception();
 
@@ -247,7 +317,7 @@ private:
 
     bool isValidCommand(const std::string& cmd) const {
         static const std::unordered_set<std::string> valid = {
-            "read", "write", "exit", "help", "fullread", "fullwrite", "testscript"
+			"read", "write", "exit", "help", "fullread", "fullwrite", "testscript", "1_", "1_FullWriteAndReadCompare", "3_", "3_WriteReadAging"
         };
         return valid.count(cmd) > 0;
     }
@@ -272,4 +342,5 @@ public:
 	MockTestShell(SSD* ssd) : TestShell(ssd) {}
 	MOCK_METHOD(void, help, (), ());
 	MOCK_METHOD(std::string, readOutputFile, (), ());
+    MOCK_METHOD(std::string, generateRandomHexString, (), ());
 };

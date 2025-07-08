@@ -126,6 +126,57 @@ TEST_F(SSDTest, WriteFailWithOutOfAddressRange) {
     EXPECT_FALSE(isPass);
 }
 
+
+TEST_F(SSDTest, WriteInvalidData00) {
+
+    string invalidData = "0x1234567890000";
+    bool isPass = writecmd.run(VALID_TEST_ADDRESS, invalidData);
+    EXPECT_FALSE(isPass);
+}
+
+TEST_F(SSDTest, WriteInvalidData01) {
+
+    string invalidData = "0x1234";
+    bool isPass = writecmd.run(VALID_TEST_ADDRESS, invalidData);
+    EXPECT_FALSE(isPass);
+}
+
+TEST_F(SSDTest, WriteInvalidData02) {
+
+    string invalidData = "12345678";
+    bool isPass = writecmd.run(VALID_TEST_ADDRESS, invalidData);
+    EXPECT_FALSE(isPass);
+}
+
+TEST_F(SSDTest, WriteInvalidData03) {
+
+    string invalidData = "0x1234ABzE";
+    bool isPass = writecmd.run(VALID_TEST_ADDRESS, invalidData);
+    EXPECT_FALSE(isPass);
+}
+
+TEST_F(SSDTest, WriteInvalidData04) {
+
+    string invalidData = "0xA5CCH012";
+    bool isPass = writecmd.run(VALID_TEST_ADDRESS, invalidData);
+    EXPECT_FALSE(isPass);
+}
+
+TEST_F(SSDTest, WriteReadVerify00) {
+
+    bool isPass = readcmd.run(VALID_TEST_ADDRESS);
+
+    EXPECT_EQ(true, isPass);
+    EXPECT_TRUE(checkOutputFile(INITIAL_HEX_DATA));
+
+    isPass = writecmd.run(VALID_TEST_ADDRESS, VALID_HEX_DATA);
+    EXPECT_TRUE(isPass);
+
+    isPass = readcmd.run(VALID_TEST_ADDRESS);
+    EXPECT_EQ(true, isPass);
+    EXPECT_TRUE(checkOutputFile(VALID_HEX_DATA));
+}
+
 #ifdef NDEBUG
 int main(int argc, char *argv[])
 {
