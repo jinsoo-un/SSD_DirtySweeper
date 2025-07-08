@@ -202,7 +202,7 @@ private:
     const string WRITE_SUCCESS_LOG = "[Write] Done";
 
     virtual std::string readOutputFile() {
-        std::ifstream file("nand_output.txt");
+        std::ifstream file("C:\\Users\\User\\source\\repos\\SSD-DirtySweeper\\SSD\\x64\\Release\\ssd_output.txt");
 
         if (!file.is_open()) throw std::exception();
 
