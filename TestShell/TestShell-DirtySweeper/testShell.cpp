@@ -125,7 +125,7 @@ public:
             return;
         }
 
-        if (cmd == "2_PartialLBAWrite" || cmd == "2_") {
+        if (cmd == "2_" || cmd == "2_PartialLBAWrite") {
             this->partialLBAWrite();
             return;
         }
@@ -286,8 +286,8 @@ public:
 
     void partialLBAWrite() {
         const string testValue = "0x12345678";
-
-        for (int count = 1; count <= 30; count++) {
+        const int repeatCnt = 30;
+        for (int count = 1; count <= repeatCnt; count++) {
             ssd->write(4, testValue);
             ssd->write(0, testValue);
             ssd->write(3, testValue);
