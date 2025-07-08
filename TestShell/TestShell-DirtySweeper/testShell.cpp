@@ -1,4 +1,4 @@
-#include <iostream>
+ï»¿#include <iostream>
 #include <string>
 #include <stdexcept>
 #include <fstream>
@@ -31,28 +31,37 @@ public:
 
 class SsdHelpler : public SSD {
 public:
-    void read(int lba)  override {}
-    void write(int lba, string data) override {
-        // 1. set cli
-        string result = "";
-        string filePath = "./ssd.exe";
-        string writeCmd = "W";
-        string commandLine = writeCmd + std::to_string(lba) + data;
+    string buildCommandLine(string rw, int lba, string data = "") {
+        string cmdLine = rw + " " + std::to_string(lba);
+        if (rw == "W") cmdLine = cmdLine + " " + data;
+        return cmdLine;
+    }
 
-        // 2. ssd.exe ½ÇÇà
-        HINSTANCE executeResult = ShellExecuteA( // ShellExecuteA´Â ANSI ¹®ÀÚ¿­¿ë, ShellExecuteW´Â À¯´ÏÄÚµå¿ë
-            nullptr,                      // ºÎ¸ğ À©µµ¿ì ÇÚµé
-            "open",                       // ¼öÇàÇÒ ÀÛ¾÷ (¿¹: "open", "runas")
-            filePath.c_str(),             // ½ÇÇàÇÒ ÆÄÀÏ °æ·Î
-            commandLine.c_str(),           // ÀÎÀÚ ¹®ÀÚ¿­
-            nullptr,                      // ½ÃÀÛ µğ·ºÅä¸®
-            SW_SHOWNORMAL                 // À©µµ¿ì º¸¿©ÁÖ±â »óÅÂ
+    void executeCommandLine(string& commandLine) {
+        const string filePath = "./ssd.exe";
+        HINSTANCE executeResult = ShellExecuteA( // ShellExecuteAëŠ” ANSI ë¬¸ìì—´ìš©, ShellExecuteWëŠ” ìœ ë‹ˆì½”ë“œìš©
+            nullptr,                      // ë¶€ëª¨ ìœˆë„ìš° í•¸ë“¤
+            "open",                       // ìˆ˜í–‰í•  ì‘ì—… (ì˜ˆ: "open", "runas")
+            filePath.c_str(),             // ì‹¤í–‰í•  íŒŒì¼ ê²½ë¡œ
+            commandLine.c_str(),           // ì¸ì ë¬¸ìì—´
+            nullptr,                      // ì‹œì‘ ë””ë ‰í† ë¦¬
+            SW_SHOWNORMAL                 // ìœˆë„ìš° ë³´ì—¬ì£¼ê¸° ìƒíƒœ
         );
 
         if (reinterpret_cast<long long>(executeResult) <= 32) {
             std::cerr << "Failed to launch: " << filePath << ". Error code: " << reinterpret_cast<long long>(executeResult) << std::endl;
             throw std::exception();
         }
+    }
+
+    void read(int lba)  override {
+        string commandLine = buildCommandLine("R", lba);
+        executeCommandLine(commandLine);
+    }
+
+    void write(int lba, string data) override {
+        string commandLine = buildCommandLine("W", lba, data);
+        executeCommandLine(commandLine);
     }
     string getResult() override {
         return "";
@@ -143,7 +152,7 @@ public:
             return;
         }
 
-        executeCommand(cmd, args);  // commandExecutor´Â Ç×»ó Á¸ÀçÇÔ
+        executeCommand(cmd, args);  // commandExecutorëŠ” í•­ìƒ ì¡´ì¬í•¨
     }
 
     void help() {
