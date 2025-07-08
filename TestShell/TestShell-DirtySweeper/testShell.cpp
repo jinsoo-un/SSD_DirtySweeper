@@ -125,11 +125,25 @@ public:
         ssd->write(lba, data);
         string result = ssd->getResult();
         if (result == "") {
-            return "[Write] Done";
+            return "[Write] Done\n";
         }
-        return "[Write] ERROR";
+        return "[Write] ERROR\n";
     }
 
+    string fullWrite(string data)
+    {
+        string totalResult = "";
+        for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; lba++) {
+            ssd->write(lba, data);
+            string currentResult = ssd->getResult();
+            if (currentResult == "ERROR") {
+                totalResult += "[Write] ERROR\n";
+                break;
+            }
+            totalResult += "[Write] Done\n";
+        }
+        return totalResult;
+    }
 private:
     CommandExecutor* commandExecutor;
     SSD* ssd;
