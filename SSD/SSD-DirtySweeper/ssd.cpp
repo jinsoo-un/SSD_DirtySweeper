@@ -30,36 +30,37 @@ public:
 		argCount = cnt;
 	}
 
-	int readData(int address) {
+	bool readData(int address) {
+        ifstream ssd_file("ssd_nand.txt");
+		ofstream output_file("ssd_output.txt");
+        
+		if (!ssd_file.is_open() || !output_file.is_open()) {
+			cout << "Error opening file." << endl;
+			
+			throw std::exception();
 
-        //generate init ssd_nand file
-        if ((address < 0) || (address >= 100)){
-            //Error
-            string msg{ "ERROR" };
-            ofstream fout2("ssd_output.txt");
-            fout2 << msg;
-            fout2.close();
-            return -1;
-        }
+			return false;
+		}
 
+		if (true == isAddressOutOfRange(address))
+		{
+			createErrorOutputFile();
+			return false;
+		}
 
-        ifstream fin("ssd_nand.txt");
-        ofstream fout2("ssd_output.txt");
-            
-        char line[20];
+		string line;
+        for (int addr = 0; addr < MAX_ADDRESS; addr++) {
+			getline(ssd_file, line);		
 
-        for (int i = 0; i < 100; i++) {
-            fin.getline(line, 20);
-
-            if (i == address)
+            if (addr == address)
             {
-                fout2 << line;
+				output_file << line;
             }                
         }
 
-        fin.close();
-        fout2.close();
-        return 0;
+		ssd_file.close();
+		output_file.close();
+        return true;
       
 	}
 
