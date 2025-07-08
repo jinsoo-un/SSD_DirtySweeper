@@ -13,7 +13,7 @@ using namespace std;
 
 class SSD {
 public:
-	virtual void read(int lba) = 0;
+    virtual void read(int lba) = 0;
     virtual void write(int lba, string data) = 0;
     virtual string getResult() = 0;
 };
@@ -59,9 +59,9 @@ public:
 
 class SSDMock : public SSD {
 public:
-	MOCK_METHOD(void, read, (int lba), (override));
-	MOCK_METHOD(void, write, (int, string), (override));
-	MOCK_METHOD(string, getResult, (), (override));
+    MOCK_METHOD(void, read, (int lba), (override));
+    MOCK_METHOD(void, write, (int, string), (override));
+    MOCK_METHOD(string, getResult, (), (override));
 };
 
 class TestShell {
@@ -106,10 +106,11 @@ public:
         //    return;
         //}
 
-        //if (cmd == "fullwrite") {
-        //    this->fullWrite();
-        //    return;
-        //}
+        if (cmd == "fullwrite") {
+            std::string data = args[0];
+            this->fullWrite(data);
+            return;
+        }
 
         //if (cmd == "testscript") {
         //    this->testScript();
@@ -173,16 +174,32 @@ public:
         ssd->write(lba, data);
         string result = ssd->getResult();
         if (result == "ERROR") {
-            return "[Write] ERROR";
+            return WRITE_FAIL_LOG;
         }
-        return "[Write] Done";
+        return WRITE_SUCCESS_LOG;
     }
 
+    string fullWrite(string data)
+    {
+        string totalResult = "";
+        for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; lba++) {
+            ssd->write(lba, data);
+            string currentResult = ssd->getResult();
+            if (currentResult == "ERROR") {
+                totalResult += WRITE_FAIL_LOG;
+                break;
+            }
+            totalResult += WRITE_SUCCESS_LOG + "\n";
+        }
+        return totalResult;
+    }
 private:
     SSD* ssd;
 
     const int LBA_START_ADDRESS = 0;
     const int LBA_END_ADDRESS = 99;
+    const string WRITE_FAIL_LOG = "[Write] ERROR";
+    const string WRITE_SUCCESS_LOG = "[Write] Done";
 
     virtual std::string readOutputFile() {
         std::ifstream file("nand_output.txt");
