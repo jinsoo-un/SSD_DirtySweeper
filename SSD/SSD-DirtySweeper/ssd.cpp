@@ -33,12 +33,13 @@ public:
 		ssdData.resize(MAX_ADDRESS, "0x00000000");
 	}
 
-	void commandParser(string command) {
+	bool parseCommand(string command) {
 		if (!isValidCommand(command)) {
 			updateOutputFile("ERROR");
-			return;
+			return false;
 		}
 		storeParams(command);
+		return true;
 	}
 
 	bool readData(int address) {
