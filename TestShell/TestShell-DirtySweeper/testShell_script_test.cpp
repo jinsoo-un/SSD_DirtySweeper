@@ -1,4 +1,4 @@
-#include "gmock/gmock.h"
+﻿#include "gmock/gmock.h"
 #include "testShell.cpp"
 using namespace testing;
 
@@ -52,6 +52,37 @@ TEST_F(FullWriteReadTest, FullWriteAndReadCompareShouldPass) {
             .WillOnce(Return(expected));
     }
 
+    shell.processInput("1_");
+}
+
+TEST_F(FullWriteReadTest, FullWriteAndReadCompareShouldFail) {
+    std::string evenData = EVEN_DATA;
+    std::string oddData = ODD_DATA;
+
+    for (int lbaIndex = START_LBA; lbaIndex <= END_LBA; ++lbaIndex) {
+        std::string data = (lbaIndex / 5 % 2 == 0) ? evenData : oddData;
+        EXPECT_CALL(ssd, write(lbaIndex, data)).Times(1);
+        EXPECT_CALL(ssd, read(lbaIndex)).Times(1);
+    }
+
+    Sequence seq;
+    for (int lbaIndex = START_LBA; lbaIndex <= END_LBA; ++lbaIndex) {
+        std::string expected;
+
+        if (lbaIndex == 13) {
+            // 일부러 실패하도록 의도적으로 잘못된 값
+            expected = "0xWRONGDATA";
+        }
+        else {
+            expected = (lbaIndex / 5 % 2 == 0) ? "0xAAAABBBB" : "0xCCCCDDDD";
+        }
+
+        EXPECT_CALL(shell, readOutputFile())
+            .InSequence(seq)
+            .WillOnce(Return(expected));
+    }
+
+    // 실제 테스트
     shell.processInput("1_");
 }
 
