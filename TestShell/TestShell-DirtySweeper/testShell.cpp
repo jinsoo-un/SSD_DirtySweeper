@@ -34,6 +34,9 @@ class TestShell {
 public:
     TestShell() : commandExecutor(nullptr) {}
     TestShell(SSD* ssd) : ssd{ ssd } {}
+    TestShell(CommandExecutor* executor, SSD* ssd = nullptr)
+        : commandExecutor(executor), ssd(ssd) {
+    }
 
     void setExecutor(CommandExecutor* executor) {
         commandExecutor = executor;
@@ -104,12 +107,7 @@ public:
             return;
         }
 
-        if (commandExecutor == nullptr) {
-            std::cout << "NO EXECUTOR SET\n";
-            return;
-        }
-
-        executeCommand(cmd, args);
+        executeCommand(cmd, args);  // commandExecutor는 항상 존재함
     }
 
     void help() {

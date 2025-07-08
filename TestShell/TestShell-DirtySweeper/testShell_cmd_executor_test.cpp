@@ -57,6 +57,5 @@ TEST_F(TestShellFixture, ValidCommandTestScript) {
 }
 
 TEST_F(TestShellFixture, InvalidCommandShouldPrintInvalid) {
-    // 콘솔 출력 테스트는 필요 시 capture 하는 방식으로 별도 처리 가능
     shell.processInput("invalid_cmd");
 }
