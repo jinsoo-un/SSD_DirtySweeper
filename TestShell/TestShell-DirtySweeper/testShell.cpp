@@ -170,6 +170,7 @@ public:
             printSuccessReadResult(result, lba);
         }
     }
+
     string write(int lba, string data)
     {
         ssd->write(lba, data);
@@ -194,9 +195,12 @@ public:
         }
         return totalResult;
     }
+
+    void writeReadAging() {
+    }
+
 private:
     SSD* ssd;
-
     const int LBA_START_ADDRESS = 0;
     const int LBA_END_ADDRESS = 99;
     const string WRITE_FAIL_LOG = "[Write] ERROR";
