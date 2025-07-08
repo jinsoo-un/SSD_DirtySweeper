@@ -136,24 +136,32 @@ private:
 	}
 };
 
+class EraseCommand : public SSDCommand {
+public:
+	bool run(int addr = 0, string val = "0x00000000") override {
+		erase();
+		return true;
+	}
+private:
+	void erase() {
+		ofstream file(FileNames::DATA_FILE);
+		if (!file.is_open()) {
+			cout << "Error opening file for writing." << endl;
+			return;
+		}
+		for (int i = MIN_ADDRESS; i < MAX_ADDRESS; ++i) {
+			file << i << "\t" << "0x00000000" << endl;
+		}
+
+		file.close();
+
+		ssdData.clear();
+		ssdData.resize(MAX_ADDRESS, "0x00000000");
+	}
+};
+
 class SSD {
 public:
-	void erase() {
-        ofstream file(FileNames::DATA_FILE);
-        if (!file.is_open()) {
-	        cout << "Error opening file for writing." << endl;
-	        return;
-        }
-        for (int i = MIN_ADDRESS; i < MAX_ADDRESS; ++i) {
-	        file << i << "\t" << "0x00000000" << endl;
-        }
-
-        file.close();
-
-		//ssdData.clear();
-		//ssdData.resize(MAX_ADDRESS, "0x00000000");
-	}
-
 	bool parseCommand(string command) {
         if (!isValidCommand(command)) {
 	        updateOutputFile("ERROR");

@@ -9,6 +9,7 @@ public:
     SSD ssd;
     ReadCommand readCmd;
     WriteCommand writeCmd;
+    EraseCommand eraseCmd;
     string VALID_HEX_DATA = "0x1298CDEF";
     string INVALID_HEX_DATA = "0xABCDEFGH";
     string INITIAL_HEX_DATA = "0x00000000";
@@ -16,7 +17,7 @@ public:
     static const int INVALID_TEST_ADDRESS = 100;
 
     void SetUp() override {
-        ssd.erase();
+        eraseCmd.run();
     }
 
     bool checkOutputFile(string expected) {
