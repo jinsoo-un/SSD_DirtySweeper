@@ -9,13 +9,13 @@ public:
     SSD ssd;
     string VALID_HEX_DATA = "0x1298CDEF";
     string INVALID_HEX_DATA = "0xABCDEFGH";
-	string INITIAL_HEX_DATA = "0x00000000";
+    string INITIAL_HEX_DATA = "0x00000000";
     static const int VALID_TEST_ADDRESS = 0;
     static const int INVALID_TEST_ADDRESS = 100;
 
     void SetUp() override {
         ssd.erase();
-	}
+    }
 
     bool checkOutputFile(string expected) {
         ifstream fin(FileNames::OUTPUT_FILE);
