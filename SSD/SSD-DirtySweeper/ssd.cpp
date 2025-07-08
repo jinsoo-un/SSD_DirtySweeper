@@ -64,18 +64,14 @@ public:
 	}
 
 	bool writeData(int address, string hexData) {
-		createErrorOutputFile();
-		if (isAddressOutOfRange(address)) return false; 
-		if (!readFromFile()) return false;
-		
+		if (isAddressOutOfRange(address)) { updateOutputFile("ERROR");  return false; }
+		if (!readFromFile()) { updateOutputFile("ERROR");  return false; }
+
 		ssdData[address] = hexData;
+		if (!writeFileFromData()) { updateOutputFile("ERROR");  return false; };
 
-		// Write data to ssd_nand.txt file
-		if (!writeFileFromData()) return false;
+		updateOutputFile("");
 
-		// Write ssd_output.txt file as null
-		createEmptyOutputFile();
-		
 		return true;
 	}
 
@@ -140,20 +136,16 @@ private:
 		return true;
 	}
 
-	void createEmptyOutputFile() {
-		ofstream file("ssd_output.txt", ios::trunc);
-		file.close();
-	}
-
-	void createErrorOutputFile() {
-		string msg{ "ERROR" };
-		ofstream fout2("ssd_output.txt");
-		fout2 << msg;
-		fout2.close();
+	void updateOutputFile(string msg) {
+		string OUTPUT_FILE = "ssd_output.txt";
+		ofstream fout(OUTPUT_FILE);
+		fout << msg;
+		fout.close();
 	}
 
 	static const int MIN_ADDRESS = 0;
 	static const int MAX_ADDRESS = 100;
+
 	vector<string> ssdData; // Simulated SSD data storage
 	
 
