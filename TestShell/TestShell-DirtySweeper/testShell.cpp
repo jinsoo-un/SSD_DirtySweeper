@@ -125,6 +125,11 @@ public:
             return;
         }
 
+        if (cmd == "3_" || cmd == "3_WriteReadAging") {
+            writeReadAging();
+            return;
+        }
+
         std::cout << "INVALID COMMAND\n";
     }
 
@@ -207,19 +212,22 @@ public:
         return totalResult;
     }
 
-    void fullWriteAndReadCompare() {
+    std::string getWriteDataInFullWriteAndReadCompareScript(int lba){
         std::string evenData = "0xAAAABBBB";
         std::string oddData = "0xCCCCDDDD";
+        return (lba / 5 % 2 == 0) ? evenData : oddData;
+    }
 
-        for (int i = 0; i <= 99; ++i) {
-            std::string writeData = (i / 5 % 2 == 0) ? evenData : oddData;
+    void fullWriteAndReadCompare() {
+        for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; ++lba) {
+            std::string writeData = getWriteDataInFullWriteAndReadCompareScript(lba);
 
-            ssd->write(i, writeData);
-            ssd->read(i);
+            ssd->write(lba, writeData);
+            ssd->read(lba);
             std::string readData = readOutputFile();
 
             if (readData != writeData) {
-                std::cout << "[Mismatch] LBA " << i << " Expected: " << writeData << " Got: " << readData << "\n";
+                std::cout << "[Mismatch] LBA " << lba << " Expected: " << writeData << " Got: " << readData << "\n";
             }
         }
     }
@@ -309,7 +317,7 @@ private:
 
     bool isValidCommand(const std::string& cmd) const {
         static const std::unordered_set<std::string> valid = {
-            "read", "write", "exit", "help", "fullread", "fullwrite", "testscript", "1_", "1_FullWriteAndReadCompare"
+			"read", "write", "exit", "help", "fullread", "fullwrite", "testscript", "1_", "1_FullWriteAndReadCompare", "3_", "3_WriteReadAging"
         };
         return valid.count(cmd) > 0;
     }
