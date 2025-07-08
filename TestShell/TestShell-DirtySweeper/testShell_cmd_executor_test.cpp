@@ -3,7 +3,7 @@
 
 class MockCommandExecutor : public CommandExecutor {
 public:
-    MOCK_METHOD(std::string, read, (), (override));
+    MOCK_METHOD(std::string, read, (int lba), (override));
     MOCK_METHOD(std::string, write, (), (override));
     MOCK_METHOD(std::string, exit, (), (override));
     MOCK_METHOD(std::string, help, (), (override));
@@ -21,56 +21,58 @@ protected:
     TestShell shell;
 };
 
-TEST_F(TestShellFixture, ValidCommand_Read) {
-    EXPECT_CALL(mock, read()).WillOnce(::testing::Return("READ EXECUTED"));
+TEST_F(TestShellFixture, ValidCommandRead) {
+    
+    int lba = 0;
+    EXPECT_CALL(mock, read(lba)).WillOnce(::testing::Return("READ EXECUTED"));
 
-    std::string result = shell.executeCommand("read");
+    std::string result = shell.processInput("read 0");
     EXPECT_EQ(result, "READ EXECUTED");
 }
 
 TEST_F(TestShellFixture, ValidCommand_Write) {
     EXPECT_CALL(mock, write()).WillOnce(::testing::Return("WRITE EXECUTED"));
 
-    std::string result = shell.executeCommand("write");
+    std::string result = shell.processInput("write");
     EXPECT_EQ(result, "WRITE EXECUTED");
 }
 
 TEST_F(TestShellFixture, ValidCommand_Exit) {
     EXPECT_CALL(mock, exit()).WillOnce(::testing::Return("EXIT EXECUTED"));
 
-    std::string result = shell.executeCommand("exit");
+    std::string result = shell.processInput("exit");
     EXPECT_EQ(result, "EXIT EXECUTED");
 }
 
 TEST_F(TestShellFixture, ValidCommand_Help) {
     EXPECT_CALL(mock, help()).WillOnce(::testing::Return("HELP EXECUTED"));
 
-    std::string result = shell.executeCommand("help");
+    std::string result = shell.processInput("help");
     EXPECT_EQ(result, "HELP EXECUTED");
 }
 
 TEST_F(TestShellFixture, ValidCommand_FullRead) {
     EXPECT_CALL(mock, fullRead()).WillOnce(::testing::Return("FULL READ EXECUTED"));
 
-    std::string result = shell.executeCommand("fullread");
+    std::string result = shell.processInput("fullread");
     EXPECT_EQ(result, "FULL READ EXECUTED");
 }
 
 TEST_F(TestShellFixture, ValidCommand_FullWrite) {
     EXPECT_CALL(mock, fullWrite()).WillOnce(::testing::Return("FULL WRITE EXECUTED"));
 
-    std::string result = shell.executeCommand("fullwrite");
+    std::string result = shell.processInput("fullwrite");
     EXPECT_EQ(result, "FULL WRITE EXECUTED");
 }
 
 TEST_F(TestShellFixture, ValidCommand_TestScript) {
     EXPECT_CALL(mock, testScript()).WillOnce(::testing::Return("TEST SCRIPT EXECUTED"));
 
-    std::string result = shell.executeCommand("testscript");
+    std::string result = shell.processInput("testscript");
     EXPECT_EQ(result, "TEST SCRIPT EXECUTED");
 }
 
 TEST_F(TestShellFixture, InvalidCommand_ShouldReturnInvalid) {
-    std::string result = shell.executeCommand("invalid_cmd");
+    std::string result = shell.processInput("invalid_cmd");
     EXPECT_EQ(result, "INVALID COMMAND");
 }

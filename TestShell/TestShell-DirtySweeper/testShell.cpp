@@ -4,13 +4,15 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <vector>
+#include <unordered_set>
 #include "gmock/gmock.h"
 
 using namespace std;
 
 class CommandExecutor {
 public:
-    virtual std::string read() = 0;
+    virtual std::string read(int lba) = 0;
     virtual std::string write() = 0;
     virtual std::string exit() = 0;
     virtual std::string help() = 0;
@@ -38,12 +40,8 @@ public:
         commandExecutor = executor;
     }
 
-    std::string executeCommand(const std::string& cmd) {
-        if (commandExecutor == nullptr) {
-            return "NO EXECUTOR SET";
-        }
-
-        if (cmd == "read") return commandExecutor->read();
+    std::string executeCommand(const std::string& cmd, std::vector<std::string> args) {
+        if (cmd == "read") return commandExecutor->read(0);
         if (cmd == "write") return commandExecutor->write();
         if (cmd == "exit") return commandExecutor->exit();
         if (cmd == "help") return commandExecutor->help();
@@ -51,6 +49,19 @@ public:
         if (cmd == "fullwrite") return commandExecutor->fullWrite();
         if (cmd == "testscript") return commandExecutor->testScript();
         return "INVALID COMMAND";
+    }
+
+    std::string processInput(const std::string& input) {
+        auto tokens = tokenize(input);
+        if (tokens.empty()) return "INVALID COMMAND";
+
+        const std::string& cmd = tokens[0];
+        std::vector<std::string> args(tokens.begin() + 1, tokens.end());
+
+        if (!isValidCommand(cmd)) return "INVALID COMMAND";
+        if (commandExecutor == nullptr) return "NO EXECUTOR SET";
+
+		return executeCommand(cmd, args);
     }
 
     void help() {
@@ -96,6 +107,23 @@ public:
 private:
     CommandExecutor* commandExecutor;
 	SSD* ssd;
+
+    std::vector<std::string> tokenize(const std::string& input) {
+        std::vector<std::string> tokens;
+        std::istringstream iss(input);
+        std::string token;
+        while (iss >> token) {
+            tokens.push_back(token);
+        }
+        return tokens;
+    }
+
+    bool isValidCommand(const std::string& cmd) const {
+        static const std::unordered_set<std::string> valid = {
+            "read", "write", "exit", "help", "fullread", "fullwrite", "testscript"
+        };
+        return valid.count(cmd) > 0;
+    }
 };
 
 class MockTestShell : public TestShell {
