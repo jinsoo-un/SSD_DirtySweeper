@@ -160,11 +160,9 @@ TEST(PartialLBAWrite, PassCase) {
         .Times(5 * 30)
         .WillRepeatedly(Return(DATA));
 
-
     testing::internal::CaptureStdout();
     sut.partialLBAWrite();
     std::string output = testing::internal::GetCapturedStdout();
-    cout << output;
     EXPECT_THAT(output, ::testing::HasSubstr("PASS"));
 }
 
@@ -188,10 +186,8 @@ TEST(PartialLBAWrite, FailCase) {
         .WillOnce(Return(DATA))
         .WillOnce(Return(MISMATCHED_DATA));
 
-
     testing::internal::CaptureStdout();
     sut.partialLBAWrite();
     std::string output = testing::internal::GetCapturedStdout();
-    cout << output;
     EXPECT_THAT(output, ::testing::HasSubstr("FAIL\n"));
 }
