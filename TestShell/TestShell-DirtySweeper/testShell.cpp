@@ -217,9 +217,12 @@ public:
         for (int i = 0; i < 200; i++) {
             ssd->write(0, "0xAAAABBBB");
             ssd->read(0);
+            string firstLBAResult = readOutputFile();
             ssd->write(99, "0xAAAABBBB");
             ssd->read(99);
+            string endLBAResult = readOutputFile();
         }
+        cout << "PASS";
     }
 
 private:

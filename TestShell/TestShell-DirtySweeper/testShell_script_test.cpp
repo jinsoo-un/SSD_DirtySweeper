@@ -8,7 +8,7 @@ TEST(ScriptTest, TC1) {
 
 TEST(WriteReadAging, CallTest) {
     testing::NiceMock<SSDMock> ssdMock;
-    TestShell sut(&ssdMock);
+    MockTestShell sut(&ssdMock);
     
     const string actual = "[Write] Done";
     const string DATA = "0xAAAABBBB";
@@ -21,6 +21,9 @@ TEST(WriteReadAging, CallTest) {
         .Times(200);
     EXPECT_CALL(ssdMock, read(99))
         .Times(200);
+
+    EXPECT_CALL(sut, readOutputFile())
+        .WillRepeatedly(Return("0xAAAABBBB"));
 
     sut.writeReadAging();
 }
