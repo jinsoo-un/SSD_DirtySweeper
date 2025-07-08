@@ -120,6 +120,11 @@ public:
             return;
         }
 
+        if (cmd == "3_WriteReadAging" || cmd == "3_") {
+            this->writeReadAging();
+            return;
+        }
+
         //if (cmd == "testscript") {
         //    this->testScript();
         //    return;
@@ -226,11 +231,11 @@ public:
             string endLBAResult = readOutputFile();
 
             if (firstLBAResult != endLBAResult) {
-                cout << "FAIL";
+                cout << "FAIL" << "\n";
                 return;
             }
         }
-        cout << "PASS";
+        cout << "PASS" << "\n";
     }
 
     virtual std::string generateRandomHexString() {
@@ -266,7 +271,7 @@ private:
     const string WRITE_SUCCESS_MESSAGE = "[Write] Done";
 
     virtual std::string readOutputFile() {
-        std::ifstream file("C:\\Users\\User\\source\\repos\\SSD-DirtySweeper\\SSD\\x64\\Release\\ssd_output.txt");
+        std::ifstream file("..\\..\\SSD\\x64\\Release\\ssd_output.txt");
 
         if (!file.is_open()) throw std::exception();
 
@@ -293,6 +298,7 @@ private:
     bool isValidCommand(const std::string& cmd) const {
         static const std::unordered_set<std::string> valid = {
             "read", "write", "exit", "help", "fullread", "fullwrite", "testscript"
+            , "3_WriteReadAging", "3_"
         };
         return valid.count(cmd) > 0;
     }
