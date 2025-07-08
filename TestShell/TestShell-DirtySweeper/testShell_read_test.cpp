@@ -49,3 +49,34 @@ TEST(ReadTest, ReadFailTest) {
 	testShell.read(11);
 	EXPECT_EQ(testShell.readOutputFile(), "ERROR");
 }
+
+TEST(FullReadTest, TestIfReadCalled100Times) {
+	NiceMock<SSDMock> ssdMock;
+	MockTestShell testShell{ &ssdMock };
+
+	const int LBA_COUNT = 100;
+
+	EXPECT_CALL(ssdMock, read(_))
+		.Times(LBA_COUNT);
+
+	EXPECT_CALL(testShell, readOutputFile())
+		.WillRepeatedly(Return("0xAAAABBBB"));
+
+	testShell.fullRead();
+}
+
+TEST(FullReadTest, FulLReadFail) {
+	NiceMock<SSDMock> ssdMock;
+	MockTestShell testShell{ &ssdMock };
+
+	EXPECT_CALL(ssdMock, read(_))
+		.Times(4);
+
+	EXPECT_CALL(testShell, readOutputFile())
+		.WillOnce(Return("0xAAAABBBB"))
+		.WillOnce(Return("0xAAAABBBB"))
+		.WillOnce(Return("0xAAAABBBB"))
+		.WillRepeatedly(Return("ERROR"));
+
+	testShell.fullRead();
+}
