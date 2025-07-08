@@ -22,11 +22,16 @@ public:
 class SSD {
 public:
 	virtual void read(int lba) = 0;
+    virtual void write(int lba, string data) = 0;
+    virtual string getResult() = 0;
+
 };
 
 class SSDMock : public SSD {
 public:
 	MOCK_METHOD(void, read, (int lba), (override));
+	MOCK_METHOD(void, write, (int, string), (override));
+	MOCK_METHOD(string, getResult, (), (override));
 };
 
 class TestShell {
@@ -76,7 +81,15 @@ public:
             std::cout << "[Read] LBA " << lba << " : " << result << "\n";
         }
     }
-
+    string write(int lba, string data)
+    {
+        ssd->write(lba, data);
+        string result = ssd->getResult();
+        if (result == "ERROR") {
+            return "[Write] ERROR";
+        }
+        return "[Write] Done";
+    }
     virtual std::string readOutputFile() {
         std::ifstream file("nand_output.txt");
 
