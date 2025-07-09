@@ -9,6 +9,8 @@ using std::string;
 using std::stringstream;
 using std::vector;
 
+const int MAX_BUFFER_SIZE = 5;
+
 namespace BufferFileNames {
     const string DIR_NAME = "./buffer";
     const string EMPTY_FILE_NAME = "_empty";
@@ -53,14 +55,26 @@ public:
         if (words.size() >= 4) {
             output.op = words[1];
             output.addr = stoi(words[2]);
-            if (output.op == "W")
+            if (output.op == "W") {
                 output.value = words[3];
-            else if (output.op == "E")
+                output.size = 0;
+            }
+            else if (output.op == "E") {
+                output.value = "0x0";
                 output.size = stoi(words[3]);
+            }
             else
                 return false;
         }
         return true;
+    }
+
+    int getFilledCount() {
+        for (int i = 1; i <= MAX_BUFFER_SIZE; i++) {
+            if (isOneBufferEmpty(i))
+                return i - 1;
+        }
+        return MAX_BUFFER_SIZE;
     }
 
     bool isAllBufferEmpty() {
@@ -71,11 +85,61 @@ public:
         return true;
     }
 
-    // change the buffer "[index]_*" to "[index]_[data]"
-    void writeBuffer(int index, struct params input) {
-        string data = paramToBufferName(input);
+    bool isAllBufferFull() {
+        for (int i = 1; i <= 5; i++) {
+            if (isOneBufferEmpty(i))
+                return false;
+        }
+        return true;
+    }
+
+    bool isOneBufferEmpty(int index) {
+        string targetBuffer = readBuffer(index);
+        string emptyBuffer = std::to_string(index) + EMPTY_FILE_NAME;
+        if (targetBuffer != emptyBuffer)
+            return false;
+        return true;
+    }
+
+    void eraseBuffer(int index) {
         string targetBuffer = DIR_NAME + "/" + readBuffer(index);
-        string newBuffer = DIR_NAME + "/" + std::to_string(index) + "_" + data;
+        string newBuffer = DIR_NAME + "/" + std::to_string(index) + EMPTY_FILE_NAME;
+
+        vector<string> suffixes;
+
+        std::filesystem::rename(targetBuffer, newBuffer);
+
+        // store suffixes
+        for (int i = index + 1; i <= MAX_BUFFER_SIZE; i++) {
+            string filename = readBuffer(i);
+            size_t pos = filename.find('_');
+            string result;
+            if (pos != string::npos) {
+                result = filename.substr(pos + 1);
+            }
+            suffixes.push_back(result);
+        }
+
+        // rename the buffers after the index
+        for (int i = index; i <= MAX_BUFFER_SIZE - 1; i++) {
+            targetBuffer = DIR_NAME + "/" + readBuffer(i);
+            newBuffer = DIR_NAME + "/" + std::to_string(i) + "_" + suffixes[i - index];
+            std::filesystem::rename(targetBuffer, newBuffer);
+        }
+
+        targetBuffer = DIR_NAME + "/" + readBuffer(MAX_BUFFER_SIZE);
+        newBuffer = DIR_NAME + "/" + std::to_string(MAX_BUFFER_SIZE) + EMPTY_FILE_NAME;
+        std::filesystem::rename(targetBuffer, newBuffer);
+    }
+
+    void writeBuffer(struct params input) {
+        string data = paramToBufferName(input);
+        int index = getFilledCount();
+        if (index >= 5)
+            return;
+
+        string targetBuffer = DIR_NAME + "/" + readBuffer(index + 1);
+        string newBuffer = DIR_NAME + "/" + std::to_string(index + 1) + "_" + data;
         std::filesystem::rename(targetBuffer, newBuffer);
     }
 
@@ -88,14 +152,6 @@ private:
             result = input.op + "_" + std::to_string(input.addr) + "_" + std::to_string(input.size);
 
         return result;
-    }
-
-    bool isOneBufferEmpty(int index) {
-        string targetBuffer = readBuffer(index);
-        string emptyBuffer = std::to_string(index) + EMPTY_FILE_NAME;
-        if (targetBuffer != emptyBuffer)
-            return false;
-        return true;
     }
 
     // return the buffer "[index]_*"
