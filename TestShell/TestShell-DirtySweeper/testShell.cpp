@@ -363,16 +363,15 @@ public:
 
     void fullWrite(string data) {
 		logger.print("testShell.fullWrite()", "full write command called");
-
         for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; lba++) {
             ssd->write(lba, data);
             string currentResult = readOutputFile();
             if (currentResult == "ERROR") {
-                cout << "[Full Write] ERROR\n";
+                testShellStringManager.printErrorFullWriteResult();
                 return;
             }
         }
-        cout << "[Full Write] Done\n";;
+        testShellStringManager.printSuccessFullWriteResult();
     }
 
     std::string getWriteDataInFullWriteAndReadCompareScript(int lba){
