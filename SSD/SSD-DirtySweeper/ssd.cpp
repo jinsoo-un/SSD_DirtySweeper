@@ -143,7 +143,7 @@ public:
 	}
 private:
 	bool erase(int address, string val, int size) {
-		if (address + size >= MAX_ADDRESS) {
+		if (address + size > MAX_ADDRESS) {
 			updateOutputFile("ERROR");
 			return false;
 		}
