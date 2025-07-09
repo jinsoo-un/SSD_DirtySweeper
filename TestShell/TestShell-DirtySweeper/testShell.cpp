@@ -22,10 +22,10 @@ using namespace std;
 
 class Logger {
 public:
-    void print(const std::string& sender, const std::string& message) {
+    void print(const string& sender, const string& message) {
         rotateIfNeeded();
 
-        std::ofstream logFile(LOG_FILE_NAME, std::ios::app);
+        ofstream logFile(LOG_FILE_NAME, ios::app);
         if (!logFile.is_open()) return;
 
         logFile << "[" << currentDateTime() << "] ";
@@ -33,32 +33,32 @@ public:
     }
 
 private:
-    const std::string LOG_FILE_NAME = "latest.log";
+    const string LOG_FILE_NAME = "latest.log";
     const size_t MAX_LOG_FILE_SIZE = 10 * 1024; // 10KB
 
-    std::string currentDateTime() {
-        std::time_t now = std::time(nullptr);
-        std::tm tmStruct;
+    string currentDateTime() {
+        time_t now = time(nullptr);
+        tm tmStruct;
         localtime_s(&tmStruct, &now);
         char buffer[20];
-        std::strftime(buffer, sizeof(buffer), "%y.%m.%d %H:%M", &tmStruct);
+        strftime(buffer, sizeof(buffer), "%y.%m.%d %H:%M", &tmStruct);
         return buffer;
     }
 
-    std::string formatForFileName(std::tm tmStruct) {
-        std::ostringstream oss;
+    string formatForFileName(tm tmStruct) {
+        ostringstream oss;
         oss << "until_"
-            << std::put_time(&tmStruct, "%y%m%d_%Hh_%Mm_%Ss")
+            << put_time(&tmStruct, "%y%m%d_%Hh_%Mm_%Ss")
             << ".log";
         return oss.str();
     }
 
-    std::string padRight(const std::string& str, size_t width) {
+    string padRight(const string& str, size_t width) {
         if (str.length() >= width) return str;
-        return str + std::string(width - str.length(), ' ');
+        return str + string(width - str.length(), ' ');
     }
 
-    size_t getFileSize(const std::string& path) {
+    size_t getFileSize(const string& path) {
         struct _stat st;
         if (_stat(path.c_str(), &st) != 0) return 0;
         return st.st_size;
@@ -69,18 +69,18 @@ private:
         if (size < MAX_LOG_FILE_SIZE) return;
 
         // rename latest.log to until_YYMMDD_HHh_MMm_SSs.log
-        std::time_t now = std::time(nullptr);
-        std::tm tmStruct;
+        time_t now = time(nullptr);
+        tm tmStruct;
         localtime_s(&tmStruct, &now);
-        std::string newFileName = formatForFileName(tmStruct);
+        string newFileName = formatForFileName(tmStruct);
 
-        std::rename(LOG_FILE_NAME.c_str(), newFileName.c_str());
+        rename(LOG_FILE_NAME.c_str(), newFileName.c_str());
 
         handleUntilLogFiles();
     }
 
     void handleUntilLogFiles() {
-        std::vector<std::string> untilLogs;
+        vector<string> untilLogs;
 
         _finddata_t fileinfo;
         intptr_t handle = _findfirst("until_*.log", &fileinfo);
@@ -94,7 +94,7 @@ private:
         if (untilLogs.size() < 2) return;
 
         // find oldest file
-        std::string oldest = untilLogs[0];
+        string oldest = untilLogs[0];
         time_t oldestTime = getLastWriteTime(oldest);
 
         for (const auto& f : untilLogs) {
@@ -106,11 +106,11 @@ private:
         }
 
         // rename .log to .zip
-        std::string zipName = oldest.substr(0, oldest.find_last_of('.')) + ".zip";
-        std::rename(oldest.c_str(), zipName.c_str());
+        string zipName = oldest.substr(0, oldest.find_last_of('.')) + ".zip";
+        rename(oldest.c_str(), zipName.c_str());
     }
 
-    time_t getLastWriteTime(const std::string& path) {
+    time_t getLastWriteTime(const string& path) {
         WIN32_FILE_ATTRIBUTE_DATA info;
         if (!GetFileAttributesExA(path.c_str(), GetFileExInfoStandard, &info)) return 0;
 
@@ -131,24 +131,43 @@ public:
 
 class SsdHelpler : public SSD {
 public:
+    void read(int lba)  override {
+        logger.print("SsdHelpler.read()", "Reading LBA: " + to_string(lba));
+        string commandLine = buildCommandLine("R", lba);
+        executeCommandLine(commandLine);
+    }
+
+    void write(int lba, string data) override {
+        logger.print("SsdHelpler.write()", "Writing to LBA: " + to_string(lba) + " with data: " + data);
+        string commandLine = buildCommandLine("W", lba, data);
+        executeCommandLine(commandLine);
+    }
+
+    void erase(unsigned int lba, unsigned size) override {
+        logger.print("SsdHelpler.erase()", "Erasing LBA: " + to_string(lba) + " with size: " + to_string(size));
+        string commandLine = buildCommandLine("E", lba, to_string(size));
+        executeCommandLine(commandLine);
+    }
+
+private:
     string buildCommandLine(string cmd, int lba, string data = "") {
-        string cmdLine = cmd + " " + std::to_string(lba);
+        string cmdLine = cmd + " " + to_string(lba);
         if (cmd == "W" || cmd == "E") cmdLine = cmdLine + " " + data;
         return cmdLine;
     }
 
-    void executeCommandLine(std::string commandLine) {
+    void executeCommandLine(string commandLine) {
 
         char modulePath[MAX_PATH];
         GetModuleFileNameA(NULL, modulePath, MAX_PATH);
 
-        std::string shellFullPath(modulePath);
+        string shellFullPath(modulePath);
         size_t lastSlash = shellFullPath.find_last_of("\\/");
-        std::string shellDir = (lastSlash != std::string::npos) ? shellFullPath.substr(0, lastSlash) : ".";
+        string shellDir = (lastSlash != string::npos) ? shellFullPath.substr(0, lastSlash) : ".";
 
         // ssd.exe 경로: shellDir 기준으로 상대 위치
-        std::string ssdRelativePath = shellDir + "\\..\\..\\..\\SSD\\x64\\Release\\ssd.exe";
-        std::string workingDirRelative = shellDir + "\\..\\..\\..\\SSD\\x64\\Release";
+        string ssdRelativePath = shellDir + "\\..\\..\\..\\SSD\\x64\\Release\\ssd.exe";
+        string workingDirRelative = shellDir + "\\..\\..\\..\\SSD\\x64\\Release";
 
         // 절대경로로 변환
         char absSsdPath[MAX_PATH];
@@ -157,7 +176,7 @@ public:
         char absWorkingDir[MAX_PATH];
         _fullpath(absWorkingDir, workingDirRelative.c_str(), MAX_PATH);
 
-        std::string fullCommand = "\"" + std::string(absSsdPath) + "\" " + commandLine;
+        string fullCommand = "\"" + string(absSsdPath) + "\" " + commandLine;
 
         STARTUPINFOA si = { sizeof(STARTUPINFOA) };
         PROCESS_INFORMATION pi;
@@ -173,7 +192,7 @@ public:
         );
 
         if (!success) {
-            std::cerr << "CreateProcess failed with error: " << GetLastError() << std::endl;
+            cerr << "CreateProcess failed with error: " << GetLastError() << endl;
             return;
         }
 
@@ -181,26 +200,7 @@ public:
         CloseHandle(pi.hProcess);
         CloseHandle(pi.hThread);
     }
-
-    void read(int lba)  override {
-		logger.print("SsdHelpler.read()", "Reading LBA: " + std::to_string(lba));
-        string commandLine = buildCommandLine("R", lba);
-        executeCommandLine(commandLine);
-    }
-
-    void write(int lba, string data) override {
-		logger.print("SsdHelpler.write()", "Writing to LBA: " + std::to_string(lba) + " with data: " + data);
-        string commandLine = buildCommandLine("W", lba, data);
-        executeCommandLine(commandLine);
-    }
-    void erase(unsigned int lba, unsigned size) override {
-		logger.print("SsdHelpler.erase()", "Erasing LBA: " + std::to_string(lba) + " with size: " + std::to_string(size));
-        string commandLine = buildCommandLine("E", lba, std::to_string(size));
-        executeCommandLine(commandLine);
-    }
-
-private:
-	Logger logger;
+    Logger logger;
 };
 
 class SSDMock : public SSD {
@@ -214,7 +214,7 @@ class TestShell {
 public:
     TestShell(SSD* ssd) : ssd{ ssd } {}
 
-    void executeCommand(const std::string& cmd, const std::vector<std::string>& args) {
+    void executeCommand(const string& cmd, const vector<string>& args) {
         if (cmd == "read") {
             int lba = stoi(args[0]);
             this->read(lba);
@@ -228,13 +228,13 @@ public:
 
         if (cmd == "write") {
             int lba = stoi(args[0]);
-            std::string data = args[1];
+            string data = args[1];
             this->write(lba, data);
             return;
         }
 
         if (cmd == "fullwrite") {
-            std::string data = args[0];
+            string data = args[0];
             this->fullWrite(data);
             return;
         }
@@ -265,7 +265,7 @@ public:
 
         if (cmd == "erase") {
             if (args.size() != 2) {
-                std::cout << "INVALID COMMAND\n";
+                cout << "INVALID COMMAND\n";
                 return;
             }
             int lba = stoi(args[0]);
@@ -276,7 +276,7 @@ public:
 
         if (cmd == "erase_range") {
             if (args.size() != 2) {
-                std::cout << "INVALID COMMAND\n";
+                cout << "INVALID COMMAND\n";
                 return;
             }
             int startLba = stoi(args[0]);
@@ -288,38 +288,38 @@ public:
             this->eraseAndWriteAging();
             return;
         }
-        std::cout << "INVALID COMMAND\n";
+        cout << "INVALID COMMAND\n";
     }
 
-    void processInput(const std::string& input) {
+    void processInput(const string& input) {
         auto tokens = tokenize(input);
         if (tokens.empty()) {
             return;
         }
 
-        const std::string& cmd = tokens[0];
-        std::vector<std::string> args(tokens.begin() + 1, tokens.end());
+        const string& cmd = tokens[0];
+        vector<string> args(tokens.begin() + 1, tokens.end());
 
         if (isValidCommand(cmd) && isArgumentSizeValid(cmd, args.size())) {
             executeCommand(cmd, args);
             return;
         }
 
-        std::cout << "INVALID COMMAND\n";
+        cout << "INVALID COMMAND\n";
     }
 
     void help() {
-		logger.print("testShell.help()", "help command called");
+        logger.print("testShell.help()", "help command called");
 
-        std::cout << "Developed by: Team Members - Sooeon Jin, Euncho Bae, Kwangwon Min, Hyeongseok Choi, Yunbae Kim, Seongkyoon Lee" << std::endl;
-        std::cout << "read (LBA)         : Read data from (LBA)." << std::endl;
-        std::cout << "write (LBA) (DATA) : Write (DATA) to (LBA)." << std::endl;
-        std::cout << "fullread           : Read data from all LBAs." << std::endl;
-        std::cout << "fullwrite (DATA)   : Write (DATA) to all LBAs" << std::endl;
-        std::cout << "testscript         : Execute the predefined test script. See documentation for details." << std::endl;
-        std::cout << "help               : Show usage instructions for all available commands." << std::endl;
-        std::cout << "exit               : Exit the program." << std::endl;
-        std::cout << "Note               : INVALID COMMAND will be shown if the input is unrecognized." << std::endl;
+        cout << "Developed by: Team Members - Sooeon Jin, Euncho Bae, Kwangwon Min, Hyeongseok Choi, Yunbae Kim, Seongkyoon Lee" << endl;
+        cout << "read (LBA)         : Read data from (LBA)." << endl;
+        cout << "write (LBA) (DATA) : Write (DATA) to (LBA)." << endl;
+        cout << "fullread           : Read data from all LBAs." << endl;
+        cout << "fullwrite (DATA)   : Write (DATA) to all LBAs" << endl;
+        cout << "testscript         : Execute the predefined test script. See documentation for details." << endl;
+        cout << "help               : Show usage instructions for all available commands." << endl;
+        cout << "exit               : Exit the program." << endl;
+        cout << "Note               : INVALID COMMAND will be shown if the input is unrecognized." << endl;
     }
 
     void read(int lba) {
@@ -330,7 +330,7 @@ public:
             return;
         }
         ssd->read(lba);
-        std::string result = readOutputFile();
+        string result = readOutputFile();
         if (result == "ERROR") testShellStringManager.printErrorReadResult();
         else testShellStringManager.printSuccessReadResult(result, lba);
     }
@@ -340,7 +340,7 @@ public:
 
         for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; lba++) {
             ssd->read(lba);
-            std::string result = readOutputFile();
+            string result = readOutputFile();
             if (result == "ERROR") {
                 testShellStringManager.printErrorReadResult();
                 break;
@@ -353,8 +353,7 @@ public:
     {
         logger.print("testShell.write()", "write command called");
         ssd->write(lba, data);
-        string result = readOutputFile();
-        if (result == "ERROR") {
+        if (isCmdExecuteError(readOutputFile())) {
             testShellStringManager.printErrorWriteResult();
             return;
         }
@@ -362,11 +361,10 @@ public:
     }
 
     void fullWrite(string data) {
-		logger.print("testShell.fullWrite()", "full write command called");
+        logger.print("testShell.fullWrite()", "full write command called");
         for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; lba++) {
             ssd->write(lba, data);
-            string currentResult = readOutputFile();
-            if (currentResult == "ERROR") {
+            if (isCmdExecuteError(readOutputFile())) {
                 testShellStringManager.printErrorFullWriteResult();
                 return;
             }
@@ -375,14 +373,14 @@ public:
     }
 
     void fullWriteAndReadCompare() {
-		logger.print("testShell.fullWriteAndReadCompare()", "full write and read compare command called");
+        logger.print("testShell.fullWriteAndReadCompare()", "full write and read compare command called");
 
         for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; ++lba) {
-            std::string writeData = testShellStringManager.getWriteDataInFullWriteAndReadCompareScript(lba);
+            string writeData = testShellStringManager.getWriteDataInFullWriteAndReadCompareScript(lba);
 
             ssd->write(lba, writeData);
             ssd->read(lba);
-            std::string readData = readOutputFile();
+            string readData = readOutputFile();
 
             if (readData != writeData) {
                 testShellStringManager.printWriteReadMismatch(lba, writeData, readData);
@@ -394,7 +392,7 @@ public:
     }
 
     void exit(void) {
-        std::cout << "Set Exit Comannd...\n";
+        cout << "Set Exit Comannd...\n";
         isExitCmd = true;
     }
     bool isExit() const {
@@ -402,7 +400,7 @@ public:
     }
 
     void writeReadAging() {
-		logger.print("testShell.writeReadAging()", "write read aging command called");
+        logger.print("testShell.writeReadAging()", "write read aging command called");
 
         for (int i = 0; i < WRITE_READ_ITERATION; i++) {
             string randomString = getRandomHexString();
@@ -417,12 +415,12 @@ public:
         testShellStringManager.printScriptPassResult();
     }
 
-    virtual std::string getRandomHexString() {
+    virtual string getRandomHexString() {
         return testShellStringManager.generateRandomHexString();
     }
 
     void partialLBAWrite() {
-		logger.print("testShell.partialLBAWrite()", "partial LBA write command called");
+        logger.print("testShell.partialLBAWrite()", "partial LBA write command called");
 
         const string testValue = "0x12345678";
         const int repeatCnt = 30;
@@ -457,42 +455,52 @@ public:
         testShellStringManager.printScriptPassResult();
     }
 
-    void eraseWithSize(unsigned int lba, unsigned int size){
-		logger.print("testShell.eraseWithSize()", "erase with size command called");
+    void eraseWithSize(unsigned int lba, unsigned int size) {
+        logger.print("testShell.eraseWithSize()", "erase with size command called");
 
-        if (!isValidEraseWithSizeArgument(lba,size)) {
-            printEraseResult("Erase", "ERROR");
+        if (!isValidEraseWithSizeArgument(lba, size)) {
+            testShellStringManager.printEraseErrorResult();
             return;
         }
+
         string result = erase(lba, size);
-        printEraseResult("Erase", result);
+        if (isCmdExecuteError(result)) {
+            testShellStringManager.printEraseErrorResult();
+            return;
+        }
+
+        testShellStringManager.printErasePassResult();
     }
 
-    void eraseWithRange(unsigned int startLba, unsigned int endLba){
-		logger.print("testShell.eraseWithRange()", "erase with range command called");
+    void eraseWithRange(unsigned int startLba, unsigned int endLba) {
+        logger.print("testShell.eraseWithRange()", "erase with range command called");
 
         if (!isValidLbaRange(startLba, endLba)) {
-            printEraseResult("Erase Range", "ERROR");
+            testShellStringManager.printEraseRangeErrorResult();
             return;
         }
         const unsigned int size = endLba - startLba + 1;
         string result = erase(startLba, size);
-        printEraseResult("Erase Range", result);
+        if (isCmdExecuteError(result)) {
+            testShellStringManager.printEraseRangeErrorResult();
+            return;
+        }
+        testShellStringManager.printEraseRangePassResult();
     }
 
     void eraseAndWriteAging(void) {
-		logger.print("testShell.eraseAndWriteAging()", "erase and write aging command called");
+        logger.print("testShell.eraseAndWriteAging()", "erase and write aging command called");
 
         const int eraseUnitSize = 2;
         const int maxAgingCnt = 30;
         ssd->erase(0, eraseUnitSize);
-        if (readOutputFile() == "ERROR") {
-            std::cout << "FAIL\n";
+        if (isCmdExecuteError(readOutputFile())) {
+            testShellStringManager.printScriptFailResult();
             return;
         }
 
         for (int loopCnt = 0; loopCnt < maxAgingCnt; loopCnt++) {
-            for (int lba = 2; lba < LBA_END_ADDRESS; lba += eraseUnitSize){
+            for (int lba = 2; lba < LBA_END_ADDRESS; lba += eraseUnitSize) {
                 vector<string> result;
                 ssd->write(lba, testShellStringManager.generateRandomHexString());
                 result.push_back(readOutputFile());
@@ -502,30 +510,18 @@ public:
                 result.push_back(readOutputFile());
 
                 for (auto data : result) {
-                    if (data == "ERROR") {
-                        std::cout << "FAIL\n";
+                    if (isCmdExecuteError(data)) {
+                        testShellStringManager.printScriptFailResult();
                         return;
                     }
                 }
             }
-            std::cout << "PASS\n";
         }
+        testShellStringManager.printScriptPassResult();
     }
+
     static const int WRITE_READ_ITERATION = 200;
-
 private:
-    SSD* ssd;
-	Logger logger;
-    TestShellStringManager testShellStringManager;
-
-    bool isExitCmd{ false };
-
-    const int LBA_START_ADDRESS = 0;
-    const int LBA_END_ADDRESS = 99;
-
-    const string ERASE_ERROR_MESSAGE = "[Erase] ERROR";
-    const string ERASE_SUCCESS_MESSAGE = "[Erase] Done";
-
     bool isArgumentSizeValid(const string& cmd, int argsSize) {
         if (cmd == "read") {
             if (argsSize != 1) return false;
@@ -542,56 +538,56 @@ private:
         return true;
     }
 
-    virtual std::string readOutputFile() {
+    virtual string readOutputFile() {
         // shell.exe의 절대 경로 구하기
         char modulePath[MAX_PATH];
         GetModuleFileNameA(NULL, modulePath, MAX_PATH);
 
-        std::string shellFullPath(modulePath);
+        string shellFullPath(modulePath);
         size_t lastSlash = shellFullPath.find_last_of("\\/");
-        std::string shellDir = (lastSlash != std::string::npos) ? shellFullPath.substr(0, lastSlash) : ".";
+        string shellDir = (lastSlash != string::npos) ? shellFullPath.substr(0, lastSlash) : ".";
 
         // ssd_output.txt의 상대 경로 → 절대 경로 변환
-        std::string relativePath = shellDir + "\\..\\..\\..\\SSD\\x64\\Release\\ssd_output.txt";
+        string relativePath = shellDir + "\\..\\..\\..\\SSD\\x64\\Release\\ssd_output.txt";
 
         char absPath[MAX_PATH];
         _fullpath(absPath, relativePath.c_str(), MAX_PATH);
 
-        std::ifstream file(absPath);
+        ifstream file(absPath);
         if (!file.is_open()) {
-            std::cerr << "Failed to open output file: " << absPath << std::endl;
-            throw std::exception();
+            cerr << "Failed to open output file: " << absPath << endl;
+            throw exception();
         }
 
-        std::ostringstream content;
-        std::string line;
-        while (std::getline(file, line)) {
+        ostringstream content;
+        string line;
+        while (getline(file, line)) {
             content << line;
         }
 
         return content.str();
     }
 
-    std::string getWriteReadResult(int lba, std::string input) {
+    string getWriteReadResult(int lba, string input) {
         ssd->write(lba, input);
         ssd->read(lba);
         string result = readOutputFile();
         return result;
     }
 
-    std::vector<std::string> tokenize(const std::string& input) {
-        std::vector<std::string> tokens;
-        std::istringstream iss(input);
-        std::string token;
+    vector<string> tokenize(const string& input) {
+        vector<string> tokens;
+        istringstream iss(input);
+        string token;
         while (iss >> token) {
             tokens.push_back(token);
         }
         return tokens;
     }
 
-    bool isValidCommand(const std::string& cmd) const {
-        static const std::unordered_set<std::string> valid = {
-			"read", "write", "exit", "help", "fullread", "fullwrite", 
+    bool isValidCommand(const string& cmd) const {
+        static const unordered_set<string> valid = {
+            "read", "write", "exit", "help", "fullread", "fullwrite",
             "testscript", "1_", "1_FullWriteAndReadCompare",
             "2_","2_PartialLBAWrite",
             "3_", "3_WriteReadAging",
@@ -600,6 +596,7 @@ private:
         };
         return valid.count(cmd) > 0;
     }
+
     string erase(unsigned int lba, unsigned int size) {
         const int maxEraseSize = 10;
         int currentLba = lba;
@@ -614,6 +611,7 @@ private:
         }
         return "Done";
     }
+
     bool isValidLbaRange(unsigned int startLba, unsigned int endLba)
     {
         if (startLba < LBA_START_ADDRESS || startLba > LBA_END_ADDRESS) {
@@ -629,6 +627,7 @@ private:
         }
         return true;
     }
+
     bool isValidEraseWithSizeArgument(unsigned int lba, unsigned int size) {
         if (lba > LBA_END_ADDRESS) {
             return false;
@@ -643,16 +642,23 @@ private:
         return true;
     }
 
-    void printEraseResult(const string header, const string result)
-    {
-        std::cout <<"["<< header<<"] "<< result << "\n";
+    bool isCmdExecuteError(const string result) const {
+        return result == "ERROR";
     }
+
+    SSD* ssd;
+    Logger logger;
+    TestShellStringManager testShellStringManager;
+
+    bool isExitCmd{ false };
+    const int LBA_START_ADDRESS = 0;
+    const int LBA_END_ADDRESS = 99;
 };
 
 class MockTestShell : public TestShell {
 public:
-	MockTestShell(SSD* ssd) : TestShell(ssd) {}
+    MockTestShell(SSD* ssd) : TestShell(ssd) {}
     MOCK_METHOD(void, help, (), ());
-    MOCK_METHOD(std::string, readOutputFile, (), ());
-    MOCK_METHOD(std::string, getRandomHexString, (), ());
+    MOCK_METHOD(string, readOutputFile, (), ());
+    MOCK_METHOD(string, getRandomHexString, (), ());
 };
