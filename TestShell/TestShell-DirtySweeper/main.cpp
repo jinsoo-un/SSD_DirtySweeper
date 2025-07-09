@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) {
     }
     else if (argc > 2) {
         std::cerr << "Usage: " << argv[0] << " [script_file]\n";
-		return 0;
+        return 0;
     }
 
     while (!shell.isExit()) {
