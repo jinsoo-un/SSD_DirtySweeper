@@ -14,13 +14,13 @@ public:
     NiceMock< MockTestShell> sut{ &ssdMock };
     string getEraseResult(unsigned lba, unsigned int size) {
         testing::internal::CaptureStdout();
-        sut.erase(lba, size);
+        sut.eraseWithSize(lba, size);
         string output = testing::internal::GetCapturedStdout();
         return output;
     }
     string getEraseRangeResult(unsigned startLba, unsigned int endLba) {
         testing::internal::CaptureStdout();
-        sut.eraseRange(startLba, endLba);
+        sut.eraseWithRange(startLba, endLba);
         string output = testing::internal::GetCapturedStdout();
         return output;
     }
@@ -147,19 +147,25 @@ TEST_F(TestShellEraseTest, ExceptionOverMaxSize)
 {
     const int startLBA = 0;
     const int size = 1000;
-    EXPECT_THROW(sut.erase(startLBA, size), std::exception);
+    auto actual = getEraseResult(startLBA, size);
+    auto expected = ::testing::HasSubstr("[Erase] ERROR");
+    EXPECT_THAT(actual, expected);
 }
 TEST_F(TestShellEraseTest, ExceptionUnderMinSize)
 {
     const int startLBA = 0;
     const int size = 0;
-    EXPECT_THROW(sut.erase(startLBA, size), std::exception);
+    auto actual = getEraseResult(startLBA, size);
+    auto expected = ::testing::HasSubstr("[Erase] ERROR");
+    EXPECT_THAT(actual, expected);
 }
 TEST_F(TestShellEraseTest, ExceptionOverMaxRange)
 {
     const int startLBA = 99;
     const int size = 10;
-    EXPECT_THROW(sut.erase(startLBA, size), std::exception);
+    auto actual = getEraseResult(startLBA, size);
+    auto expected = ::testing::HasSubstr("[Erase] ERROR");
+    EXPECT_THAT(actual, expected);
 }
 
 TEST_F(TestShellEraseTest, EraseRangeFail)
@@ -183,20 +189,26 @@ TEST_F(TestShellEraseTest, EraseRangeExceptionUnderMinLBA)
 {
     const int startLBA = -1;
     const int endLBA = 10;
-    EXPECT_THROW(sut.eraseRange(startLBA, endLBA), std::exception);
+    auto actual = getEraseRangeResult(startLBA, endLBA);
+    auto expected = ::testing::HasSubstr("[Erase Range] ERROR");
+    EXPECT_THAT(actual, expected);
 }
 TEST_F(TestShellEraseTest, EraseRangeExceptionOverMaxLBA)
 {
     const int startLBA = 0;
     const int endLBA = 100;
-    EXPECT_THROW(sut.eraseRange(startLBA, endLBA), std::exception);
+    auto actual = getEraseRangeResult(startLBA, endLBA);
+    auto expected = ::testing::HasSubstr("[Erase Range] ERROR");
+    EXPECT_THAT(actual, expected);
 }
 
 TEST_F(TestShellEraseTest, EraseRangeExceptionFirstLBAIsLargerThanLastLBA)
 {
     const int startLBA = 50;
     const int endLBA = 49;
-    EXPECT_THROW(sut.eraseRange(startLBA, endLBA), std::exception);
+    auto actual = getEraseRangeResult(startLBA, endLBA);
+    auto expected = ::testing::HasSubstr("[Erase Range] ERROR");
+    EXPECT_THAT(actual, expected);
 }
 
 TEST_F(TestShellEraseTest, EraseRangeMax)

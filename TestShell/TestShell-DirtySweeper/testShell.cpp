@@ -10,6 +10,7 @@
 #include <direct.h>
 #include <cstdlib>
 #include <ctime>
+#include <algorithm>
 #include "gmock/gmock.h"
 
 using namespace std;
@@ -171,7 +172,7 @@ public:
             }
             int lba = stoi(args[0]);
             int size = stoi(args[1]);
-            this->erase(lba, size);
+            this->eraseWithSize(lba, size);
             return;
         }
 
@@ -182,7 +183,7 @@ public:
             }
             int startLba = stoi(args[0]);
             int endLba = stoi(args[1]);
-            this->eraseRange(startLba, endLba);
+            this->eraseWithRange(startLba, endLba);
             return;
         }
         if (cmd == "4_" || cmd == "4_EraseAndWriteAging") {
@@ -375,87 +376,23 @@ public:
         std::cout << "PASS\n";
     }
 
-    void erase(unsigned int lba, unsigned int size){
-        // exception 
-        if (lba > LBA_END_ADDRESS) {
-            throw::std::exception();
-        }
-
-        if (size < 1 || size > 100) {
-            throw::std::exception();
-        }
-        if (lba + size > LBA_END_ADDRESS + 1) {
-            throw::std::exception();
-        }
-
-        bool isFailed = false;
-        const int maxEraseCntForSsd = 10;
-        const int maxRepeatCnt = size / maxEraseCntForSsd;
-        const int remainedSize = size % maxEraseCntForSsd;
-        int startLba = lba;
-
-        for (int cnt = 0; cnt < maxRepeatCnt; cnt++) {
-            ssd->erase(startLba, maxEraseCntForSsd);
-            startLba += maxEraseCntForSsd;
-            if (readOutputFile() == "ERROR") {
-                isFailed = true;
-                break;
-            }
-        }
-        
-        if (!isFailed && remainedSize > 0) {
-            ssd->erase(startLba, remainedSize);
-            isFailed = ("ERROR" == readOutputFile());
-        }
-
-        if (isFailed) {
+    void eraseWithSize(unsigned int lba, unsigned int size){
+        if (!isValidEraseWithSizeArgument(lba,size)) {
             printEraseResult("Erase", "ERROR");
+            return;
         }
-        else {
-            printEraseResult("Erase", "Done");
-        }
+        string result = erase(lba, size);
+        printEraseResult("Erase", result);
     }
-    void eraseRange(unsigned int startLba, unsigned int endLba){
-        // exception 
-        if (startLba < LBA_START_ADDRESS || startLba > LBA_END_ADDRESS) {
-            throw::std::exception();
-        }
 
-        if (endLba < LBA_START_ADDRESS || endLba > LBA_END_ADDRESS) {
-            throw::std::exception();
-        }
-
-        if (startLba > endLba) {
-            throw::std::exception();
-        }
-
-        const unsigned int size = endLba - startLba + 1;
-
-        bool isFailed = false;
-        const int maxEraseCntForSsd = 10;
-        const int maxRepeatCnt = size / maxEraseCntForSsd;
-        const int remainedSize = size % maxEraseCntForSsd;
-
-        for (int cnt = 0; cnt < maxRepeatCnt; cnt++) {
-            ssd->erase(startLba, maxEraseCntForSsd);
-            startLba += maxEraseCntForSsd;
-            if (readOutputFile() == "ERROR") {
-                isFailed = true;
-                break;
-            }
-        }
-
-        if (!isFailed && remainedSize > 0) {
-            ssd->erase(startLba, remainedSize);
-            isFailed = ("ERROR" == readOutputFile());
-        }
-
-        if (isFailed) {
+    void eraseWithRange(unsigned int startLba, unsigned int endLba){
+        if (!isValidLbaRange(startLba, endLba)) {
             printEraseResult("Erase Range", "ERROR");
+            return;
         }
-        else {
-            printEraseResult("Erase Range", "Done");
-        }
+        const unsigned int size = endLba - startLba + 1;
+        string result = erase(startLba, size);
+        printEraseResult("Erase Range", result);
     }
 
     void eraseAndWriteAging(void) {
@@ -552,6 +489,48 @@ private:
         return valid.count(cmd) > 0;
     }
 
+    string erase(unsigned int lba, unsigned int size) {
+        const int maxEraseSize = 10;
+        int currentLba = lba;
+        for (int remainedSize = size; remainedSize > 0;) {
+            int chunkSize = min(maxEraseSize, remainedSize);
+            ssd->erase(currentLba, chunkSize);
+            remainedSize -= chunkSize;
+            currentLba += chunkSize;
+            if (readOutputFile() == "ERROR") {
+                return "ERROR";
+            }
+        }
+        return "Done";
+    }
+    bool isValidLbaRange(unsigned int startLba, unsigned int endLba)
+    {
+        if (startLba < LBA_START_ADDRESS || startLba > LBA_END_ADDRESS) {
+            return false;
+        }
+
+        if (endLba < LBA_START_ADDRESS || endLba > LBA_END_ADDRESS) {
+            return false;
+        }
+
+        if (startLba > endLba) {
+            return false;
+        }
+        return true;
+    }
+    bool isValidEraseWithSizeArgument(unsigned int lba, unsigned int size) {
+        if (lba > LBA_END_ADDRESS) {
+            return false;
+        }
+
+        if (size < 1 || size > 100) {
+            return false;
+        }
+        if (lba + size > LBA_END_ADDRESS + 1) {
+            return false;
+        }
+        return true;
+    }
     void printErrorReadResult() {
         std::cout << "[Read] ERROR\n";
     }
