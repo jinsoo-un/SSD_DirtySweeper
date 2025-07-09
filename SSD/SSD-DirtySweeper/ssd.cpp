@@ -180,6 +180,7 @@ public:
 	virtual string getOp() = 0;
 	virtual int getAddr() = 0;
 	virtual string getValue() = 0;
+    virtual int getAccessCount() = 0;
 };
 
 class RealSSD : public SSD {
@@ -226,6 +227,10 @@ public:
 	string getValue() {
 		return value;
 	}
+
+    int getAccessCount() {
+        return accessCount;
+    }
 
 private:
 	void storeParams(string command)
@@ -309,6 +314,7 @@ private:
 	int addr;
 	string value;
 	int size;
+    int accessCount;
 
 	SSDCommand* command = nullptr;
 };
@@ -339,6 +345,10 @@ public:
 	string getValue() {
 		return ssd->getValue();
 	}
+
+    int getAccessCount() {
+        return ssd->getAccessCount();
+    }
 private:
 	// Buffered SSD methods
 	void read() {
