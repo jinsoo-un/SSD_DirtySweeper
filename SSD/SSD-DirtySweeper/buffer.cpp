@@ -21,12 +21,11 @@ public:
         if (std::filesystem::exists(DIR_NAME) && std::filesystem::is_directory(DIR_NAME))
             return;
 
-        std::filesystem::create_directory(DIR_NAME); // 디렉토리 생성
+        std::filesystem::create_directory(DIR_NAME);
 
-        // 1_x, 2_x, ..., 5_x 파일 생성
         for (int i = 1; i <= 5; ++i) {
             std::string bufferName = DIR_NAME + "/" + std::to_string(i) + EMPTY_FILE_NAME;
-            std::ofstream ofs(bufferName); // 빈 파일 생성
+            std::ofstream ofs(bufferName);
             ofs.close();
         }
 	}
@@ -38,7 +37,6 @@ public:
 
         string data = readBuffer(index);
 
-        // 구분자를 기준으로 문자열 분할
         vector<string> words;
         stringstream ss(data);
         string word;
@@ -91,7 +89,7 @@ private:
         for (const auto& entry : std::filesystem::directory_iterator(DIR_NAME)) {
             if (entry.is_regular_file()) {
                 string filename = entry.path().filename().string();
-                if (filename.rfind(prefix, 0) == 0) { // prefix로 시작하는지 확인
+                if (filename.rfind(prefix, 0) == 0) {
                     return filename;
                 }
             }
