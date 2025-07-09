@@ -324,6 +324,7 @@ private:
 	SSDCommand* command = nullptr;
 };
 
+#include "buffer.cpp"
 
 // SSD Proxy Class
 class BufferedSSD : public SSD {
@@ -360,13 +361,44 @@ public:
 private:
 	// Buffered SSD methods
 	bool read() {
-		// Check buffer first
-		// if buffer is empty, read from RealSSD
+		// Buffer 에 아무것도 없는 경우 RealSSD 에서 읽어오기
+		if (buffer.getFilledCount() == 0) return ssd->exec();
+		// Buffer 에 있는 마지막 명령어부터 Check
+		for (int i = buffer.getFilledCount(); i > 0; i--) {
+			struct params bufferCommand;
+			buffer.readAndParseBuffer(i, bufferCommand);
+			// buffer command 가 write 인 경우
+			if (bufferCommand.op == "W") {
+				// Address가 일치하는 경우
+				if (bufferCommand.addr == ssd->getAddr()) {
+					// Return the value from buffer
+					//updateOutputFile(param.value);
+					return true;
+				}
+			}
+			// buffer command 가 erase 인 경우
+			if (bufferCommand.op == "E") {
+				// Address가 일치하는 경우
+				for (int checkAddr = bufferCommand.addr; checkAddr < bufferCommand.addr + bufferCommand.size; checkAddr++) {
+					if (checkAddr == ssd->getAddr()) {
+						// Return the initial value
+						//updateOutputFile("0x00000000");
+						return true;
+					}
+				}
+			}
+		}
+
+		// if all command buffer is not matched, read from RealSSD
 		return ssd->exec(); // read from RealSSD
 	}
 
 	bool write() {
 		// check if buffer is full, flush to RealSSD
+		if (buffer.isFull()) {
+			flushBuffer();
+		}
+		
 		// check if command can be merged with buffer
 		// if buffer has room, write to buffer
 		return ssd->exec(); // write to RealSSD
@@ -379,7 +411,28 @@ private:
 		return ssd->exec(); // Erase RealSSD
 	}
 
-	RealSSD* ssd; // RealSSD instance
+	string buildCommand(struct params& commandParam) {
+		//string cmd, int lba, string data = ""
+		string cmdLine = commandParam.op + " " + std::to_string(commandParam.addr);
+		if (commandParam.op == "W") cmdLine = cmdLine + " " + commandParam.value;
+		if (commandParam.op == "E") cmdLine = cmdLine + " " + std::to_string(commandParam.size);
+		return cmdLine;
+	}
 
+	void flushBuffer() {
+		// Flush the buffer to RealSSD
+		for (int i = 1; i <= buffer.getFilledCount(); i++) {
+			struct params commandParam;
+			if (buffer.readAndParseBuffer(i, commandParam)) {
+				string cmdLine = buildCommand(commandParam);
+				ssd->parseCommand(cmdLine);
+				ssd->exec();
+			}
+		}
+		buffer.clear();
+	}
+
+	RealSSD* ssd; // RealSSD instance
+	Buffer buffer; // Buffer instance to manage buffered operations
 };
 
