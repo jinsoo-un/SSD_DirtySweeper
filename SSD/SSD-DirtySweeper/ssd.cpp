@@ -426,9 +426,89 @@ private:
 			buffer.writeBuffer(ssdParams);
 		}
 
-		// check if command can be merged with buffer
-		// if buffer has room, write to buffer
-		return ssd->exec(); // Erase RealSSD
+		int startAddr = ssd->getAddr();
+		int endAddr = startAddr + ssd->getSize() - 1;
+
+		// check ascending writes
+		int index = buffer.getFilledCount();
+		for (int i = index; i > 0; i--) {
+			struct params bufferCommand;
+			buffer.readAndParseBuffer(i, bufferCommand);
+
+			// check if writes are in erase range
+			if (bufferCommand.op == "W") {
+				if (bufferCommand.addr >= startAddr && bufferCommand.addr <= endAddr) {
+					buffer.eraseBuffer(i);
+				}
+			}
+		}
+
+		index = buffer.getFilledCount();
+		vector<int> markedEraseIndex;
+
+		for (int i = 1; i <= index; i++) {
+			struct params bufferCommand;
+			buffer.readAndParseBuffer(i, bufferCommand);
+
+			// write after erase, just mark that erase if matters
+			if (bufferCommand.op == "E") {
+				for (int j = i + 1; j <= index; j++) {
+					struct params innerBufferCommand;
+					buffer.readAndParseBuffer(j, innerBufferCommand);
+					if (innerBufferCommand.op == "W" &&
+						innerBufferCommand.addr >= bufferCommand.addr &&
+						innerBufferCommand.addr <= bufferCommand.addr + bufferCommand.size - 1) {
+						markedEraseIndex.push_back(i);
+					}
+				}
+			}
+		}
+
+		// check ascending erases, merge if it can
+		index = buffer.getFilledCount();
+		for (int i = index; i > 0; i--) {
+			struct params bufferCommand;
+			buffer.readAndParseBuffer(i, bufferCommand);
+			
+			// check if ascending erase can be merged
+			if (bufferCommand.op == "E") {
+				int bufStartAddr = bufferCommand.addr;
+				int bufEndAddr = bufferCommand.addr + bufferCommand.size - 1;
+				std::pair<int, int> merged = checkOverlap(startAddr, endAddr, bufStartAddr, bufEndAddr);
+				
+				// if no overlapped section, do nothing
+				if (merged.first == -1)
+					continue;
+				// if overlapped section's size exceed 10, do nothing
+				if (merged.second - merged.first >= 10)
+					continue;
+				// if target erase command is marked before, do nothing
+				if (find(markedEraseIndex.begin(), markedEraseIndex.end(), i) != markedEraseIndex.end())
+					continue;
+
+				buffer.eraseBuffer(i);
+				startAddr = merged.first;
+				endAddr = merged.second;
+			}
+		}
+
+		struct params ssdParams;
+		ssdParams.op = ssd->getOp();
+		ssdParams.addr = startAddr;
+		ssdParams.size = endAddr - startAddr + 1;
+
+		// write the command to buffer
+		buffer.writeBuffer(ssdParams);
+		//updateOutputFile("");
+
+		return true;
+	}
+
+	std::pair<int, int> checkOverlap(int a, int b, int c, int d) {
+		if (b >= c && a <= d) {
+			return { std::min(a, c), std::max(b, d) };
+		}
+		return { -1, -1 };
 	}
 
 	string buildCommand(struct params& commandParam) {
