@@ -21,7 +21,7 @@ using namespace std;
 class Logger {
 public:
     void print(const std::string& sender, const std::string& message) {
-        std::ofstream logFile("latest.log", std::ios::app);  // append mode
+        std::ofstream logFile("latest.log", std::ios::app);
         if (!logFile.is_open()) return;
 
         auto now = std::chrono::system_clock::now();
@@ -29,7 +29,6 @@ public:
         std::tm local_tm;
         localtime_s(&local_tm, &now_c);
 
-        // Format timestamp [YY.MM.DD HH:MM]
         logFile << "["
             << std::setfill('0') << std::setw(2) << (local_tm.tm_year % 100) << "."
             << std::setw(2) << (local_tm.tm_mon + 1) << "."
@@ -37,10 +36,7 @@ public:
             << std::setw(2) << local_tm.tm_hour << ":"
             << std::setw(2) << local_tm.tm_min << "] ";
 
-        // Format sender: left-aligned, 40-character field
         logFile << std::left << std::setfill(' ') << std::setw(40) << sender;
-
-        // Message
         logFile << " : " << message << std::endl;
     }
 };
