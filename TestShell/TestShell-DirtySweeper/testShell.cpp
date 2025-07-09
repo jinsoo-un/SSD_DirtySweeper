@@ -95,7 +95,7 @@ public:
 
     void executeCommand(const std::string& cmd, const std::vector<std::string>& args) {
         if (cmd == "read") {
-            if (args.size() < 1) {
+            if ((args.size() == 0) || (args.size() >= 2)) {
                 std::cout << "INVALID COMMAND\n";
                 return;
             }
@@ -105,6 +105,10 @@ public:
         }
 
         if (cmd == "fullread") {
+            if (args.size() > 0) {
+                std::cout << "INVALID COMMAND\n";
+                return;
+            }
             this->fullRead();
             return;
         }
@@ -131,6 +135,10 @@ public:
         }
 
         if (cmd == "fullwrite") {
+            if ((args.size() <= 0) || (args.size() >= 2)) {
+                std::cout << "INVALID COMMAND\n";
+                return;
+            }
             std::string data = args[0];
             this->fullWrite(data);
             return;
@@ -183,10 +191,13 @@ public:
     }
 
     void read(int lba) {
-        if (lba < 0 || lba > 99) throw std::exception();
+        if (lba < 0 || lba > 99) {
+            printErrorReadResult();
+            return;
+        }
         ssd->read(lba);
         std::string result = readOutputFile();
-        if (result == "ERROR") printErrorReadResult(result);
+        if (result == "ERROR") printErrorReadResult();
         else printSuccessReadResult(result, lba);
     }
 
@@ -195,7 +206,7 @@ public:
             ssd->read(lba);
             std::string result = readOutputFile();
             if (result == "ERROR") {
-                printErrorReadResult(result);
+                printErrorReadResult();
                 break;
             }
             printSuccessReadResult(result, lba);
@@ -215,21 +226,17 @@ public:
         return WRITE_SUCCESS_MESSAGE;
     }
 
-    string fullWrite(string data)
+    void fullWrite(string data)
     {
-        string totalResult = "";
         for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; lba++) {
             ssd->write(lba, data);
             string currentResult = readOutputFile();
             if (currentResult == "ERROR") {
-                totalResult += WRITE_ERROR_MESSAGE;
-                printErrorWriteResult();
-                break;
+                cout << "[Full Write] ERROR\n";
+                return;
             }
-            totalResult += WRITE_SUCCESS_MESSAGE + "\n";
-            printSuccessWriteResult();
         }
-        return totalResult;
+        cout << "[Full Write] Done\n";;
     }
 
     std::string getWriteDataInFullWriteAndReadCompareScript(int lba){
@@ -248,8 +255,11 @@ public:
 
             if (readData != writeData) {
                 std::cout << "[Mismatch] LBA " << lba << " Expected: " << writeData << " Got: " << readData << "\n";
+                std::cout << "FAIL\n";
+                return;
             }
         }
+        std::cout << "PASS\n";
     }
 
     void exit(void) {
@@ -271,11 +281,11 @@ public:
             string endLBAResult = readOutputFile();
 
             if (firstLBAResult != endLBAResult) {
-                cout << "FAIL";
+                cout << "FAIL\n";
                 return;
             }
         }
-        cout << "PASS";
+        cout << "PASS\n";
     }
 
     virtual std::string generateRandomHexString() {
@@ -394,8 +404,8 @@ private:
         return valid.count(cmd) > 0;
     }
 
-    void printErrorReadResult(std::string result) {
-        std::cout << "[Read] " << result << "\n";
+    void printErrorReadResult() {
+        std::cout << "[Read] ERROR\n";
     }
 
     void printSuccessReadResult(std::string result, int lba) {

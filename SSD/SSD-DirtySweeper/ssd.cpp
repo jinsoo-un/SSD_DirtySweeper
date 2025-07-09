@@ -171,7 +171,18 @@ private:
 	}
 };
 
+// SSD Interface Class
 class SSD {
+public:
+	virtual bool parseCommand(string command) = 0;
+	virtual void exec() = 0;
+	virtual int getArgCount() = 0;
+	virtual string getOp() = 0;
+	virtual int getAddr() = 0;
+	virtual string getValue() = 0;
+};
+
+class RealSSD : public SSD {
 public:
 	bool parseCommand(string command) {
         if (!isValidCommand(command)) {
@@ -301,3 +312,56 @@ private:
 
 	SSDCommand* command = nullptr;
 };
+
+
+// SSD Proxy Class
+class BufferedSSD : public SSD {
+public:
+	BufferedSSD() : ssd{ new RealSSD() } {}
+	bool parseCommand(string command) {
+		return ssd->parseCommand(command);
+	}
+	void exec() {
+		string operation = ssd->getOp();
+		if (operation == "R") read();
+		if (operation == "W") write();
+		if (operation == "E") erase();	
+	}
+	int getArgCount() {
+		return ssd->getArgCount();
+	}
+	string getOp() {
+		return ssd->getOp();
+	}
+	int getAddr() {
+		return ssd->getAddr();
+	}
+	string getValue() {
+		return ssd->getValue();
+	}
+private:
+	// Buffered SSD methods
+	void read() {
+		// Check buffer first
+		// if buffer is empty, read from RealSSD
+		ssd->exec(); // read from RealSSD
+	}
+
+	void write() {
+		// check if buffer is full, flush to RealSSD
+		// check if command can be merged with buffer
+		// if buffer has room, write to buffer
+		ssd->exec(); // write to RealSSD
+	}
+
+	void erase() {
+		// check if buffer is full, flush to RealSSD
+		// check if command can be merged with buffer
+		// if buffer has room, write to buffer
+		ssd->exec(); // Erase RealSSD
+	}
+
+	RealSSD* ssd; // RealSSD instance
+
+};
+

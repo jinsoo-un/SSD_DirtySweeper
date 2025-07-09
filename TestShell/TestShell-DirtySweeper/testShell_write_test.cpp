@@ -76,8 +76,11 @@ TEST_F(TestShellWriteTest, FullWriteNormalCase)
         .Times(100)
         .WillRepeatedly(Return(SSD_WRITE_DONE_VALUE));
 
-    string result = sut.fullWrite(VALID_DATA);
-    EXPECT_EQ(actual, result);
+    testing::internal::CaptureStdout();
+    sut.fullWrite(VALID_DATA);
+    std::string output = testing::internal::GetCapturedStdout();
+    cout << output;
+    EXPECT_THAT(output, ::testing::HasSubstr("[Full Write] Done"));
 }
 TEST_F(TestShellWriteTest, FullWriteFailWithInvalidData)
 {
@@ -89,8 +92,11 @@ TEST_F(TestShellWriteTest, FullWriteFailWithInvalidData)
         .Times(1)
         .WillRepeatedly(Return(SSD_WRITE_ERROR_VALUE));
 
-    string result = sut.fullWrite(INVALID_DATA);
-    EXPECT_EQ(WRITE_FAIL_RESULT, result);
+    testing::internal::CaptureStdout();
+    sut.fullWrite(INVALID_DATA);
+    std::string output = testing::internal::GetCapturedStdout();
+    cout << output;
+    EXPECT_THAT(output, ::testing::HasSubstr("[Full Write] ERROR"));
 }
 
 
