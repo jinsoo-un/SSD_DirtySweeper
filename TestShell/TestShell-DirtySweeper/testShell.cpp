@@ -119,6 +119,10 @@ public:
         }
 
         if (cmd == "fullwrite") {
+            if ((args.size() <= 0) || (args.size() >= 2)) {
+                std::cout << "INVALID COMMAND\n";
+                return;
+            }
             std::string data = args[0];
             this->fullWrite(data);
             return;
@@ -206,21 +210,17 @@ public:
         return WRITE_SUCCESS_MESSAGE;
     }
 
-    string fullWrite(string data)
+    void fullWrite(string data)
     {
-        string totalResult = "";
         for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; lba++) {
             ssd->write(lba, data);
             string currentResult = readOutputFile();
             if (currentResult == "ERROR") {
-                totalResult += WRITE_ERROR_MESSAGE;
-                printErrorWriteResult();
-                break;
+                cout << "[Full Write] ERROR\n";
+                return;
             }
-            totalResult += WRITE_SUCCESS_MESSAGE + "\n";
-            printSuccessWriteResult();
         }
-        return totalResult;
+        cout << "[Full Write] Done\n";;
     }
 
     std::string getWriteDataInFullWriteAndReadCompareScript(int lba){
