@@ -268,7 +268,7 @@ public:
     SSD* ssd = new BufferedSSD();
 
     string VALID_HEX_DATA = "0x1298CDEF";
-    string INVALID_HEX_DATA = "0xABCDA5A5";
+    string PRECONDITION_HEX_DATA = "0xABCDA5A5";
     string INITIAL_HEX_DATA = "0x00000000";
 
     static const int VALID_TEST_ADDRESS = 0;
@@ -333,7 +333,7 @@ TEST_F(BufSSDTest, SameLBAWrite02) {
     lba_size = 10;
 
     for (int i = 0; i < 4; i++) {
-        cmd = buildCommand("W", lba+i, INVALID_HEX_DATA);
+        cmd = buildCommand("W", lba+i, PRECONDITION_HEX_DATA);
         ssd->parseCommand(cmd);
         ssd->exec();
     }
@@ -359,7 +359,7 @@ TEST_F(BufSSDTest, SameLBAWrite03) {
 
     //precondition
     for (int i = 0; i < lba_size; i++) {
-        cmd = buildCommand("W", lba + i, INVALID_HEX_DATA);
+        cmd = buildCommand("W", lba + i, PRECONDITION_HEX_DATA);
         ssd->parseCommand(cmd);
         ssd->exec();
     }
@@ -384,7 +384,6 @@ TEST_F(BufSSDTest, SameLBAWrite04) {
     lba = 20;
     lba_size = 6;
 
-    //precondition
     for (int i = 0; i < lba_size; i++) {
         cmd = buildCommand("W", lba + i, VALID_HEX_DATA);
         ssd->parseCommand(cmd);
@@ -398,7 +397,6 @@ TEST_F(BufSSDTest, SameLBAWrite05) {
     lba = 20;
     lba_size = 10;
 
-    //precondition
     for (int i = 0; i < lba_size; i++) {
         cmd = buildCommand("W", lba + i, VALID_HEX_DATA);
         ssd->parseCommand(cmd);
@@ -428,7 +426,7 @@ TEST_F(BufSSDTest, EraseTest01) {
 
     //make precondition
     for (int i = 0; i < 5; i++) {
-        cmd = buildCommand("W", lba + i, INVALID_HEX_DATA);
+        cmd = buildCommand("W", lba + i, PRECONDITION_HEX_DATA);
         ssd->parseCommand(cmd);
         ssd->exec();
     }
@@ -436,7 +434,7 @@ TEST_F(BufSSDTest, EraseTest01) {
     cmd = buildCommand("R", lba);
     ssd->parseCommand(cmd);
     ssd->exec();
-    EXPECT_TRUE(checkOutputFile(INVALID_HEX_DATA));
+    EXPECT_TRUE(checkOutputFile(PRECONDITION_HEX_DATA));
   
     cmd = buildCommand("E", lba, std::to_string(lba_size));
     ssd->parseCommand(cmd);
@@ -445,7 +443,7 @@ TEST_F(BufSSDTest, EraseTest01) {
     cmd = buildCommand("R", lba);
     ssd->parseCommand(cmd);
     ssd->exec();
-    EXPECT_TRUE(checkOutputFile(INVALID_HEX_DATA));
+    EXPECT_TRUE(checkOutputFile(INITIAL_HEX_DATA));
 }
 
 TEST_F(BufSSDTest, EraseTest02) {
@@ -454,7 +452,7 @@ TEST_F(BufSSDTest, EraseTest02) {
 
     //make precondition
     for (int i = 0; i < lba_size; i++) {
-        cmd = buildCommand("W", lba + i, VALID_HEX_DATA);
+        cmd = buildCommand("W", lba + i, PRECONDITION_HEX_DATA);
         ssd->parseCommand(cmd);
         ssd->exec();
     }
@@ -463,7 +461,7 @@ TEST_F(BufSSDTest, EraseTest02) {
         cmd = buildCommand("R", lba);
         ssd->parseCommand(cmd);
         ssd->exec();
-        EXPECT_TRUE(checkOutputFile(VALID_HEX_DATA));
+        EXPECT_TRUE(checkOutputFile(PRECONDITION_HEX_DATA));
     }
 
     cmd = buildCommand("E", lba, std::to_string(lba_size));
@@ -487,7 +485,7 @@ TEST_F(BufSSDTest, EraseTest03) {
 
     //make precondition
     for (int i = 0; i < 10; i++) {
-        cmd = buildCommand("W", lba + i, VALID_HEX_DATA);
+        cmd = buildCommand("W", lba + i, PRECONDITION_HEX_DATA);
         ssd->parseCommand(cmd);
         ssd->exec();
     }
@@ -496,7 +494,7 @@ TEST_F(BufSSDTest, EraseTest03) {
         cmd = buildCommand("R", lba);
         ssd->parseCommand(cmd);
         ssd->exec();
-        EXPECT_TRUE(checkOutputFile(VALID_HEX_DATA));
+        EXPECT_TRUE(checkOutputFile(PRECONDITION_HEX_DATA));
     }
 
     cmd = buildCommand("E", lba, std::to_string(lba_size));
@@ -519,7 +517,7 @@ TEST_F(BufSSDTest, Erase_Exception) {
 
     //make precondition
     for (int i = 0; i < 5; i++) {
-        cmd = buildCommand("W", lba + i, VALID_HEX_DATA);
+        cmd = buildCommand("W", lba + i, PRECONDITION_HEX_DATA);
         ssd->parseCommand(cmd);
         ssd->exec();
     }
