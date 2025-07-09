@@ -79,7 +79,7 @@ public:
 
     void executeCommand(const std::string& cmd, const std::vector<std::string>& args) {
         if (cmd == "read") {
-            if (args.size() < 1) {
+            if ((args.size() == 0) || (args.size() >= 2)) {
                 std::cout << "INVALID COMMAND\n";
                 return;
             }
@@ -89,6 +89,10 @@ public:
         }
 
         if (cmd == "fullread") {
+            if (args.size() > 0) {
+                std::cout << "INVALID COMMAND\n";
+                return;
+            }
             this->fullRead();
             return;
         }
