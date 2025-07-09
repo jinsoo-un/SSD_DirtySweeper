@@ -2,7 +2,6 @@
 #include "testShell.cpp"
 
 using namespace testing;
-using std::string;
 
 TEST(HelpTest, HelpCallTest) {
     SSDMock ssd;

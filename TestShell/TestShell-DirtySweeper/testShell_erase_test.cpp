@@ -1,7 +1,7 @@
 #include "gmock/gmock.h"
 #include "testShell.cpp"
 #include <string>
-using std::string;
+
 using namespace testing;
 
 namespace {
@@ -26,8 +26,7 @@ public:
     }
 };
 
-TEST_F(TestShellEraseTest, EraseFail)
-{
+TEST_F(TestShellEraseTest, EraseFail) {
     const int startLBA = 0;
     const int size = 10;
     EXPECT_CALL(ssdMock, erase(startLBA, size))
@@ -43,8 +42,7 @@ TEST_F(TestShellEraseTest, EraseFail)
     EXPECT_THAT(actual, expected);
 }
 
-TEST_F(TestShellEraseTest, EraseForShort)
-{
+TEST_F(TestShellEraseTest, EraseForShort) {
     const int startLBA = 0;
     const int size = 10;
     EXPECT_CALL(ssdMock, erase(startLBA, size))
@@ -60,8 +58,7 @@ TEST_F(TestShellEraseTest, EraseForShort)
     EXPECT_THAT(actual, expected);
 }
 
-TEST_F(TestShellEraseTest, EraseForHalf)
-{
+TEST_F(TestShellEraseTest, EraseForHalf) {
     const int startLBA = 0;
     const int size = 50;
     EXPECT_CALL(ssdMock, erase(_, _))
@@ -77,8 +74,7 @@ TEST_F(TestShellEraseTest, EraseForHalf)
     EXPECT_THAT(actual, expected);
 }
 
-TEST_F(TestShellEraseTest, EraseForMax)
-{
+TEST_F(TestShellEraseTest, EraseForMax) {
     const int startLBA = 0;
     const int size = 99;
     EXPECT_CALL(ssdMock, erase(_, _))
@@ -93,8 +89,7 @@ TEST_F(TestShellEraseTest, EraseForMax)
     auto expected = ::testing::HasSubstr("[Erase] Done");
     EXPECT_THAT(actual, expected);
 }
-TEST_F(TestShellEraseTest, EraseStartFromMiddle)
-{
+TEST_F(TestShellEraseTest, EraseStartFromMiddle) {
     const int startLBA = 50;
     const int size = 32;
     EXPECT_CALL(ssdMock, erase(_, _))
@@ -109,8 +104,7 @@ TEST_F(TestShellEraseTest, EraseStartFromMiddle)
     auto expected = ::testing::HasSubstr("[Erase] Done");
     EXPECT_THAT(actual, expected);
 }
-TEST_F(TestShellEraseTest, EraseForLastSingle)
-{
+TEST_F(TestShellEraseTest, EraseForLastSingle) {
     const int startLBA = MAX_SIZE - 1;
     const int size = 1;
     EXPECT_CALL(ssdMock, erase(_, _))
@@ -126,8 +120,7 @@ TEST_F(TestShellEraseTest, EraseForLastSingle)
     EXPECT_THAT(actual, expected);
 }
 
-TEST_F(TestShellEraseTest, EraseForFirstSingle)
-{
+TEST_F(TestShellEraseTest, EraseForFirstSingle) {
     const int startLBA = 0;
     const int size = 1;
     EXPECT_CALL(ssdMock, erase(_, _))
@@ -143,24 +136,23 @@ TEST_F(TestShellEraseTest, EraseForFirstSingle)
     EXPECT_THAT(actual, expected);
 }
 
-TEST_F(TestShellEraseTest, ExceptionOverMaxSize)
-{
+TEST_F(TestShellEraseTest, ExceptionOverMaxSize) {
     const int startLBA = 0;
     const int size = 1000;
     auto actual = getEraseResult(startLBA, size);
     auto expected = ::testing::HasSubstr("[Erase] ERROR");
     EXPECT_THAT(actual, expected);
 }
-TEST_F(TestShellEraseTest, ExceptionUnderMinSize)
-{
+
+TEST_F(TestShellEraseTest, ExceptionUnderMinSize) {
     const int startLBA = 0;
     const int size = 0;
     auto actual = getEraseResult(startLBA, size);
     auto expected = ::testing::HasSubstr("[Erase] ERROR");
     EXPECT_THAT(actual, expected);
 }
-TEST_F(TestShellEraseTest, ExceptionOverMaxRange)
-{
+
+TEST_F(TestShellEraseTest, ExceptionOverMaxRange) {
     const int startLBA = 99;
     const int size = 10;
     auto actual = getEraseResult(startLBA, size);
@@ -168,8 +160,7 @@ TEST_F(TestShellEraseTest, ExceptionOverMaxRange)
     EXPECT_THAT(actual, expected);
 }
 
-TEST_F(TestShellEraseTest, EraseRangeFail)
-{
+TEST_F(TestShellEraseTest, EraseRangeFail) {
     const int startLBA = 0;
     const int endLBA = 10;
     EXPECT_CALL(ssdMock, erase(_, _))
@@ -185,16 +176,15 @@ TEST_F(TestShellEraseTest, EraseRangeFail)
     EXPECT_THAT(actual, expected);
 }
 
-TEST_F(TestShellEraseTest, EraseRangeExceptionUnderMinLBA)
-{
+TEST_F(TestShellEraseTest, EraseRangeExceptionUnderMinLBA) {
     const int startLBA = -1;
     const int endLBA = 10;
     auto actual = getEraseRangeResult(startLBA, endLBA);
     auto expected = ::testing::HasSubstr("[Erase Range] ERROR");
     EXPECT_THAT(actual, expected);
 }
-TEST_F(TestShellEraseTest, EraseRangeExceptionOverMaxLBA)
-{
+
+TEST_F(TestShellEraseTest, EraseRangeExceptionOverMaxLBA) {
     const int startLBA = 0;
     const int endLBA = 100;
     auto actual = getEraseRangeResult(startLBA, endLBA);
@@ -202,8 +192,7 @@ TEST_F(TestShellEraseTest, EraseRangeExceptionOverMaxLBA)
     EXPECT_THAT(actual, expected);
 }
 
-TEST_F(TestShellEraseTest, EraseRangeExceptionFirstLBAIsLargerThanLastLBA)
-{
+TEST_F(TestShellEraseTest, EraseRangeExceptionFirstLBAIsLargerThanLastLBA) {
     const int startLBA = 50;
     const int endLBA = 49;
     auto actual = getEraseRangeResult(startLBA, endLBA);
@@ -211,8 +200,7 @@ TEST_F(TestShellEraseTest, EraseRangeExceptionFirstLBAIsLargerThanLastLBA)
     EXPECT_THAT(actual, expected);
 }
 
-TEST_F(TestShellEraseTest, EraseRangeMax)
-{
+TEST_F(TestShellEraseTest, EraseRangeMax) {
     const int startLBA = 0;
     const int endLBA = 99;
     EXPECT_CALL(ssdMock, erase(_, _))
@@ -227,8 +215,8 @@ TEST_F(TestShellEraseTest, EraseRangeMax)
     auto expected = ::testing::HasSubstr("[Erase Range] Done");
     EXPECT_THAT(actual, expected);
 }
-TEST_F(TestShellEraseTest, EraseRangeHalfLowerRange)
-{
+
+TEST_F(TestShellEraseTest, EraseRangeHalfLowerRange) {
     const int startLBA = 0;
     const int endLBA = 49;
     EXPECT_CALL(ssdMock, erase(_, _))
@@ -243,8 +231,8 @@ TEST_F(TestShellEraseTest, EraseRangeHalfLowerRange)
     auto expected = ::testing::HasSubstr("[Erase Range] Done");
     EXPECT_THAT(actual, expected);
 }
-TEST_F(TestShellEraseTest, EraseRangeHalfUpperRange)
-{
+
+TEST_F(TestShellEraseTest, EraseRangeHalfUpperRange) {
     const int startLBA = 50;
     const int endLBA = 99;
     EXPECT_CALL(ssdMock, erase(_, _))
@@ -259,8 +247,8 @@ TEST_F(TestShellEraseTest, EraseRangeHalfUpperRange)
     auto expected = ::testing::HasSubstr("[Erase Range] Done");
     EXPECT_THAT(actual, expected);
 }
-TEST_F(TestShellEraseTest, EraseRangeSame)
-{
+
+TEST_F(TestShellEraseTest, EraseRangeSame) {
     const int startLBA = 55;
     const int endLBA = 55;
     EXPECT_CALL(ssdMock, erase(_, _))
@@ -275,5 +263,3 @@ TEST_F(TestShellEraseTest, EraseRangeSame)
     auto expected = ::testing::HasSubstr("[Erase Range] Done");
     EXPECT_THAT(actual, expected);
 }
-
-

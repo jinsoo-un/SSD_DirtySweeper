@@ -36,7 +36,7 @@ TEST_F(TestShellLogicTest, WriteShouldCallSSDWriteAndReturnDoneOnSuccess) {
 
     testing::internal::CaptureStdout();
     shell.write(5, "abc");
-    std::string output = testing::internal::GetCapturedStdout();
+    string output = testing::internal::GetCapturedStdout();
     cout << output;
     EXPECT_THAT(output, ::testing::HasSubstr("[Write] Done"));
 }
@@ -47,7 +47,7 @@ TEST_F(TestShellLogicTest, WriteShouldReturnErrorOnFailure) {
 
     testing::internal::CaptureStdout();
     shell.write(5, "abc");
-    std::string output = testing::internal::GetCapturedStdout();
+    string output = testing::internal::GetCapturedStdout();
     cout << output;
     EXPECT_THAT(output, ::testing::HasSubstr("[Write] ERROR"));
 }
@@ -62,7 +62,7 @@ TEST_F(TestShellLogicTest, ProcessInputWriteShouldCallSSDWrite) {
 TEST_F(TestShellLogicTest, ProcessInputHelpShouldPrintUsage) {
     testing::internal::CaptureStdout();
     shell.processInput("help");
-    std::string output = testing::internal::GetCapturedStdout();
+    string output = testing::internal::GetCapturedStdout();
 
     EXPECT_THAT(output, ::testing::HasSubstr("read (LBA)"));
     EXPECT_THAT(output, ::testing::HasSubstr("write (LBA) (DATA)"));
@@ -71,6 +71,6 @@ TEST_F(TestShellLogicTest, ProcessInputHelpShouldPrintUsage) {
 TEST_F(TestShellLogicTest, InvalidCommandShouldPrintInvalid) {
     testing::internal::CaptureStdout();
     shell.processInput("invalid_cmd");
-    std::string output = testing::internal::GetCapturedStdout();
+    string output = testing::internal::GetCapturedStdout();
     EXPECT_THAT(output, ::testing::HasSubstr("INVALID COMMAND"));
 }
