@@ -21,7 +21,7 @@ namespace FileNames {
 
 class FileControl {
 public:
-	void updateOutput(string msg) {
+	void updateOutput(const string& msg) {
 		ofstream fout(FileNames::OUTPUT_FILE);
 		fout << msg;
 		fout.close();
@@ -49,7 +49,7 @@ public:
 		file.close();
 	}
 
-	bool writeData(vector<string>& data)
+	bool writeData(const vector<string>& data)
 	{
 		ofstream file(FileNames::DATA_FILE);
 		if (!file.is_open()) {
