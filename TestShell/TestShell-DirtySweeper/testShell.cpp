@@ -131,6 +131,24 @@ public:
 
 class SsdHelpler : public SSD {
 public:
+    void read(int lba)  override {
+        logger.print("SsdHelpler.read()", "Reading LBA: " + to_string(lba));
+        string commandLine = buildCommandLine("R", lba);
+        executeCommandLine(commandLine);
+    }
+
+    void write(int lba, string data) override {
+        logger.print("SsdHelpler.write()", "Writing to LBA: " + to_string(lba) + " with data: " + data);
+        string commandLine = buildCommandLine("W", lba, data);
+        executeCommandLine(commandLine);
+    }
+    void erase(unsigned int lba, unsigned size) override {
+        logger.print("SsdHelpler.erase()", "Erasing LBA: " + to_string(lba) + " with size: " + to_string(size));
+        string commandLine = buildCommandLine("E", lba, to_string(size));
+        executeCommandLine(commandLine);
+    }
+
+private:
     string buildCommandLine(string cmd, int lba, string data = "") {
         string cmdLine = cmd + " " + to_string(lba);
         if (cmd == "W" || cmd == "E") cmdLine = cmdLine + " " + data;
@@ -181,25 +199,6 @@ public:
         CloseHandle(pi.hProcess);
         CloseHandle(pi.hThread);
     }
-
-    void read(int lba)  override {
-        logger.print("SsdHelpler.read()", "Reading LBA: " + to_string(lba));
-        string commandLine = buildCommandLine("R", lba);
-        executeCommandLine(commandLine);
-    }
-
-    void write(int lba, string data) override {
-        logger.print("SsdHelpler.write()", "Writing to LBA: " + to_string(lba) + " with data: " + data);
-        string commandLine = buildCommandLine("W", lba, data);
-        executeCommandLine(commandLine);
-    }
-    void erase(unsigned int lba, unsigned size) override {
-        logger.print("SsdHelpler.erase()", "Erasing LBA: " + to_string(lba) + " with size: " + to_string(size));
-        string commandLine = buildCommandLine("E", lba, to_string(size));
-        executeCommandLine(commandLine);
-    }
-
-private:
     Logger logger;
 };
 
@@ -512,18 +511,6 @@ public:
 
     static const int WRITE_READ_ITERATION = 200;
 private:
-    SSD* ssd;
-    Logger logger;
-    TestShellStringManager testShellStringManager;
-
-    bool isExitCmd{ false };
-
-    const int LBA_START_ADDRESS = 0;
-    const int LBA_END_ADDRESS = 99;
-
-    const string ERASE_ERROR_MESSAGE = "[Erase] ERROR";
-    const string ERASE_SUCCESS_MESSAGE = "[Erase] Done";
-
     bool isArgumentSizeValid(const string& cmd, int argsSize) {
         if (cmd == "read") {
             if (argsSize != 1) return false;
@@ -640,15 +627,23 @@ private:
         }
         return true;
     }
-
     void printEraseResult(const string header, const string result)
     {
         cout << "[" << header << "] " << result << "\n";
     }
-
     bool isCmdExecuteError(const string result) const {
         return result == "ERROR";
     }
+
+    SSD* ssd;
+    Logger logger;
+    TestShellStringManager testShellStringManager;
+
+    bool isExitCmd{ false };
+    const int LBA_START_ADDRESS = 0;
+    const int LBA_END_ADDRESS = 99;
+    const string ERASE_ERROR_MESSAGE = "[Erase] ERROR";
+    const string ERASE_SUCCESS_MESSAGE = "[Erase] Done";
 };
 
 class MockTestShell : public TestShell {
