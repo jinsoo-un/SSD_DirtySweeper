@@ -7,6 +7,7 @@
 #include <unordered_set>
 #include <windows.h>
 #include <shellapi.h>
+#include <direct.h>
 #include <cstdlib>
 #include <ctime>
 #include "gmock/gmock.h"
@@ -28,21 +29,36 @@ public:
     }
 
     void executeCommandLine(std::string commandLine) {
-        const std::string filePath = "..\\..\\SSD\\x64\\Release\\ssd.exe";
-        const std::string workingDir = "..\\..\\SSD\\x64\\Release";
+        char modulePath[MAX_PATH];
+        GetModuleFileNameA(NULL, modulePath, MAX_PATH);
 
-        std::string fullCommand = "\"" + filePath + "\" " + commandLine;
+        std::string shellFullPath(modulePath);
+        size_t lastSlash = shellFullPath.find_last_of("\\/");
+        std::string shellDir = (lastSlash != std::string::npos) ? shellFullPath.substr(0, lastSlash) : ".";
+
+        // ssd.exe 경로: shellDir 기준으로 상대 위치
+        std::string ssdRelativePath = shellDir + "\\..\\..\\..\\SSD\\x64\\Release\\ssd.exe";
+        std::string workingDirRelative = shellDir + "\\..\\..\\..\\SSD\\x64\\Release";
+
+        // 절대경로로 변환
+        char absSsdPath[MAX_PATH];
+        _fullpath(absSsdPath, ssdRelativePath.c_str(), MAX_PATH);
+
+        char absWorkingDir[MAX_PATH];
+        _fullpath(absWorkingDir, workingDirRelative.c_str(), MAX_PATH);
+
+        std::string fullCommand = "\"" + std::string(absSsdPath) + "\" " + commandLine;
 
         STARTUPINFOA si = { sizeof(STARTUPINFOA) };
         PROCESS_INFORMATION pi;
 
         BOOL success = CreateProcessA(
-            nullptr,
-            &fullCommand[0],        // commandLine (비 const)
-            nullptr, nullptr, FALSE,
+            NULL,
+            &fullCommand[0],  // 반드시 non-const!
+            NULL, NULL, FALSE,
             0,
-            nullptr,
-            workingDir.c_str(),     // working directory 명시
+            NULL,
+            absWorkingDir,
             &si, &pi
         );
 
@@ -339,18 +355,33 @@ private:
     const string WRITE_SUCCESS_MESSAGE = "[Write] Done";
 
     virtual std::string readOutputFile() {
-        std::ifstream file("..\\..\\SSD\\x64\\Release\\ssd_output.txt");
+        // shell.exe의 절대 경로 구하기
+        char modulePath[MAX_PATH];
+        GetModuleFileNameA(NULL, modulePath, MAX_PATH);
 
-        if (!file.is_open()) throw std::runtime_error("File not open: ssd_output.txt");
+        std::string shellFullPath(modulePath);
+        size_t lastSlash = shellFullPath.find_last_of("\\/");
+        std::string shellDir = (lastSlash != std::string::npos) ? shellFullPath.substr(0, lastSlash) : ".";
+
+        // ssd_output.txt의 상대 경로 → 절대 경로 변환
+        std::string relativePath = shellDir + "\\..\\..\\..\\SSD\\x64\\Release\\ssd_output.txt";
+
+        char absPath[MAX_PATH];
+        _fullpath(absPath, relativePath.c_str(), MAX_PATH);
+
+        std::ifstream file(absPath);
+        if (!file.is_open()) {
+            std::cerr << "Failed to open output file: " << absPath << std::endl;
+            throw std::exception();
+        }
 
         std::ostringstream content;
         std::string line;
         while (std::getline(file, line)) {
             content << line;
         }
-        std::string result = content.str();
 
-        return result;
+        return content.str();
     }
 
     std::vector<std::string> tokenize(const std::string& input) {
