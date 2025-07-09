@@ -211,35 +211,50 @@ public:
 class TestShell {
 public:
     TestShell(SSD* ssd) : ssd{ ssd } {}
+    bool isArgumentSizeValid(const string& cmd, int argsSize) {
+        if (cmd == "read") {
+            if (argsSize != 1) return false;
+        }
+        else if (cmd == "fullread") {
+            if (argsSize != 0) return false;
+        }
+        else if (cmd == "write") {
+            if (argsSize != 2) return false;
+        }
+        else if (cmd == "fullwrite"){
+            if (argsSize != 1) return false;
+        }
+
+        return true;
+    }
 
     void executeCommand(const std::string& cmd, const std::vector<std::string>& args) {
+        if (!isArgumentSizeValid(cmd, args.size())) {
+            std::cout << "INVALID COMMAND\n";
+            return;
+        }
+
         if (cmd == "read") {
-            if ((args.size() == 0) || (args.size() >= 2)) {
-                std::cout << "INVALID COMMAND\n";
-                return;
-            }
             int lba = stoi(args[0]);
             this->read(lba);
             return;
         }
 
         if (cmd == "fullread") {
-            if (args.size() > 0) {
-                std::cout << "INVALID COMMAND\n";
-                return;
-            }
             this->fullRead();
             return;
         }
 
         if (cmd == "write") {
-            if (args.size() < 2) {
-                std::cout << "INVALID COMMAND\n";
-                return;
-            }
             int lba = stoi(args[0]);
             std::string data = args[1];
             this->write(lba, data);
+            return;
+        }
+
+        if (cmd == "fullwrite") {
+            std::string data = args[0];
+            this->fullWrite(data);
             return;
         }
 
@@ -250,16 +265,6 @@ public:
 
         if (cmd == "exit") {
             this->exit();
-            return;
-        }
-
-        if (cmd == "fullwrite") {
-            if ((args.size() <= 0) || (args.size() >= 2)) {
-                std::cout << "INVALID COMMAND\n";
-                return;
-            }
-            std::string data = args[0];
-            this->fullWrite(data);
             return;
         }
 
