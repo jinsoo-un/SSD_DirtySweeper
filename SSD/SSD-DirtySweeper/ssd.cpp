@@ -145,15 +145,6 @@ public:
 	}
 private:
 	bool erase(int address, string val, int size) {
-		if (address + size > MAX_ADDRESS) {
-			file.updateOutput("ERROR");
-			return false;
-		}
-		if (size < 1 || size > 10) {
-			file.updateOutput("ERROR");
-			return false;
-		}
-
 		if (!file.readData(ssdData)) { 
 			file.updateOutput("ERROR");  
 			return false; 
@@ -275,10 +266,19 @@ private:
 		return address < MIN_ADDRESS || address >= MAX_ADDRESS;
 	}
 	
+	bool isEraseOutOfRange(int address, int size) {
+		if (address + size > MAX_ADDRESS)
+			return true;
+		if (size < 1 || size > 10)
+			return true;
+		return false;
+	}
+
 	bool isValidCommand(string command) {
         std::istringstream iss(command);
         string arg;
         int cnt = 0;
+		int tmpAddr = 0;
 		bool isErase = false;
 
         while (iss >> arg) {
@@ -289,9 +289,15 @@ private:
 	        }
 	        else if (cnt == 2) {
 		        if (isAddressOutOfRange(stoi(arg))) return false;
+				if (isErase) tmpAddr = stoi(arg);
 	        }
 	        else if (cnt == 3) {
-				if (isErase) continue;
+				if (isErase) {
+					if (isEraseOutOfRange(tmpAddr, stoi(arg)))
+						return false;
+					else
+						continue;
+				}
 		        if (!isHexWithPrefix(arg)) return false;
 	        }
 	        else
@@ -444,14 +450,15 @@ private:
 	bool erase() {
 		// check if buffer is full, flush to RealSSD
 		if (buffer.isFull()) {
-			flushBuffer();
 			struct params ssdParams;
 			ssdParams.op = ssd->getOp();
 			ssdParams.addr = ssd->getAddr();
 			ssdParams.size = ssd->getSize();
+			flushBuffer();
 			// write the command to buffer
 			buffer.writeBuffer(ssdParams);
 			file.updateOutput("");
+			return true;
 		}
 
 		int startAddr = ssd->getAddr();
@@ -527,7 +534,7 @@ private:
 
 		// write the command to buffer
 		buffer.writeBuffer(ssdParams);
-		//updateOutputFile("");
+		file.updateOutput("");
 
 		return true;
 	}
@@ -557,7 +564,7 @@ private:
 				ssd->exec();
 			}
 		}
-		//buffer.clear();
+		buffer.clear();
 	}
 
 	RealSSD* ssd; // RealSSD instance
