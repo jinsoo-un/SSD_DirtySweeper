@@ -374,17 +374,11 @@ public:
         testShellStringManager.printSuccessFullWriteResult();
     }
 
-    std::string getWriteDataInFullWriteAndReadCompareScript(int lba){
-        std::string evenData = "0xAAAABBBB";
-        std::string oddData = "0xCCCCDDDD";
-        return (lba / 5 % 2 == 0) ? evenData : oddData;
-    }
-
     void fullWriteAndReadCompare() {
 		logger.print("testShell.fullWriteAndReadCompare()", "full write and read compare command called");
 
         for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; ++lba) {
-            std::string writeData = getWriteDataInFullWriteAndReadCompareScript(lba);
+            std::string writeData = testShellStringManager.getWriteDataInFullWriteAndReadCompareScript(lba);
 
             ssd->write(lba, writeData);
             ssd->read(lba);
