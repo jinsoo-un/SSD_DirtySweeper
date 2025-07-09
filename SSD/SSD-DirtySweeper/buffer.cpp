@@ -30,7 +30,7 @@ public:
         }
 	}
 
-    // index의 buffer를 parsing해서 return, false if empty
+    // Parse buffer which name is "[index]_*", return false if empty
     bool readAndParseBuffer(int index, string& op, int& addr, string &value, int& size) {
         if (isOneBufferEmpty(index))
             return false;
@@ -64,7 +64,7 @@ public:
         return true;
     }
 
-    // index의 buffer를 data로 변경
+    // change the buffer "[index]_*" to "[index]_[data]"
 	void writeBuffer(int index, string data) {
         string targetBuffer = readBuffer(index);
         string newBuffer = DIR_NAME + "/" + std::to_string(index) + "_" + data;
@@ -80,7 +80,7 @@ private:
         return true;
     }
 
-    // index를 prefix로 가진 buffer를 return
+    // return the buffer "[index]_*"
     string readBuffer(int index) {
         if (index < 1 || index > 5)
             return nullptr;
