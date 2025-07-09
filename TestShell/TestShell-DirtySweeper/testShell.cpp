@@ -330,12 +330,11 @@ public:
         if (size < 1 || size > 100) {
             throw::std::exception();
         }
-        if (lba + size > LBA_END_ADDRESS) {
+        if (lba + size > LBA_END_ADDRESS + 1) {
             throw::std::exception();
         }
 
         bool isFailed = false;
-        string unitResult = "";
         const int maxEraseCntForSsd = 10;
         const int maxRepeatCnt = size / maxEraseCntForSsd;
         const int remainedSize = size % maxEraseCntForSsd;
@@ -352,14 +351,58 @@ public:
         
         if (!isFailed && remainedSize > 0) {
             ssd->erase(startLba, remainedSize);
-            isFailed = (unitResult == readOutputFile());
+            isFailed = ("ERROR" == readOutputFile());
         }
 
         if (isFailed) {
-            printSuccessEraseResult();
+            printEraseResult("Erase", "ERROR");
+        }
+        else {
+            printEraseResult("Erase", "Done");
+        }
+    }
+    void eraseRange(unsigned int startLba, unsigned int endLba)
+    {
+        // exception 
+        if (startLba < LBA_START_ADDRESS || startLba > LBA_END_ADDRESS) {
+            throw::std::exception();
         }
 
-        printSuccessEraseResult();
+        if (endLba < LBA_START_ADDRESS || endLba > LBA_END_ADDRESS) {
+            throw::std::exception();
+        }
+
+        if (startLba > endLba) {
+            throw::std::exception();
+        }
+
+        const unsigned int size = endLba - startLba + 1;
+
+        bool isFailed = false;
+        const int maxEraseCntForSsd = 10;
+        const int maxRepeatCnt = size / maxEraseCntForSsd;
+        const int remainedSize = size % maxEraseCntForSsd;
+
+        for (int cnt = 0; cnt < maxRepeatCnt; cnt++) {
+            ssd->erase(startLba, maxEraseCntForSsd);
+            startLba += maxEraseCntForSsd;
+            if (readOutputFile() == "ERROR") {
+                isFailed = true;
+                break;
+            }
+        }
+
+        if (!isFailed && remainedSize > 0) {
+            ssd->erase(startLba, remainedSize);
+            isFailed = ("ERROR" == readOutputFile());
+        }
+
+        if (isFailed) {
+            printEraseResult("Erase Range", "ERROR");
+        }
+        else {
+            printEraseResult("Erase Range", "Done");
+        }
     }
 
 private:
@@ -422,11 +465,9 @@ private:
     void printErrorWriteResult() {
         std::cout << WRITE_ERROR_MESSAGE << "\n";
     }
-    void printSuccessEraseResult() {
-        std::cout << ERASE_SUCCESS_MESSAGE << "\n";
-    }
-    void printErrorEraseResult() {
-        std::cout << ERASE_ERROR_MESSAGE << "\n";
+    void printEraseResult(const string header, const string result)
+    {
+        std::cout <<"["<< header<<"] "<< result << "\n";
     }
 };
 
