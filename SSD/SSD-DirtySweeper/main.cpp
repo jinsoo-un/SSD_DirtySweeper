@@ -18,7 +18,7 @@ public:
     static const int VALID_TEST_SIZE = 10;
     static const int INVALID_TEST_SIZE = 20;
 
-	static const int DELAY_NANOS_FOR_WRITE = 10000; // 10 millisecond
+	static const int DELAY_NANOS_FOR_WRITE = 1000000; // 10 millisecond
 
     void SetUp() override {
         ofstream file(FileNames::DATA_FILE);
@@ -197,6 +197,8 @@ TEST_F(RealSSDTest, WriteReadVerify00) {
     ssd->parseCommand(cmd);
     bool isPass = ssd->exec();
 
+    this_thread::sleep_for(chrono::nanoseconds(DELAY_NANOS_FOR_WRITE));
+
     EXPECT_EQ(true, isPass);
     EXPECT_TRUE(checkOutputFile(INITIAL_HEX_DATA));
 
@@ -204,6 +206,8 @@ TEST_F(RealSSDTest, WriteReadVerify00) {
     ssd->parseCommand(cmd);
     isPass = ssd->exec();
     EXPECT_TRUE(isPass);
+
+    this_thread::sleep_for(chrono::nanoseconds(DELAY_NANOS_FOR_WRITE));
 
     cmd = buildCommand("R", VALID_TEST_ADDRESS);
     ssd->parseCommand(cmd);

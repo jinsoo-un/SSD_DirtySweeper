@@ -344,6 +344,10 @@ public:
 	string getValue() {
 		return ssd->getValue();
 	}
+	int getSize() {
+		return ssd->getSize();
+	}
+
 private:
 	// Buffered SSD methods
 	bool read() {
