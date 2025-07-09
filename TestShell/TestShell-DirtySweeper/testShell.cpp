@@ -353,8 +353,7 @@ public:
     {
         logger.print("testShell.write()", "write command called");
         ssd->write(lba, data);
-        string result = readOutputFile();
-        if (result == "ERROR") {
+        if (isCmdExecuteError(readOutputFile())) {
             testShellStringManager.printErrorWriteResult();
             return;
         }
@@ -365,8 +364,7 @@ public:
         logger.print("testShell.fullWrite()", "full write command called");
         for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; lba++) {
             ssd->write(lba, data);
-            string currentResult = readOutputFile();
-            if (currentResult == "ERROR") {
+            if (isCmdExecuteError(readOutputFile())) {
                 testShellStringManager.printErrorFullWriteResult();
                 return;
             }
@@ -486,7 +484,7 @@ public:
         const int eraseUnitSize = 2;
         const int maxAgingCnt = 30;
         ssd->erase(0, eraseUnitSize);
-        if (readOutputFile() == "ERROR") {
+        if (isCmdExecuteError(readOutputFile())) {
             std::cout << "FAIL\n";
             return;
         }
@@ -502,7 +500,7 @@ public:
                 result.push_back(readOutputFile());
 
                 for (auto data : result) {
-                    if (data == "ERROR") {
+                    if (isCmdExecuteError(data)) {
                         std::cout << "FAIL\n";
                         return;
                     }
@@ -646,6 +644,10 @@ private:
     void printEraseResult(const string header, const string result)
     {
         std::cout << "[" << header << "] " << result << "\n";
+    }
+
+    bool isCmdExecuteError(const string result) const {
+        return result == "ERROR";
     }
 };
 
