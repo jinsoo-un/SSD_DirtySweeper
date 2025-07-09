@@ -3,48 +3,53 @@
 #include "testShell_string_manager.h"
 
 void TestShellStringManager::printErrorReadResult() {
-    std::cout << "[Read] ERROR\n";
+    cout << "[Read] ERROR\n";
 }
 
-void TestShellStringManager::printSuccessReadResult(std::string result, int lba) {
-    std::cout << "[Read] LBA " << lba << " : " << result << "\n";
+void TestShellStringManager::printSuccessReadResult(string result, int lba) {
+    cout << "[Read] LBA " << lba << " : " << result << "\n";
 }
+
 void TestShellStringManager::printSuccessWriteResult() {
-    std::cout << "[Write] Done\n";
+    cout << "[Write] Done\n";
 }
+
 void TestShellStringManager::printErrorWriteResult() {
-    std::cout << "[Write] ERROR\n";
+    cout << "[Write] ERROR\n";
 }
 
 void TestShellStringManager::printSuccessFullWriteResult() {
-    std::cout << "[Full Write] Done\n";;
+    cout << "[Full Write] Done\n";;
 }
+
 void TestShellStringManager::printErrorFullWriteResult() {
-    std::cout << "[Full Write] ERROR\n";
+    cout << "[Full Write] ERROR\n";
 }
 
 void TestShellStringManager::printScriptFailResult() {
-    std::cout << "FAIL\n";
-}
-void TestShellStringManager::printScriptPassResult() {
-    std::cout << "PASS\n";
-}
-void TestShellStringManager::printWriteReadMismatch(int lba, std::string writeData, std::string readData) {
-    std::cout << "[Mismatch] LBA " << lba << " Expected: " << writeData << " Got: " << readData << "\n";
+    cout << "FAIL\n";
 }
 
-std::string TestShellStringManager::generateRandomHexString() {
+void TestShellStringManager::printScriptPassResult() {
+    cout << "PASS\n";
+}
+
+void TestShellStringManager::printWriteReadMismatch(int lba, string writeData, string readData) {
+    cout << "[Mismatch] LBA " << lba << " Expected: " << writeData << " Got: " << readData << "\n";
+}
+
+string TestShellStringManager::generateRandomHexString() {
     static const char* hexDigits = "0123456789ABCDEF";
 
     static bool seeded = false;
     if (!seeded) {
-        std::srand(static_cast<unsigned int>(std::time(nullptr)));
+        srand(static_cast<unsigned int>(time(nullptr)));
         seeded = true;
     }
 
-    unsigned int value = (static_cast<unsigned int>(std::rand()) << 16) | std::rand();
+    unsigned int value = (static_cast<unsigned int>(rand()) << 16) | rand();
 
-    std::string result = "0x";
+    string result = "0x";
     for (int i = 7; i >= 0; --i) {
         int digit = (value >> (i * 4)) & 0xF;
         result += hexDigits[digit];
@@ -53,8 +58,8 @@ std::string TestShellStringManager::generateRandomHexString() {
     return result;
 }
 
-std::string TestShellStringManager::getWriteDataInFullWriteAndReadCompareScript(int lba) {
-    std::string evenData = "0xAAAABBBB";
-    std::string oddData = "0xCCCCDDDD";
+string TestShellStringManager::getWriteDataInFullWriteAndReadCompareScript(int lba) {
+    string evenData = "0xAAAABBBB";
+    string oddData = "0xCCCCDDDD";
     return (lba / 5 % 2 == 0) ? evenData : oddData;
 }

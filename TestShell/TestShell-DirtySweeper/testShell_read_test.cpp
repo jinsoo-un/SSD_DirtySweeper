@@ -7,8 +7,8 @@ public:
     NiceMock<SSDMock> ssdMock;
     MockTestShell testShell{ &ssdMock };
 
-    const std::string RANDOM_VALUE = "0xAAAABBBB";
-    const std::string ERROR_RESULT = "ERROR";
+    const string RANDOM_VALUE = "0xAAAABBBB";
+    const string ERROR_RESULT = "ERROR";
     const int RANDOM_LBA = 11;
     const int LBA_COUNT = 100;
 };
@@ -32,7 +32,7 @@ TEST_F(ReadTestFixture, InvalidAddress) {
 
     testing::internal::CaptureStdout();
     testShell.read(100);
-    std::string output = testing::internal::GetCapturedStdout();
+    string output = testing::internal::GetCapturedStdout();
     cout << output;
     EXPECT_THAT(output, ::testing::HasSubstr("ERROR"));
 }
