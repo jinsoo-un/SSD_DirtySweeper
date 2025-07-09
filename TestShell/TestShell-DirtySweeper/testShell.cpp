@@ -494,7 +494,7 @@ public:
         const int maxAgingCnt = 30;
         ssd->erase(0, eraseUnitSize);
         if (isCmdExecuteError(readOutputFile())) {
-            cout << "FAIL\n";
+            testShellStringManager.printScriptFailResult();
             return;
         }
 
@@ -510,13 +510,13 @@ public:
 
                 for (auto data : result) {
                     if (isCmdExecuteError(data)) {
-                        cout << "FAIL\n";
+                        testShellStringManager.printScriptFailResult();
                         return;
                     }
                 }
             }
         }
-        cout << "PASS\n";
+        testShellStringManager.printScriptPassResult();
     }
 
     static const int WRITE_READ_ITERATION = 200;
