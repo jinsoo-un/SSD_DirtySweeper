@@ -6,7 +6,7 @@ using std::string;
 
 class SSDTest : public ::testing::Test {
 public:
-    SSD ssd;
+    SSD* ssd = new BufferedSSD();
     ReadCommand readCmd;
     WriteCommand writeCmd;
     EraseCommand eraseCmd;
@@ -80,40 +80,40 @@ TEST_F(SSDTest, ReadTC_ReturnData02)
 
 TEST_F(SSDTest, ArgparseRead) {
     string cmd = buildCommand("R", 3);
-    ssd.parseCommand(cmd);
-    EXPECT_EQ(2, ssd.getArgCount());
-    EXPECT_EQ("R", ssd.getOp());
-    EXPECT_EQ(3, ssd.getAddr());
+    ssd->parseCommand(cmd);
+    EXPECT_EQ(2, ssd->getArgCount());
+    EXPECT_EQ("R", ssd->getOp());
+    EXPECT_EQ(3, ssd->getAddr());
 }
 
 TEST_F(SSDTest, ArgparseWrite)
 {
     string cmd = buildCommand("W", 3, VALID_HEX_DATA);
-    ssd.parseCommand(cmd);
-    EXPECT_EQ(3, ssd.getArgCount());
-    EXPECT_EQ("W", ssd.getOp());
-    EXPECT_EQ(3, ssd.getAddr());
-    EXPECT_EQ("0x1298CDEF", ssd.getValue());
+    ssd->parseCommand(cmd);
+    EXPECT_EQ(3, ssd->getArgCount());
+    EXPECT_EQ("W", ssd->getOp());
+    EXPECT_EQ(3, ssd->getAddr());
+    EXPECT_EQ("0x1298CDEF", ssd->getValue());
 }
 
 TEST_F(SSDTest, ArgparseInvalidOp)
 {
     string cmd = buildCommand("S", 3);
-    ssd.parseCommand(cmd);
+    ssd->parseCommand(cmd);
     EXPECT_TRUE(checkOutputFile("ERROR"));
 }
 
 TEST_F(SSDTest, ArgparseInvalidAddr)
 {
     string cmd = buildCommand("R", 300);
-    ssd.parseCommand(cmd);
+    ssd->parseCommand(cmd);
     EXPECT_TRUE(checkOutputFile("ERROR"));
 }
 
 TEST_F(SSDTest, ArgparseInvalidValue)
 {
     string cmd = buildCommand("W", 3, INVALID_HEX_DATA);
-    ssd.parseCommand(cmd);
+    ssd->parseCommand(cmd);
     EXPECT_TRUE(checkOutputFile("ERROR"));
 }
 
@@ -181,7 +181,7 @@ TEST_F(SSDTest, WriteReadVerify00) {
 #ifdef NDEBUG
 int main(int argc, char *argv[])
 {
-    SSD ssd;
+    SSD* ssd = new BufferedSSD();
     string inputLine;
 
     // skip ssd.exe myself
@@ -190,9 +190,9 @@ int main(int argc, char *argv[])
         inputLine += argv[i];
     }
 
-    if (!ssd.parseCommand(inputLine))
+    if (!ssd->parseCommand(inputLine))
         return -1;
-    ssd.exec();
+    ssd->exec();
 
     return 0;
 }
