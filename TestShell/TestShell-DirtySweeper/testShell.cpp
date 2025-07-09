@@ -239,8 +239,11 @@ public:
 
             if (readData != writeData) {
                 std::cout << "[Mismatch] LBA " << lba << " Expected: " << writeData << " Got: " << readData << "\n";
+                std::cout << "FAIL\n";
+                return;
             }
         }
+        std::cout << "PASS\n";
     }
 
     void exit(void) {
