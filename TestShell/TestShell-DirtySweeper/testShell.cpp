@@ -506,11 +506,11 @@ public:
                     }
                 }
             }
-            cout << "PASS\n";
         }
+        cout << "PASS\n";
     }
-    static const int WRITE_READ_ITERATION = 200;
 
+    static const int WRITE_READ_ITERATION = 200;
 private:
     SSD* ssd;
     Logger logger;
