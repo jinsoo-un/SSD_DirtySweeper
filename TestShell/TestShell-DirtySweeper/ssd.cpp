@@ -1,16 +1,3 @@
-#include <sstream>
-#include <vector>
-#include <unordered_set>
-#include <windows.h>
-#include <shellapi.h>
-#include <direct.h>
-#include <cstdlib>
-#include <ctime>
-#include <iomanip>
-#include <chrono>
-#include <mutex>
-#include <algorithm>
-#include <io.h>
 #include "gmock/gmock.h"
 #include "testShell_string_manager.h"
 #include "logger.h"
