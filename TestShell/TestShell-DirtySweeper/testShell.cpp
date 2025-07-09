@@ -14,6 +14,7 @@
 #include <chrono>
 #include <mutex>
 #include <algorithm>
+#include <io.h>
 #include "gmock/gmock.h"
 
 using namespace std;
@@ -21,23 +22,102 @@ using namespace std;
 class Logger {
 public:
     void print(const std::string& sender, const std::string& message) {
-        std::ofstream logFile("latest.log", std::ios::app);
+        rotateIfNeeded();
+
+        std::ofstream logFile(LOG_FILE_NAME, std::ios::app);
         if (!logFile.is_open()) return;
 
-        auto now = std::chrono::system_clock::now();
-        std::time_t now_c = std::chrono::system_clock::to_time_t(now);
-        std::tm local_tm;
-        localtime_s(&local_tm, &now_c);
+        logFile << "[" << currentDateTime() << "] ";
+        logFile << padRight(sender, 30) << ": " << message << "\n";
+    }
 
-        logFile << "["
-            << std::setfill('0') << std::setw(2) << (local_tm.tm_year % 100) << "."
-            << std::setw(2) << (local_tm.tm_mon + 1) << "."
-            << std::setw(2) << local_tm.tm_mday << " "
-            << std::setw(2) << local_tm.tm_hour << ":"
-            << std::setw(2) << local_tm.tm_min << "] ";
+private:
+    const std::string LOG_FILE_NAME = "latest.log";
+    const size_t MAX_LOG_FILE_SIZE = 10 * 1024; // 10KB
 
-        logFile << std::left << std::setfill(' ') << std::setw(40) << sender;
-        logFile << " : " << message << std::endl;
+    std::string currentDateTime() {
+        std::time_t now = std::time(nullptr);
+        std::tm tmStruct;
+        localtime_s(&tmStruct, &now);
+        char buffer[20];
+        std::strftime(buffer, sizeof(buffer), "%y.%m.%d %H:%M", &tmStruct);
+        return buffer;
+    }
+
+    std::string formatForFileName(std::tm tmStruct) {
+        std::ostringstream oss;
+        oss << "until_"
+            << std::put_time(&tmStruct, "%y%m%d_%Hh_%Mm_%Ss")
+            << ".log";
+        return oss.str();
+    }
+
+    std::string padRight(const std::string& str, size_t width) {
+        if (str.length() >= width) return str;
+        return str + std::string(width - str.length(), ' ');
+    }
+
+    size_t getFileSize(const std::string& path) {
+        struct _stat st;
+        if (_stat(path.c_str(), &st) != 0) return 0;
+        return st.st_size;
+    }
+
+    void rotateIfNeeded() {
+        size_t size = getFileSize(LOG_FILE_NAME);
+        if (size < MAX_LOG_FILE_SIZE) return;
+
+        // rename latest.log to until_YYMMDD_HHh_MMm_SSs.log
+        std::time_t now = std::time(nullptr);
+        std::tm tmStruct;
+        localtime_s(&tmStruct, &now);
+        std::string newFileName = formatForFileName(tmStruct);
+
+        std::rename(LOG_FILE_NAME.c_str(), newFileName.c_str());
+
+        handleUntilLogFiles();
+    }
+
+    void handleUntilLogFiles() {
+        std::vector<std::string> untilLogs;
+
+        _finddata_t fileinfo;
+        intptr_t handle = _findfirst("until_*.log", &fileinfo);
+        if (handle != -1) {
+            do {
+                untilLogs.push_back(fileinfo.name);
+            } while (_findnext(handle, &fileinfo) == 0);
+            _findclose(handle);
+        }
+
+        if (untilLogs.size() < 2) return;
+
+        // find oldest file
+        std::string oldest = untilLogs[0];
+        time_t oldestTime = getLastWriteTime(oldest);
+
+        for (const auto& f : untilLogs) {
+            time_t t = getLastWriteTime(f);
+            if (t < oldestTime) {
+                oldestTime = t;
+                oldest = f;
+            }
+        }
+
+        // rename .log to .zip
+        std::string zipName = oldest.substr(0, oldest.find_last_of('.')) + ".zip";
+        std::rename(oldest.c_str(), zipName.c_str());
+    }
+
+    time_t getLastWriteTime(const std::string& path) {
+        WIN32_FILE_ATTRIBUTE_DATA info;
+        if (!GetFileAttributesExA(path.c_str(), GetFileExInfoStandard, &info)) return 0;
+
+        FILETIME ft = info.ftLastWriteTime;
+        ULARGE_INTEGER ull;
+        ull.LowPart = ft.dwLowDateTime;
+        ull.HighPart = ft.dwHighDateTime;
+        return static_cast<time_t>((ull.QuadPart - 116444736000000000ULL) / 10000000ULL);
     }
 };
 
@@ -101,18 +181,24 @@ public:
     }
 
     void read(int lba)  override {
+		logger.print("SsdHelpler.read()", "Reading LBA: " + std::to_string(lba));
         string commandLine = buildCommandLine("R", lba);
         executeCommandLine(commandLine);
     }
 
     void write(int lba, string data) override {
+		logger.print("SsdHelpler.write()", "Writing to LBA: " + std::to_string(lba) + " with data: " + data);
         string commandLine = buildCommandLine("W", lba, data);
         executeCommandLine(commandLine);
     }
     void erase(unsigned int lba, unsigned size) override {
+		logger.print("SsdHelpler.erase()", "Erasing LBA: " + std::to_string(lba) + " with size: " + std::to_string(size));
         string commandLine = buildCommandLine("E", lba, std::to_string(size));
         executeCommandLine(commandLine);
     }
+
+private:
+	Logger logger;
 };
 
 class SSDMock : public SSD {
@@ -237,6 +323,8 @@ public:
     }
 
     void help() {
+		logger.print("testShell.help()", "help command called");
+
         std::cout << "Developed by: Team Members - Sooeon Jin, Euncho Bae, Kwangwon Min, Hyeongseok Choi, Yunbae Kim, Seongkyoon Lee" << std::endl;
         std::cout << "read (LBA)         : Read data from (LBA)." << std::endl;
         std::cout << "write (LBA) (DATA) : Write (DATA) to (LBA)." << std::endl;
@@ -310,6 +398,8 @@ public:
     }
 
     void fullWriteAndReadCompare() {
+		logger.print("testShell.fullWriteAndReadCompare()", "full write and read compare command called");
+
         for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; ++lba) {
             std::string writeData = getWriteDataInFullWriteAndReadCompareScript(lba);
 
@@ -335,6 +425,8 @@ public:
     }
 
     void writeReadAging() {
+		logger.print("testShell.writeReadAging()", "write read aging command called");
+
         for (int i = 0; i < WRITE_READ_ITERATION; i++) {
             string randomString = generateRandomHexString();
             ssd->write(0, randomString);
@@ -375,6 +467,8 @@ public:
     static const int WRITE_READ_ITERATION = 200;
 
     void partialLBAWrite() {
+		logger.print("testShell.partialLBAWrite()", "partial LBA write command called");
+
         const string testValue = "0x12345678";
         const int repeatCnt = 30;
         for (int count = 1; count <= repeatCnt; count++) {
@@ -409,6 +503,8 @@ public:
     }
 
     void eraseWithSize(unsigned int lba, unsigned int size){
+		logger.print("testShell.eraseWithSize()", "erase with size command called");
+
         if (!isValidEraseWithSizeArgument(lba,size)) {
             printEraseResult("Erase", "ERROR");
             return;
@@ -418,6 +514,8 @@ public:
     }
 
     void eraseWithRange(unsigned int startLba, unsigned int endLba){
+		logger.print("testShell.eraseWithRange()", "erase with range command called");
+
         if (!isValidLbaRange(startLba, endLba)) {
             printEraseResult("Erase Range", "ERROR");
             return;
@@ -428,6 +526,8 @@ public:
     }
 
     void eraseAndWriteAging(void) {
+		logger.print("testShell.eraseAndWriteAging()", "erase and write aging command called");
+
         const int eraseUnitSize = 2;
         const int maxAgingCnt = 30;
         ssd->erase(0, eraseUnitSize);
