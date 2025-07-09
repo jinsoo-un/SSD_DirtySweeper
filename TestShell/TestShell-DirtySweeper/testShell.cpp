@@ -22,9 +22,9 @@ public:
 
 class SsdHelpler : public SSD {
 public:
-    string buildCommandLine(string rw, int lba, string data = "") {
-        string cmdLine = rw + " " + std::to_string(lba);
-        if (rw == "W") cmdLine = cmdLine + " " + data;
+    string buildCommandLine(string cmd, int lba, string data = "") {
+        string cmdLine = cmd + " " + std::to_string(lba);
+        if (cmd == "W" || cmd == "E") cmdLine = cmdLine + " " + data;
         return cmdLine;
     }
 
@@ -64,6 +64,10 @@ public:
 
     void write(int lba, string data) override {
         string commandLine = buildCommandLine("W", lba, data);
+        executeCommandLine(commandLine);
+    }
+    void erase(unsigned int lba, unsigned size) override {
+        string commandLine = buildCommandLine("E", lba, std::to_string(size));
         executeCommandLine(commandLine);
     }
 };
