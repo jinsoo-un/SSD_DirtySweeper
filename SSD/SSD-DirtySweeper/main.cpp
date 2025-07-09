@@ -229,7 +229,7 @@ TEST_F(SSDTest, SameLBAWrite03) {
 
     //precondition
     for (int i = 0; i < 5; i++) {
-        isPass = writeCmd.run(writeLBA, "0x123454678");
+        isPass = writeCmd.run(writeLBA + i, "0x123454678");
         EXPECT_TRUE(isPass);
     }
 
@@ -254,7 +254,7 @@ TEST_F(SSDTest, SameLBAWrite04) {
 
     //precondition
     for (int i = 0; i < 6; i++) {
-        isPass = writeCmd.run(writeLBA, "0x123454678");
+        isPass = writeCmd.run(writeLBA + i, "0x123454678");
         EXPECT_TRUE(isPass);
     }
 
@@ -269,7 +269,7 @@ TEST_F(SSDTest, SameLBAWrite05) {
 
     //precondition
     for (int i = 0; i < 10; i++) {
-        isPass = writeCmd.run(writeLBA, "0x123454678");
+        isPass = writeCmd.run(writeLBA + i, "0x123454678");
         EXPECT_TRUE(isPass);
     }
 
@@ -284,7 +284,7 @@ TEST_F(SSDTest, SameLBAWrite06) {
 
     //precondition
     for (int i = 0; i < 11; i++) {
-        isPass = writeCmd.run(writeLBA, "0x123454678");
+        isPass = writeCmd.run(writeLBA+i, "0x123454678");
         EXPECT_TRUE(isPass);
     }
 
