@@ -14,10 +14,15 @@ public:
     string INVALID_HEX_DATA = "0xABCDEFGH";
     string INITIAL_HEX_DATA = "0x00000000";
     static const int VALID_TEST_ADDRESS = 0;
+    static const int VALID_TEST_ADDRESS_MAX = 99;
     static const int INVALID_TEST_ADDRESS = 100;
+    static const int VALID_TEST_SIZE = 10;
+    static const int INVALID_TEST_SIZE = 20;
+
 
     void SetUp() override {
-        eraseCmd.run();
+        for (int i = VALID_TEST_ADDRESS; i < VALID_TEST_ADDRESS_MAX; i += VALID_TEST_SIZE)
+            eraseCmd.run(i, INITIAL_HEX_DATA, VALID_TEST_SIZE);
     }
 
     bool checkOutputFile(string expected) {
@@ -127,7 +132,6 @@ TEST_F(SSDTest, WriteFailWithOutOfAddressRange) {
     EXPECT_FALSE(isPass);
 }
 
-
 TEST_F(SSDTest, WriteInvalidData00) {
 
     string invalidData = "0x1234567890000";
@@ -176,6 +180,38 @@ TEST_F(SSDTest, WriteReadVerify00) {
     isPass = readCmd.run(VALID_TEST_ADDRESS);
     EXPECT_EQ(true, isPass);
     EXPECT_TRUE(checkOutputFile(VALID_HEX_DATA));
+}
+
+TEST_F(SSDTest, ErasePass) {
+    bool isPass = eraseCmd.run(VALID_TEST_ADDRESS, VALID_HEX_DATA, VALID_TEST_SIZE);
+    EXPECT_TRUE(isPass);
+}
+
+TEST_F(SSDTest, EraseFailOutofRange) {
+    bool isPass = eraseCmd.run(INVALID_TEST_ADDRESS, VALID_HEX_DATA, VALID_TEST_SIZE);
+    EXPECT_FALSE(isPass);
+}
+
+TEST_F(SSDTest, EraseFailOutofRangeDestination) {
+    bool isPass = eraseCmd.run(VALID_TEST_ADDRESS_MAX, VALID_HEX_DATA, VALID_TEST_SIZE);
+    EXPECT_FALSE(isPass);
+}
+
+TEST_F(SSDTest, EraseFailExceedMaxSize) {
+    bool isPass = eraseCmd.run(VALID_TEST_ADDRESS, VALID_HEX_DATA, INVALID_TEST_SIZE);
+    EXPECT_FALSE(isPass);
+}
+
+TEST_F(SSDTest, EraseAndReadVerify) {
+    bool isPass = writeCmd.run(VALID_TEST_ADDRESS, VALID_HEX_DATA);
+    EXPECT_TRUE(isPass);
+
+    isPass = eraseCmd.run(VALID_TEST_ADDRESS, VALID_HEX_DATA, VALID_TEST_SIZE);
+    EXPECT_TRUE(isPass);
+
+    isPass = readCmd.run(VALID_TEST_ADDRESS);
+    EXPECT_EQ(true, isPass);
+    EXPECT_TRUE(checkOutputFile(INITIAL_HEX_DATA));
 }
 
 #ifdef NDEBUG
