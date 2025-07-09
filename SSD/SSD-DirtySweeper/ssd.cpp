@@ -185,6 +185,7 @@ public:
 	virtual string getValue() = 0;
 	virtual int getSize() = 0;
     virtual int getAccessCount() = 0;
+    virtual void bufferClear() = 0;
 protected:
 	FileControl file;
 };
@@ -246,6 +247,9 @@ public:
         return accessCount;
     }
 
+    void bufferClear() {
+        return;
+    }
 private:
 	void storeParams(string command)
 	{
@@ -361,6 +365,11 @@ public:
     int getAccessCount() {
         return ssd->getAccessCount();
     }
+
+    void bufferClear() {
+        buffer.clear();
+        return;
+    }
 private:
 	// Buffered SSD methods
 	bool read() {
@@ -397,21 +406,39 @@ private:
 	}
 
 	bool write() {
-		// check if buffer is full, flush to RealSSD
-		if (buffer.isFull()) {
-			flushBuffer();
-			struct params ssdParams;
-			ssdParams.op = ssd->getOp();
-			ssdParams.addr = ssd->getAddr();
-			ssdParams.value = ssd->getValue();
-			// write the command to buffer
-			buffer.writeBuffer(ssdParams);
-			file.updateOutput("");
-		}
-		
-		// check if command can be merged with buffer
-		// if buffer has room, write to buffer
-		return ssd->exec(); // write to RealSSD
+        struct params ssdParams;
+        ssdParams.op = ssd->getOp();
+        ssdParams.addr = ssd->getAddr();
+        ssdParams.value = ssd->getValue();
+
+        if (buffer.isFull()) {
+            flushBuffer();
+            buffer.clear();
+        }
+
+        buffer.writeBuffer(ssdParams);
+
+        if (buffer.getFilledCount() == 1) return true;
+
+        for (int i = buffer.getFilledCount()-1; i > 0; i--) {
+            struct params bufferCommand;
+            buffer.readAndParseBuffer(i, bufferCommand);
+            if (bufferCommand.op == "W") {
+                if (bufferCommand.addr == ssd->getAddr()) {
+                     buffer.eraseBuffer(i);
+                    return true;
+                }
+            }
+
+            if (bufferCommand.op == "E") {
+                if ((bufferCommand.size == 1) && (bufferCommand.addr == ssd->getAddr())) {
+                    buffer.eraseBuffer(i);
+                    return true;
+                }
+            }
+        }
+  
+        return false;        
 	}
 
 	bool erase() {

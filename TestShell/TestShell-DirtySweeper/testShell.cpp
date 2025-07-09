@@ -131,6 +131,25 @@ public:
 
 class SsdHelpler : public SSD {
 public:
+    void read(int lba)  override {
+        logger.print("SsdHelpler.read()", "Reading LBA: " + to_string(lba));
+        string commandLine = buildCommandLine("R", lba);
+        executeCommandLine(commandLine);
+    }
+
+    void write(int lba, string data) override {
+        logger.print("SsdHelpler.write()", "Writing to LBA: " + to_string(lba) + " with data: " + data);
+        string commandLine = buildCommandLine("W", lba, data);
+        executeCommandLine(commandLine);
+    }
+
+    void erase(unsigned int lba, unsigned size) override {
+        logger.print("SsdHelpler.erase()", "Erasing LBA: " + to_string(lba) + " with size: " + to_string(size));
+        string commandLine = buildCommandLine("E", lba, to_string(size));
+        executeCommandLine(commandLine);
+    }
+
+private:
     string buildCommandLine(string cmd, int lba, string data = "") {
         string cmdLine = cmd + " " + to_string(lba);
         if (cmd == "W" || cmd == "E") cmdLine = cmdLine + " " + data;
@@ -181,25 +200,6 @@ public:
         CloseHandle(pi.hProcess);
         CloseHandle(pi.hThread);
     }
-
-    void read(int lba)  override {
-        logger.print("SsdHelpler.read()", "Reading LBA: " + to_string(lba));
-        string commandLine = buildCommandLine("R", lba);
-        executeCommandLine(commandLine);
-    }
-
-    void write(int lba, string data) override {
-        logger.print("SsdHelpler.write()", "Writing to LBA: " + to_string(lba) + " with data: " + data);
-        string commandLine = buildCommandLine("W", lba, data);
-        executeCommandLine(commandLine);
-    }
-    void erase(unsigned int lba, unsigned size) override {
-        logger.print("SsdHelpler.erase()", "Erasing LBA: " + to_string(lba) + " with size: " + to_string(size));
-        string commandLine = buildCommandLine("E", lba, to_string(size));
-        executeCommandLine(commandLine);
-    }
-
-private:
     Logger logger;
 };
 
@@ -353,8 +353,7 @@ public:
     {
         logger.print("testShell.write()", "write command called");
         ssd->write(lba, data);
-        string result = readOutputFile();
-        if (result == "ERROR") {
+        if (isCmdExecuteError(readOutputFile())) {
             testShellStringManager.printErrorWriteResult();
             return;
         }
@@ -365,8 +364,7 @@ public:
         logger.print("testShell.fullWrite()", "full write command called");
         for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; lba++) {
             ssd->write(lba, data);
-            string currentResult = readOutputFile();
-            if (currentResult == "ERROR") {
+            if (isCmdExecuteError(readOutputFile())) {
                 testShellStringManager.printErrorFullWriteResult();
                 return;
             }
@@ -461,23 +459,33 @@ public:
         logger.print("testShell.eraseWithSize()", "erase with size command called");
 
         if (!isValidEraseWithSizeArgument(lba, size)) {
-            printEraseResult("Erase", "ERROR");
+            testShellStringManager.printEraseErrorResult();
             return;
         }
+
         string result = erase(lba, size);
-        printEraseResult("Erase", result);
+        if (isCmdExecuteError(result)) {
+            testShellStringManager.printEraseErrorResult();
+            return;
+        }
+
+        testShellStringManager.printErasePassResult();
     }
 
     void eraseWithRange(unsigned int startLba, unsigned int endLba) {
         logger.print("testShell.eraseWithRange()", "erase with range command called");
 
         if (!isValidLbaRange(startLba, endLba)) {
-            printEraseResult("Erase Range", "ERROR");
+            testShellStringManager.printEraseRangeErrorResult();
             return;
         }
         const unsigned int size = endLba - startLba + 1;
         string result = erase(startLba, size);
-        printEraseResult("Erase Range", result);
+        if (isCmdExecuteError(result)) {
+            testShellStringManager.printEraseRangeErrorResult();
+            return;
+        }
+        testShellStringManager.printEraseRangePassResult();
     }
 
     void eraseAndWriteAging(void) {
@@ -486,8 +494,8 @@ public:
         const int eraseUnitSize = 2;
         const int maxAgingCnt = 30;
         ssd->erase(0, eraseUnitSize);
-        if (readOutputFile() == "ERROR") {
-            cout << "FAIL\n";
+        if (isCmdExecuteError(readOutputFile())) {
+            testShellStringManager.printScriptFailResult();
             return;
         }
 
@@ -502,30 +510,18 @@ public:
                 result.push_back(readOutputFile());
 
                 for (auto data : result) {
-                    if (data == "ERROR") {
-                        cout << "FAIL\n";
+                    if (isCmdExecuteError(data)) {
+                        testShellStringManager.printScriptFailResult();
                         return;
                     }
                 }
             }
-            cout << "PASS\n";
         }
+        testShellStringManager.printScriptPassResult();
     }
+
     static const int WRITE_READ_ITERATION = 200;
-
 private:
-    SSD* ssd;
-    Logger logger;
-    TestShellStringManager testShellStringManager;
-
-    bool isExitCmd{ false };
-
-    const int LBA_START_ADDRESS = 0;
-    const int LBA_END_ADDRESS = 99;
-
-    const string ERASE_ERROR_MESSAGE = "[Erase] ERROR";
-    const string ERASE_SUCCESS_MESSAGE = "[Erase] Done";
-
     bool isArgumentSizeValid(const string& cmd, int argsSize) {
         if (cmd == "read") {
             if (argsSize != 1) return false;
@@ -600,6 +596,7 @@ private:
         };
         return valid.count(cmd) > 0;
     }
+
     string erase(unsigned int lba, unsigned int size) {
         const int maxEraseSize = 10;
         int currentLba = lba;
@@ -614,6 +611,7 @@ private:
         }
         return "Done";
     }
+
     bool isValidLbaRange(unsigned int startLba, unsigned int endLba)
     {
         if (startLba < LBA_START_ADDRESS || startLba > LBA_END_ADDRESS) {
@@ -629,6 +627,7 @@ private:
         }
         return true;
     }
+
     bool isValidEraseWithSizeArgument(unsigned int lba, unsigned int size) {
         if (lba > LBA_END_ADDRESS) {
             return false;
@@ -643,10 +642,17 @@ private:
         return true;
     }
 
-    void printEraseResult(const string header, const string result)
-    {
-        cout << "[" << header << "] " << result << "\n";
+    bool isCmdExecuteError(const string result) const {
+        return result == "ERROR";
     }
+
+    SSD* ssd;
+    Logger logger;
+    TestShellStringManager testShellStringManager;
+
+    bool isExitCmd{ false };
+    const int LBA_START_ADDRESS = 0;
+    const int LBA_END_ADDRESS = 99;
 };
 
 class MockTestShell : public TestShell {

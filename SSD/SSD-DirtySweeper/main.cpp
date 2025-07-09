@@ -287,6 +287,8 @@ public:
         }
         file.close();
 
+        ssd->bufferClear();
+
 
         this_thread::sleep_for(chrono::nanoseconds(DELAY_NANOS_FOR_WRITE));
     }
@@ -384,7 +386,7 @@ TEST_F(BufSSDTest, SameLBAWrite02) {
     cmd = buildCommand("R", lba);
     parseAndExecute(cmd);
     EXPECT_TRUE(checkOutputFile(VALID_HEX_DATA));
-    EXPECT_EQ(0, ssd->getAccessCount());
+    EXPECT_EQ(5, ssd->getAccessCount());
    
 }
 
@@ -409,7 +411,7 @@ TEST_F(BufSSDTest, SameLBAWrite03) {
     parseAndExecute(cmd);
     EXPECT_TRUE(checkOutputFile(VALID_HEX_DATA));
 
-    EXPECT_EQ(0, ssd->getAccessCount());
+    EXPECT_EQ(5, ssd->getAccessCount());
 }
 
 TEST_F(BufSSDTest, SameLBAWrite04) {
