@@ -4,8 +4,8 @@ using namespace testing;
 
 class FullWriteReadTest : public ::testing::Test {
 public:
-    const std::string EVEN_DATA = "0xAAAABBBB";
-    const std::string ODD_DATA = "0xCCCCDDDD";
+    const string EVEN_DATA = "0xAAAABBBB";
+    const string ODD_DATA = "0xCCCCDDDD";
     const int START_LBA = 0;
     const int END_LBA = 99;
 protected:
@@ -35,18 +35,18 @@ public:
 };
 
 TEST_F(FullWriteReadTest, FullWriteAndReadCompareShouldPass) {
-    std::string evenData = EVEN_DATA;
-    std::string oddData = ODD_DATA;
+    string evenData = EVEN_DATA;
+    string oddData = ODD_DATA;
 
     for (int lbaIndex = START_LBA; lbaIndex <= END_LBA; ++lbaIndex) {
-        std::string data = (lbaIndex / 5 % 2 == 0) ? evenData : oddData;
+        string data = (lbaIndex / 5 % 2 == 0) ? evenData : oddData;
         EXPECT_CALL(ssd, write(lbaIndex, data)).Times(1);
         EXPECT_CALL(ssd, read(lbaIndex)).Times(1);
     }
 
     Sequence seq;
     for (int lbaIndex = START_LBA; lbaIndex <= END_LBA; ++lbaIndex) {
-        std::string expected = (lbaIndex / 5 % 2 == 0) ? "0xAAAABBBB" : "0xCCCCDDDD";
+        string expected = (lbaIndex / 5 % 2 == 0) ? "0xAAAABBBB" : "0xCCCCDDDD";
         EXPECT_CALL(shell, readOutputFile())
             .InSequence(seq)
             .WillOnce(Return(expected));
@@ -56,20 +56,20 @@ TEST_F(FullWriteReadTest, FullWriteAndReadCompareShouldPass) {
 }
 
 TEST_F(FullWriteReadTest, FullWriteAndReadCompareShouldFail) {
-    std::string evenData = EVEN_DATA;
-    std::string oddData = ODD_DATA;
+    string evenData = EVEN_DATA;
+    string oddData = ODD_DATA;
     const int ERROR_INJECTED_LBA = 13;
 
     for (int lbaIndex = START_LBA; lbaIndex <= END_LBA; ++lbaIndex) {
         if (lbaIndex > ERROR_INJECTED_LBA) break;
-        std::string data = (lbaIndex / 5 % 2 == 0) ? evenData : oddData;
+        string data = (lbaIndex / 5 % 2 == 0) ? evenData : oddData;
         EXPECT_CALL(ssd, write(lbaIndex, data)).Times(1);
         EXPECT_CALL(ssd, read(lbaIndex)).Times(1);
     }
 
     Sequence seq;
     for (int lbaIndex = START_LBA; lbaIndex <= END_LBA; ++lbaIndex) {
-        std::string expected;
+        string expected;
         if (lbaIndex > ERROR_INJECTED_LBA) break;
 
         if (lbaIndex == ERROR_INJECTED_LBA) {
@@ -141,7 +141,7 @@ TEST_F(WriteReadAgingFixture, FailTest) {
 
     testing::internal::CaptureStdout();
     sut.writeReadAging();
-    std::string output = testing::internal::GetCapturedStdout();
+    string output = testing::internal::GetCapturedStdout();
     cout << output;
     EXPECT_THAT(output, ::testing::HasSubstr("FAIL"));
 }
@@ -250,4 +250,3 @@ TEST_F(EraseAndWriteAgingTest, Fail) {
 
     EXPECT_THAT(getEraseAndWriteAgingResult(), ::testing::HasSubstr("FAIL"));
 }
-
