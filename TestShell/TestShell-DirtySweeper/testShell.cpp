@@ -320,8 +320,7 @@ public:
         std::cout << "PASS\n";
     }
 
-    void erase(unsigned int lba, unsigned int size)
-    {
+    void erase(unsigned int lba, unsigned int size){
         // exception 
         if (lba > LBA_END_ADDRESS) {
             throw::std::exception();
@@ -361,8 +360,7 @@ public:
             printEraseResult("Erase", "Done");
         }
     }
-    void eraseRange(unsigned int startLba, unsigned int endLba)
-    {
+    void eraseRange(unsigned int startLba, unsigned int endLba){
         // exception 
         if (startLba < LBA_START_ADDRESS || startLba > LBA_END_ADDRESS) {
             throw::std::exception();
@@ -402,6 +400,36 @@ public:
         }
         else {
             printEraseResult("Erase Range", "Done");
+        }
+    }
+
+    void eraseAndWriteAging(void) {
+        const int eraseUnitSize = 2;
+        const int maxAgingCnt = 30;
+        ssd->erase(0, eraseUnitSize);
+        if (readOutputFile() == "ERROR") {
+            std::cout << "FAIL\n";
+            return;
+        }
+
+        for (int loopCnt = 0; loopCnt < maxAgingCnt; loopCnt++) {
+            for (int lba = 2; lba < LBA_END_ADDRESS; lba += eraseUnitSize){
+                vector<string> result;
+                ssd->write(lba, generateRandomHexString());
+                result.push_back(readOutputFile());
+                ssd->write(lba, generateRandomHexString());
+                result.push_back(readOutputFile());
+                ssd->erase(lba, eraseUnitSize);
+                result.push_back(readOutputFile());
+
+                for (auto data : result) {
+                    if (data == "ERROR") {
+                        std::cout << "FAIL\n";
+                        return;
+                    }
+                }
+            }
+            std::cout << "PASS\n";
         }
     }
 
