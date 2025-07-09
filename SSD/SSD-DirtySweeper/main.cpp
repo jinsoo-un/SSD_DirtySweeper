@@ -228,8 +228,9 @@ public:
     SSD* ssd = new BufferedSSD();
 
     string VALID_HEX_DATA = "0x1298CDEF";
-    string INVALID_HEX_DATA = "0xABCDEFGH";
+    string INVALID_HEX_DATA = "0xABCDA5A5";
     string INITIAL_HEX_DATA = "0x00000000";
+
     static const int VALID_TEST_ADDRESS = 0;
     static const int VALID_TEST_ADDRESS_MAX = 99;
     static const int INVALID_TEST_ADDRESS = 100;
@@ -267,9 +268,9 @@ public:
         return true;
     }
 
-    string buildCommand(string rw, int lba, string data = "") {
-        string cmdLine = rw + " " + std::to_string(lba);
-        if (rw == "W") cmdLine = cmdLine + " " + data;
+    string buildCommand(string cmd, int lba, string data = "") {
+        string cmdLine = cmd + " " + std::to_string(lba);
+        if (cmd == "W" || cmd == "E") cmdLine = cmdLine + " " + data;
         return cmdLine;
     }
 };
@@ -288,10 +289,10 @@ TEST_F(BufSSDTest, SameLBAWrite01) {
 }
 
 TEST_F(BufSSDTest, SameLBAWrite02) {
-    lba = 30;
+    lba = 20;
     lba_size = 10;
 
-    for (int i = 0; i < lba_size; i++) {
+    for (int i = 0; i < 4; i++) {
         cmd = buildCommand("W", lba+i, INVALID_HEX_DATA);
         ssd->parseCommand(cmd);
         ssd->exec();

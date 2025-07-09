@@ -201,10 +201,14 @@ public:
 
 		if (op == "R")
 			setCommand(&readCmd);
-		if (op == "W")
-			setCommand(&writeCmd);
-		if (op == "E")
-			setCommand(&eraseCmd);
+        if (op == "W") {
+            setCommand(&writeCmd);
+            accessCount++;
+        }
+        if (op == "E") {
+            setCommand(&eraseCmd);
+            accessCount += size;
+        }
 
 		if (command == nullptr)
 			return;
