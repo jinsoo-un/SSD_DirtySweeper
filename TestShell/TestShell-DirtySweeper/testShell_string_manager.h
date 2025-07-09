@@ -12,6 +12,11 @@ public:
 	void printScriptFailResult();
 	void printScriptPassResult();
 	void printWriteReadMismatch(int lba, string writeData, string readData);
+	void printEraseErrorResult();
+	void printErasePassResult();
+	void printEraseRangeErrorResult();
+	void printEraseRangePassResult();
+
 	string generateRandomHexString();
 	string getWriteDataInFullWriteAndReadCompareScript(int lba);
 };
