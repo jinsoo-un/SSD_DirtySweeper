@@ -10,6 +10,7 @@
 #include <direct.h>
 #include <cstdlib>
 #include <ctime>
+#include <algorithm>
 #include "gmock/gmock.h"
 
 using namespace std;
@@ -18,13 +19,14 @@ class SSD {
 public:
     virtual void read(int lba) = 0;
     virtual void write(int lba, string data) = 0;
+    virtual void erase(unsigned int lba, unsigned int size) = 0;
 };
 
 class SsdHelpler : public SSD {
 public:
-    string buildCommandLine(string rw, int lba, string data = "") {
-        string cmdLine = rw + " " + std::to_string(lba);
-        if (rw == "W") cmdLine = cmdLine + " " + data;
+    string buildCommandLine(string cmd, int lba, string data = "") {
+        string cmdLine = cmd + " " + std::to_string(lba);
+        if (cmd == "W" || cmd == "E") cmdLine = cmdLine + " " + data;
         return cmdLine;
     }
 
@@ -81,12 +83,17 @@ public:
         string commandLine = buildCommandLine("W", lba, data);
         executeCommandLine(commandLine);
     }
+    void erase(unsigned int lba, unsigned size) override {
+        string commandLine = buildCommandLine("E", lba, std::to_string(size));
+        executeCommandLine(commandLine);
+    }
 };
 
 class SSDMock : public SSD {
 public:
     MOCK_METHOD(void, read, (int lba), (override));
     MOCK_METHOD(void, write, (int, string), (override));
+    MOCK_METHOD(void, erase, (unsigned int, unsigned int), (override));
 };
 
 class TestShell {
@@ -158,6 +165,31 @@ public:
             return;
         }
 
+        if (cmd == "erase") {
+            if (args.size() != 2) {
+                std::cout << "INVALID COMMAND\n";
+                return;
+            }
+            int lba = stoi(args[0]);
+            int size = stoi(args[1]);
+            this->eraseWithSize(lba, size);
+            return;
+        }
+
+        if (cmd == "erase_range") {
+            if (args.size() != 2) {
+                std::cout << "INVALID COMMAND\n";
+                return;
+            }
+            int startLba = stoi(args[0]);
+            int endLba = stoi(args[1]);
+            this->eraseWithRange(startLba, endLba);
+            return;
+        }
+        if (cmd == "4_" || cmd == "4_EraseAndWriteAging") {
+            this->eraseAndWriteAging();
+            return;
+        }
         std::cout << "INVALID COMMAND\n";
     }
 
@@ -344,6 +376,55 @@ public:
         std::cout << "PASS\n";
     }
 
+    void eraseWithSize(unsigned int lba, unsigned int size){
+        if (!isValidEraseWithSizeArgument(lba,size)) {
+            printEraseResult("Erase", "ERROR");
+            return;
+        }
+        string result = erase(lba, size);
+        printEraseResult("Erase", result);
+    }
+
+    void eraseWithRange(unsigned int startLba, unsigned int endLba){
+        if (!isValidLbaRange(startLba, endLba)) {
+            printEraseResult("Erase Range", "ERROR");
+            return;
+        }
+        const unsigned int size = endLba - startLba + 1;
+        string result = erase(startLba, size);
+        printEraseResult("Erase Range", result);
+    }
+
+    void eraseAndWriteAging(void) {
+        const int eraseUnitSize = 2;
+        const int maxAgingCnt = 30;
+        ssd->erase(0, eraseUnitSize);
+        if (readOutputFile() == "ERROR") {
+            std::cout << "FAIL\n";
+            return;
+        }
+
+        for (int loopCnt = 0; loopCnt < maxAgingCnt; loopCnt++) {
+            for (int lba = 2; lba < LBA_END_ADDRESS; lba += eraseUnitSize){
+                vector<string> result;
+                ssd->write(lba, generateRandomHexString());
+                result.push_back(readOutputFile());
+                ssd->write(lba, generateRandomHexString());
+                result.push_back(readOutputFile());
+                ssd->erase(lba, eraseUnitSize);
+                result.push_back(readOutputFile());
+
+                for (auto data : result) {
+                    if (data == "ERROR") {
+                        std::cout << "FAIL\n";
+                        return;
+                    }
+                }
+            }
+            std::cout << "PASS\n";
+        }
+    }
+
 private:
     SSD* ssd;
     bool isExitCmd{ false };
@@ -353,6 +434,8 @@ private:
 
     const string WRITE_ERROR_MESSAGE = "[Write] ERROR";
     const string WRITE_SUCCESS_MESSAGE = "[Write] Done";
+    const string ERASE_ERROR_MESSAGE = "[Erase] ERROR";
+    const string ERASE_SUCCESS_MESSAGE = "[Erase] Done";
 
     virtual std::string readOutputFile() {
         // shell.exe의 절대 경로 구하기
@@ -399,11 +482,55 @@ private:
 			"read", "write", "exit", "help", "fullread", "fullwrite", 
             "testscript", "1_", "1_FullWriteAndReadCompare",
             "2_","2_PartialLBAWrite",
-            "3_", "3_WriteReadAging"
+            "3_", "3_WriteReadAging",
+            "erase","erase_range",
+            "4_", "4_EraseAndWriteAging"
         };
         return valid.count(cmd) > 0;
     }
 
+    string erase(unsigned int lba, unsigned int size) {
+        const int maxEraseSize = 10;
+        int currentLba = lba;
+        for (int remainedSize = size; remainedSize > 0;) {
+            int chunkSize = min(maxEraseSize, remainedSize);
+            ssd->erase(currentLba, chunkSize);
+            remainedSize -= chunkSize;
+            currentLba += chunkSize;
+            if (readOutputFile() == "ERROR") {
+                return "ERROR";
+            }
+        }
+        return "Done";
+    }
+    bool isValidLbaRange(unsigned int startLba, unsigned int endLba)
+    {
+        if (startLba < LBA_START_ADDRESS || startLba > LBA_END_ADDRESS) {
+            return false;
+        }
+
+        if (endLba < LBA_START_ADDRESS || endLba > LBA_END_ADDRESS) {
+            return false;
+        }
+
+        if (startLba > endLba) {
+            return false;
+        }
+        return true;
+    }
+    bool isValidEraseWithSizeArgument(unsigned int lba, unsigned int size) {
+        if (lba > LBA_END_ADDRESS) {
+            return false;
+        }
+
+        if (size < 1 || size > 100) {
+            return false;
+        }
+        if (lba + size > LBA_END_ADDRESS + 1) {
+            return false;
+        }
+        return true;
+    }
     void printErrorReadResult() {
         std::cout << "[Read] ERROR\n";
     }
@@ -416,6 +543,10 @@ private:
     }
     void printErrorWriteResult() {
         std::cout << WRITE_ERROR_MESSAGE << "\n";
+    }
+    void printEraseResult(const string header, const string result)
+    {
+        std::cout <<"["<< header<<"] "<< result << "\n";
     }
 };
 
