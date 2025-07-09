@@ -17,6 +17,7 @@ class SSD {
 public:
     virtual void read(int lba) = 0;
     virtual void write(int lba, string data) = 0;
+    virtual void erase(unsigned int lba, unsigned int size) = 0;
 };
 
 class SsdHelpler : public SSD {
@@ -71,6 +72,7 @@ class SSDMock : public SSD {
 public:
     MOCK_METHOD(void, read, (int lba), (override));
     MOCK_METHOD(void, write, (int, string), (override));
+    MOCK_METHOD(void, erase, (unsigned int, unsigned int), (override));
 };
 
 class TestShell {
@@ -318,6 +320,48 @@ public:
         std::cout << "PASS\n";
     }
 
+    void erase(unsigned int lba, unsigned int size)
+    {
+        // exception 
+        if (lba > LBA_END_ADDRESS) {
+            throw::std::exception();
+        }
+
+        if (size < 1 || size > 100) {
+            throw::std::exception();
+        }
+        if (lba + size > LBA_END_ADDRESS) {
+            throw::std::exception();
+        }
+
+        bool isFailed = false;
+        string unitResult = "";
+        const int maxEraseCntForSsd = 10;
+        const int maxRepeatCnt = size / maxEraseCntForSsd;
+        const int remainedSize = size % maxEraseCntForSsd;
+        int startLba = lba;
+
+        for (int cnt = 0; cnt < maxRepeatCnt; cnt++) {
+            ssd->erase(startLba, maxEraseCntForSsd);
+            startLba += maxEraseCntForSsd;
+            if (readOutputFile() == "ERROR") {
+                isFailed = true;
+                break;
+            }
+        }
+        
+        if (!isFailed && remainedSize > 0) {
+            ssd->erase(startLba, remainedSize);
+            isFailed = (unitResult == readOutputFile());
+        }
+
+        if (isFailed) {
+            printSuccessEraseResult();
+        }
+
+        printSuccessEraseResult();
+    }
+
 private:
     SSD* ssd;
     bool isExitCmd{ false };
@@ -327,6 +371,8 @@ private:
 
     const string WRITE_ERROR_MESSAGE = "[Write] ERROR";
     const string WRITE_SUCCESS_MESSAGE = "[Write] Done";
+    const string ERASE_ERROR_MESSAGE = "[Erase] ERROR";
+    const string ERASE_SUCCESS_MESSAGE = "[Erase] Done";
 
     virtual std::string readOutputFile() {
         std::ifstream file("..\\..\\SSD\\x64\\Release\\ssd_output.txt");
@@ -375,6 +421,12 @@ private:
     }
     void printErrorWriteResult() {
         std::cout << WRITE_ERROR_MESSAGE << "\n";
+    }
+    void printSuccessEraseResult() {
+        std::cout << ERASE_SUCCESS_MESSAGE << "\n";
+    }
+    void printErrorEraseResult() {
+        std::cout << ERASE_ERROR_MESSAGE << "\n";
     }
 };
 
