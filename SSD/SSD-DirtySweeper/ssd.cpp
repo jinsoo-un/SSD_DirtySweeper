@@ -362,7 +362,7 @@ private:
 	// Buffered SSD methods
 	bool read() {
 		// Buffer 에 아무것도 없는 경우 RealSSD 에서 읽어오기
-		if (buffer.getFilledCount() == 0) return ssd->exec();
+		if (buffer.isEmpty()) return ssd->exec();
 		// Buffer 에 있는 마지막 명령어부터 Check
 		for (int i = buffer.getFilledCount(); i > 0; i--) {
 			struct params bufferCommand;
@@ -397,6 +397,12 @@ private:
 		// check if buffer is full, flush to RealSSD
 		if (buffer.isFull()) {
 			flushBuffer();
+			struct params ssdParams;
+			ssdParams.op = ssd->getOp();
+			ssdParams.addr = ssd->getAddr();
+			ssdParams.value = ssd->getValue();
+			// write the command to buffer
+			buffer.writeBuffer(ssdParams);
 		}
 		
 		// check if command can be merged with buffer
@@ -406,6 +412,16 @@ private:
 
 	bool erase() {
 		// check if buffer is full, flush to RealSSD
+		if (buffer.isFull()) {
+			flushBuffer();
+			struct params ssdParams;
+			ssdParams.op = ssd->getOp();
+			ssdParams.addr = ssd->getAddr();
+			ssdParams.size = ssd->getSize();
+			// write the command to buffer
+			buffer.writeBuffer(ssdParams);
+		}
+
 		// check if command can be merged with buffer
 		// if buffer has room, write to buffer
 		return ssd->exec(); // Erase RealSSD
@@ -429,7 +445,7 @@ private:
 				ssd->exec();
 			}
 		}
-		buffer.clear();
+		//buffer.clear();
 	}
 
 	RealSSD* ssd; // RealSSD instance

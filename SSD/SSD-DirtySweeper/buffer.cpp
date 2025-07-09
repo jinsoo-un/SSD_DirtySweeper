@@ -77,7 +77,7 @@ public:
         return MAX_BUFFER_SIZE;
     }
 
-    bool isAllBufferEmpty() {
+    bool isEmpty() {
         for (int i = 1; i <= 5; i++) {
             if (!isOneBufferEmpty(i))
                 return false;
@@ -85,7 +85,7 @@ public:
         return true;
     }
 
-    bool isAllBufferFull() {
+    bool isFull() {
         for (int i = 1; i <= 5; i++) {
             if (isOneBufferEmpty(i))
                 return false;
