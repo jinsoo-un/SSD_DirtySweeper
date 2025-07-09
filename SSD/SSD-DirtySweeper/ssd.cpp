@@ -199,6 +199,10 @@ public:
 		return value;
 	}
 
+    int getAccessCount() {
+        return accessCount;
+    }
+
 private:
 	void storeParams(string command)
 	{
@@ -275,6 +279,7 @@ private:
 	string op;
 	int addr;
 	string value;
+    int accessCount;
 
 	SSDCommand* command = nullptr;
 };

@@ -177,6 +177,121 @@ TEST_F(SSDTest, WriteReadVerify00) {
     EXPECT_EQ(true, isPass);
     EXPECT_TRUE(checkOutputFile(VALID_HEX_DATA));
 }
+///////////////////////////////////////////////////////////////////////////
+
+TEST_F(SSDTest, SameLBAWrite01) {
+    int access_count;
+    int writeLBA = 30;
+    bool isPass;
+
+    for(int i=0; i<10; i++){
+        isPass = writeCmd.run(writeLBA, VALID_HEX_DATA);
+        EXPECT_TRUE(isPass);
+    }
+
+    access_count = ssd.getAccessCount();
+    EXPECT_EQ(access_count, 0);
+
+    isPass = readCmd.run(writeLBA);
+    EXPECT_EQ(true, isPass);
+    EXPECT_TRUE(checkOutputFile(VALID_HEX_DATA));
+}
+
+TEST_F(SSDTest, SameLBAWrite02) {
+    int access_count;
+    int writeLBA = 20;
+    bool isPass;
+
+    //precondition
+    for (int i = 0; i < 4; i++) {
+        isPass = writeCmd.run(writeLBA+i, "0x123454678");
+        EXPECT_TRUE(isPass);
+    }
+
+    writeLBA = 50;
+    for (int i = 0; i < 10; i++) {
+        isPass = writeCmd.run(writeLBA, VALID_HEX_DATA);
+        EXPECT_TRUE(isPass);
+    }
+
+    isPass = readCmd.run(writeLBA);
+    EXPECT_EQ(true, isPass);
+    EXPECT_TRUE(checkOutputFile(VALID_HEX_DATA));
+
+    access_count = ssd.getAccessCount();
+    EXPECT_EQ(access_count, 0);
+}
+
+TEST_F(SSDTest, SameLBAWrite03) {
+    int access_count;
+    int writeLBA = 20;
+    bool isPass;
+
+    //precondition
+    for (int i = 0; i < 5; i++) {
+        isPass = writeCmd.run(writeLBA, "0x123454678");
+        EXPECT_TRUE(isPass);
+    }
+
+    writeLBA = 21;
+    for (int i = 0; i < 10; i++) {
+        isPass = writeCmd.run(writeLBA, VALID_HEX_DATA);
+        EXPECT_TRUE(isPass);
+    }
+
+    isPass = readCmd.run(writeLBA);
+    EXPECT_EQ(true, isPass);
+    EXPECT_TRUE(checkOutputFile(VALID_HEX_DATA));
+
+    access_count = ssd.getAccessCount();
+    EXPECT_EQ(access_count, 0);
+}
+
+TEST_F(SSDTest, SameLBAWrite04) {
+    int access_count;
+    int writeLBA = 20;
+    bool isPass;
+
+    //precondition
+    for (int i = 0; i < 6; i++) {
+        isPass = writeCmd.run(writeLBA, "0x123454678");
+        EXPECT_TRUE(isPass);
+    }
+
+    access_count = ssd.getAccessCount();
+    EXPECT_EQ(access_count, 5);
+}
+
+TEST_F(SSDTest, SameLBAWrite05) {
+    int access_count;
+    int writeLBA = 20;
+    bool isPass;
+
+    //precondition
+    for (int i = 0; i < 10; i++) {
+        isPass = writeCmd.run(writeLBA, "0x123454678");
+        EXPECT_TRUE(isPass);
+    }
+
+    access_count = ssd.getAccessCount();
+    EXPECT_EQ(access_count, 5);
+}
+
+TEST_F(SSDTest, SameLBAWrite06) {
+    int access_count;
+    int writeLBA = 20;
+    bool isPass;
+
+    //precondition
+    for (int i = 0; i < 11; i++) {
+        isPass = writeCmd.run(writeLBA, "0x123454678");
+        EXPECT_TRUE(isPass);
+    }
+
+    access_count = ssd.getAccessCount();
+    EXPECT_EQ(access_count, 5);
+}
+
 
 #ifdef NDEBUG
 int main(int argc, char *argv[])
