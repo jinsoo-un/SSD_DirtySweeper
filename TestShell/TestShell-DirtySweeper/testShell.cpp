@@ -167,10 +167,13 @@ public:
     }
 
     void read(int lba) {
-        if (lba < 0 || lba > 99) throw std::exception();
+        if (lba < 0 || lba > 99) {
+            printErrorReadResult();
+            return;
+        }
         ssd->read(lba);
         std::string result = readOutputFile();
-        if (result == "ERROR") printErrorReadResult(result);
+        if (result == "ERROR") printErrorReadResult();
         else printSuccessReadResult(result, lba);
     }
 
@@ -179,7 +182,7 @@ public:
             ssd->read(lba);
             std::string result = readOutputFile();
             if (result == "ERROR") {
-                printErrorReadResult(result);
+                printErrorReadResult();
                 break;
             }
             printSuccessReadResult(result, lba);
@@ -331,7 +334,7 @@ private:
     virtual std::string readOutputFile() {
         std::ifstream file("..\\..\\SSD\\x64\\Release\\ssd_output.txt");
 
-        if (!file.is_open()) throw std::exception();
+        if (!file.is_open()) throw std::runtime_error("File not open: ssd_output.txt");
 
         std::ostringstream content;
         std::string line;
@@ -363,8 +366,8 @@ private:
         return valid.count(cmd) > 0;
     }
 
-    void printErrorReadResult(std::string result) {
-        std::cout << "[Read] " << result << "\n";
+    void printErrorReadResult() {
+        std::cout << "[Read] ERROR\n";
     }
 
     void printSuccessReadResult(std::string result, int lba) {

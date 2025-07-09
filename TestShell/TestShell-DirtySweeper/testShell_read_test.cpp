@@ -24,7 +24,17 @@ TEST_F(ReadTestFixture, BasicRead) {
 }
 
 TEST_F(ReadTestFixture, InvalidAddress) {
-	EXPECT_THROW(testShell.read(100), std::exception);
+	EXPECT_CALL(ssdMock, read(_))
+		.Times(0);
+
+	EXPECT_CALL(testShell, readOutputFile())
+		.Times(0);
+
+	testing::internal::CaptureStdout();
+	testShell.read(100);
+	std::string output = testing::internal::GetCapturedStdout();
+	cout << output;
+	EXPECT_THAT(output, ::testing::HasSubstr("ERROR"));
 }
 
 TEST_F(ReadTestFixture, ReadSuccessTest) {
