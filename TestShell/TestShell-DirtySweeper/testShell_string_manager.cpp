@@ -38,6 +38,26 @@ void TestShellStringManager::printWriteReadMismatch(int lba, string writeData, s
     cout << "[Mismatch] LBA " << lba << " Expected: " << writeData << " Got: " << readData << "\n";
 }
 
+void TestShellStringManager::printEraseErrorResult()
+{
+    cout << "[Erase] ERROR\n";
+}
+
+void TestShellStringManager::printErasePassResult()
+{
+    cout << "[Erase] Done\n";
+}
+
+void TestShellStringManager::printEraseRangeErrorResult()
+{
+    cout << "[Erase Range] ERROR\n";
+}
+
+void TestShellStringManager::printEraseRangePassResult()
+{
+    cout << "[Erase Range] Done\n";
+}
+
 string TestShellStringManager::generateRandomHexString() {
     static const char* hexDigits = "0123456789ABCDEF";
 

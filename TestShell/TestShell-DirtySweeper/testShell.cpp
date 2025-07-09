@@ -458,23 +458,33 @@ public:
         logger.print("testShell.eraseWithSize()", "erase with size command called");
 
         if (!isValidEraseWithSizeArgument(lba, size)) {
-            printEraseResult("Erase", "ERROR");
+            testShellStringManager.printEraseErrorResult();
             return;
         }
+
         string result = erase(lba, size);
-        printEraseResult("Erase", result);
+        if (isCmdExecuteError(result)) {
+            testShellStringManager.printEraseErrorResult();
+            return;
+        }
+
+        testShellStringManager.printErasePassResult();
     }
 
     void eraseWithRange(unsigned int startLba, unsigned int endLba) {
         logger.print("testShell.eraseWithRange()", "erase with range command called");
 
         if (!isValidLbaRange(startLba, endLba)) {
-            printEraseResult("Erase Range", "ERROR");
+            testShellStringManager.printEraseRangeErrorResult();
             return;
         }
         const unsigned int size = endLba - startLba + 1;
         string result = erase(startLba, size);
-        printEraseResult("Erase Range", result);
+        if (isCmdExecuteError(result)) {
+            testShellStringManager.printEraseRangeErrorResult();
+            return;
+        }
+        testShellStringManager.printEraseRangePassResult();
     }
 
     void eraseAndWriteAging(void) {
@@ -626,10 +636,6 @@ private:
             return false;
         }
         return true;
-    }
-    void printEraseResult(const string header, const string result)
-    {
-        cout << "[" << header << "] " << result << "\n";
     }
     bool isCmdExecuteError(const string result) const {
         return result == "ERROR";
