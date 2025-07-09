@@ -13,7 +13,7 @@ namespace {
     static const string INVALID_DATA = "AHAHHAHAA";
     static const string WRITE_SUCCESS_RESULT = "[Write] Done";
     static const string WRITE_FAIL_RESULT = "[Write] ERROR";
-    static const string SSD_WRITE_DONE_VALUE= "";
+    static const string SSD_WRITE_DONE_VALUE = "";
     static const string SSD_WRITE_ERROR_VALUE = "ERROR";
 }
 

@@ -183,24 +183,24 @@ public:
     }
 
     void read(int lba)  override {
-		logger.print("SsdHelpler.read()", "Reading LBA: " + std::to_string(lba));
+        logger.print("SsdHelpler.read()", "Reading LBA: " + std::to_string(lba));
         string commandLine = buildCommandLine("R", lba);
         executeCommandLine(commandLine);
     }
 
     void write(int lba, string data) override {
-		logger.print("SsdHelpler.write()", "Writing to LBA: " + std::to_string(lba) + " with data: " + data);
+        logger.print("SsdHelpler.write()", "Writing to LBA: " + std::to_string(lba) + " with data: " + data);
         string commandLine = buildCommandLine("W", lba, data);
         executeCommandLine(commandLine);
     }
     void erase(unsigned int lba, unsigned size) override {
-		logger.print("SsdHelpler.erase()", "Erasing LBA: " + std::to_string(lba) + " with size: " + std::to_string(size));
+        logger.print("SsdHelpler.erase()", "Erasing LBA: " + std::to_string(lba) + " with size: " + std::to_string(size));
         string commandLine = buildCommandLine("E", lba, std::to_string(size));
         executeCommandLine(commandLine);
     }
 
 private:
-	Logger logger;
+    Logger logger;
 };
 
 class SSDMock : public SSD {
@@ -309,7 +309,7 @@ public:
     }
 
     void help() {
-		logger.print("testShell.help()", "help command called");
+        logger.print("testShell.help()", "help command called");
 
         std::cout << "Developed by: Team Members - Sooeon Jin, Euncho Bae, Kwangwon Min, Hyeongseok Choi, Yunbae Kim, Seongkyoon Lee" << std::endl;
         std::cout << "read (LBA)         : Read data from (LBA)." << std::endl;
@@ -362,7 +362,7 @@ public:
     }
 
     void fullWrite(string data) {
-		logger.print("testShell.fullWrite()", "full write command called");
+        logger.print("testShell.fullWrite()", "full write command called");
         for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; lba++) {
             ssd->write(lba, data);
             string currentResult = readOutputFile();
@@ -375,7 +375,7 @@ public:
     }
 
     void fullWriteAndReadCompare() {
-		logger.print("testShell.fullWriteAndReadCompare()", "full write and read compare command called");
+        logger.print("testShell.fullWriteAndReadCompare()", "full write and read compare command called");
 
         for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; ++lba) {
             std::string writeData = testShellStringManager.getWriteDataInFullWriteAndReadCompareScript(lba);
@@ -402,7 +402,7 @@ public:
     }
 
     void writeReadAging() {
-		logger.print("testShell.writeReadAging()", "write read aging command called");
+        logger.print("testShell.writeReadAging()", "write read aging command called");
 
         for (int i = 0; i < WRITE_READ_ITERATION; i++) {
             string randomString = getRandomHexString();
@@ -422,7 +422,7 @@ public:
     }
 
     void partialLBAWrite() {
-		logger.print("testShell.partialLBAWrite()", "partial LBA write command called");
+        logger.print("testShell.partialLBAWrite()", "partial LBA write command called");
 
         const string testValue = "0x12345678";
         const int repeatCnt = 30;
@@ -457,10 +457,10 @@ public:
         testShellStringManager.printScriptPassResult();
     }
 
-    void eraseWithSize(unsigned int lba, unsigned int size){
-		logger.print("testShell.eraseWithSize()", "erase with size command called");
+    void eraseWithSize(unsigned int lba, unsigned int size) {
+        logger.print("testShell.eraseWithSize()", "erase with size command called");
 
-        if (!isValidEraseWithSizeArgument(lba,size)) {
+        if (!isValidEraseWithSizeArgument(lba, size)) {
             printEraseResult("Erase", "ERROR");
             return;
         }
@@ -468,8 +468,8 @@ public:
         printEraseResult("Erase", result);
     }
 
-    void eraseWithRange(unsigned int startLba, unsigned int endLba){
-		logger.print("testShell.eraseWithRange()", "erase with range command called");
+    void eraseWithRange(unsigned int startLba, unsigned int endLba) {
+        logger.print("testShell.eraseWithRange()", "erase with range command called");
 
         if (!isValidLbaRange(startLba, endLba)) {
             printEraseResult("Erase Range", "ERROR");
@@ -481,7 +481,7 @@ public:
     }
 
     void eraseAndWriteAging(void) {
-		logger.print("testShell.eraseAndWriteAging()", "erase and write aging command called");
+        logger.print("testShell.eraseAndWriteAging()", "erase and write aging command called");
 
         const int eraseUnitSize = 2;
         const int maxAgingCnt = 30;
@@ -492,7 +492,7 @@ public:
         }
 
         for (int loopCnt = 0; loopCnt < maxAgingCnt; loopCnt++) {
-            for (int lba = 2; lba < LBA_END_ADDRESS; lba += eraseUnitSize){
+            for (int lba = 2; lba < LBA_END_ADDRESS; lba += eraseUnitSize) {
                 vector<string> result;
                 ssd->write(lba, testShellStringManager.generateRandomHexString());
                 result.push_back(readOutputFile());
@@ -515,7 +515,7 @@ public:
 
 private:
     SSD* ssd;
-	Logger logger;
+    Logger logger;
     TestShellStringManager testShellStringManager;
 
     bool isExitCmd{ false };
@@ -591,7 +591,7 @@ private:
 
     bool isValidCommand(const std::string& cmd) const {
         static const std::unordered_set<std::string> valid = {
-			"read", "write", "exit", "help", "fullread", "fullwrite", 
+            "read", "write", "exit", "help", "fullread", "fullwrite",
             "testscript", "1_", "1_FullWriteAndReadCompare",
             "2_","2_PartialLBAWrite",
             "3_", "3_WriteReadAging",
@@ -645,13 +645,13 @@ private:
 
     void printEraseResult(const string header, const string result)
     {
-        std::cout <<"["<< header<<"] "<< result << "\n";
+        std::cout << "[" << header << "] " << result << "\n";
     }
 };
 
 class MockTestShell : public TestShell {
 public:
-	MockTestShell(SSD* ssd) : TestShell(ssd) {}
+    MockTestShell(SSD* ssd) : TestShell(ssd) {}
     MOCK_METHOD(void, help, (), ());
     MOCK_METHOD(std::string, readOutputFile, (), ());
     MOCK_METHOD(std::string, getRandomHexString, (), ());
