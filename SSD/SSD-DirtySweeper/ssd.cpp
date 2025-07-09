@@ -21,7 +21,7 @@ namespace FileNames {
 
 class SSDCommand {
 public:
-	virtual bool run(int addr, string val) = 0;
+	virtual bool run(int addr, string val, int size) = 0;
 
 protected:
 	bool readFromFile() {
@@ -46,6 +46,21 @@ protected:
 		file.close();
 	}
 
+	bool writeFileFromData(void)
+	{
+		ofstream file(FileNames::DATA_FILE);
+		if (!file.is_open()) {
+			cout << "Error opening file for writing." << endl;
+			return false;
+		}
+		for (int i = 0; i < ssdData.size(); ++i) {
+			file << i << "\t" << ssdData[i] << endl;
+		}
+		file.close();
+
+		return true;
+	}
+
 	bool isAddressOutOfRange(int address) {
 		return address < MIN_ADDRESS || address >= MAX_ADDRESS;
 	}
@@ -61,7 +76,7 @@ protected:
 
 class ReadCommand : public SSDCommand {
 public:
-	bool run(int addr, string val = "0x00000000") override {
+	bool run(int addr, string val = "0x00000000", int size = 0) override {
 		return readData(addr, val);
 	}
 private:
@@ -76,7 +91,7 @@ private:
 
 class WriteCommand : public SSDCommand {
 public:
-	bool run(int addr, string val) override {
+	bool run(int addr, string val, int size = 0) override {
 		return writeData(addr, val);
 	}
 private:
@@ -89,21 +104,6 @@ private:
 		if (!writeFileFromData()) { updateOutputFile("ERROR");  return false; };
 
 		updateOutputFile("");
-
-		return true;
-	}
-
-	bool writeFileFromData(void)
-	{
-		ofstream file(FileNames::DATA_FILE);
-		if (!file.is_open()) {
-			cout << "Error opening file for writing." << endl;
-			return false;
-		}
-		for (int i = 0; i < ssdData.size(); ++i) {
-			file << i << "\t" << ssdData[i] << endl;
-		}
-		file.close();
 
 		return true;
 	}
@@ -138,25 +138,36 @@ private:
 
 class EraseCommand : public SSDCommand {
 public:
-	bool run(int addr = 0, string val = "0x00000000") override {
-		erase();
-		return true;
+	bool run(int addr, string val, int size) override {
+		return erase(addr, val, size);
 	}
 private:
-	void erase() {
-		ofstream file(FileNames::DATA_FILE);
-		if (!file.is_open()) {
-			cout << "Error opening file for writing." << endl;
-			return;
+	bool erase(int address, string val, int size) {
+		if (address + size >= MAX_ADDRESS) {
+			updateOutputFile("ERROR");
+			return false;
 		}
-		for (int i = MIN_ADDRESS; i < MAX_ADDRESS; ++i) {
-			file << i << "\t" << "0x00000000" << endl;
+		if (size < 1 || size > 10) {
+			updateOutputFile("ERROR");
+			return false;
 		}
 
-		file.close();
+		if (!readFromFile()) { 
+			updateOutputFile("ERROR");  
+			return false; 
+		}
 
-		ssdData.clear();
-		ssdData.resize(MAX_ADDRESS, "0x00000000");
+		for (int i = 0; i < size; i++)
+			ssdData[address + i] = "0x00000000";
+		
+		if (!writeFileFromData()) {
+			updateOutputFile("ERROR");  
+			return false; 
+		}
+
+		updateOutputFile("");
+
+		return true;
 	}
 };
 
@@ -174,13 +185,19 @@ public:
 	void exec() {
 		ReadCommand readCmd;
 		WriteCommand writeCmd;
+		EraseCommand eraseCmd;
 
 		if (op == "R")
 			setCommand(&readCmd);
 		if (op == "W")
 			setCommand(&writeCmd);
+		if (op == "E")
+			setCommand(&eraseCmd);
 
-		command->run(addr, value);
+		if (command == nullptr)
+			return;
+
+		command->run(addr, value, size);
 	}
 
 	int getArgCount() {
@@ -202,7 +219,6 @@ public:
     int getAccessCount() {
         return accessCount;
     }
-
 private:
 	void storeParams(string command)
 	{
@@ -216,8 +232,10 @@ private:
 		        op = arg;
 	        if (cnt == 2)
 		        addr = std::stoi(arg);
-	        if (cnt == 3)
-		        value = arg;
+			if (cnt == 3) {
+				if (op == "E") size = std::stoi(arg);
+				else value = arg;
+			}
         }
         argCount = cnt;
 	}
@@ -236,16 +254,19 @@ private:
         std::istringstream iss(command);
         string arg;
         int cnt = 0;
+		bool isErase = false;
 
         while (iss >> arg) {
 	        cnt++;
 	        if (cnt == 1) {
 		        if (!isValidOp(arg)) return false;
+				if (arg == "E") isErase = true;
 	        }
 	        else if (cnt == 2) {
 		        if (isAddressOutOfRange(stoi(arg))) return false;
 	        }
 	        else if (cnt == 3) {
+				if (isErase) continue;
 		        if (!isHexWithPrefix(arg)) return false;
 	        }
 	        else
@@ -256,7 +277,7 @@ private:
 	}
 
 	bool isValidOp(string arg) {
-        if (arg != "R" && arg != "W")
+        if (arg != "R" && arg != "W" && arg != "E")
 	        return false;
         return true;
 	}
@@ -279,6 +300,7 @@ private:
 	string op;
 	int addr;
 	string value;
+	int size;
     int accessCount;
 
 	SSDCommand* command = nullptr;

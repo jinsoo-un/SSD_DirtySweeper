@@ -14,10 +14,23 @@ public:
     string INVALID_HEX_DATA = "0xABCDEFGH";
     string INITIAL_HEX_DATA = "0x00000000";
     static const int VALID_TEST_ADDRESS = 0;
+    static const int VALID_TEST_ADDRESS_MAX = 99;
     static const int INVALID_TEST_ADDRESS = 100;
+    static const int VALID_TEST_SIZE = 10;
+    static const int INVALID_TEST_SIZE = 20;
+
 
     void SetUp() override {
-        eraseCmd.run();
+        ofstream file(FileNames::DATA_FILE);
+        if (!file.is_open()) {
+            cout << "Error opening file for setup test." << endl;
+            return;
+        }
+
+        for (int i = MIN_ADDRESS; i < MAX_ADDRESS; i++) {
+            file << i << "\t" << "0x00000000" << endl;
+        }
+        file.close();
     }
 
     bool checkOutputFile(string expected) {
@@ -126,7 +139,6 @@ TEST_F(SSDTest, WriteFailWithOutOfAddressRange) {
     bool isPass = writeCmd.run(INVALID_TEST_ADDRESS, VALID_HEX_DATA);
     EXPECT_FALSE(isPass);
 }
-
 
 TEST_F(SSDTest, WriteInvalidData00) {
 
