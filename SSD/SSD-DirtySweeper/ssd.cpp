@@ -26,21 +26,15 @@ public:
 		fout << msg;
 		fout.close();
 	}
-};
 
-class SSDCommand {
-public:
-	virtual bool run(int addr, string val, int size) = 0;
-
-protected:
-	bool readFromFile() {
+	bool readData(vector<string>& data) {
 		ifstream file(FileNames::DATA_FILE);
 		if (!file.is_open()) {
 			return false;
 		}
 
-		ssdData.clear();
-		ssdData.resize(MAX_ADDRESS, "0x00000000"); // 기본값 0으로 초기화
+		data.clear();
+		data.resize(MAX_ADDRESS, "0x00000000"); // 기본값 0으로 초기화
 
 		string line;
 		while (getline(file, line)) {
@@ -49,27 +43,34 @@ protected:
 			string hexData;
 			if (iss >> fileAddress >> hexData) {
 				string value = hexData;
-				ssdData[fileAddress] = value;
+				data[fileAddress] = value;
 			}
 		}
 		file.close();
 	}
 
-	bool writeFileFromData(void)
+	bool writeData(vector<string>& data)
 	{
 		ofstream file(FileNames::DATA_FILE);
 		if (!file.is_open()) {
 			cout << "Error opening file for writing." << endl;
 			return false;
 		}
-		for (int i = 0; i < ssdData.size(); ++i) {
-			file << i << "\t" << ssdData[i] << endl;
+		for (int i = 0; i < data.size(); ++i) {
+			file << i << "\t" << data[i] << endl;
 		}
 		file.close();
 
 		return true;
 	}
 
+};
+
+class SSDCommand {
+public:
+	virtual bool run(int addr, string val, int size) = 0;
+
+protected:
 	bool isAddressOutOfRange(int address) {
 		return address < MIN_ADDRESS || address >= MAX_ADDRESS;
 	}
@@ -81,11 +82,11 @@ protected:
 class ReadCommand : public SSDCommand {
 public:
 	bool run(int addr, string val = "0x00000000", int size = 0) override {
-		return readData(addr, val);
+		return read(addr, val);
 	}
 private:
-	bool readData(int address, string value) {
-		if (!readFromFile()) { file.updateOutput("ERROR");  return false; }
+	bool read(int address, string value) {
+		if (!file.readData(ssdData)) { file.updateOutput("ERROR");  return false; }
 
 		file.updateOutput(ssdData[address]);
 		return true;
@@ -100,10 +101,10 @@ public:
 private:
 	bool writeData(int address, string hexData) {
 		if (!isValidWriteData(hexData)) { file.updateOutput("ERROR");  return false; }
-		if (!readFromFile()) { file.updateOutput("ERROR");  return false; }
+		if (!file.readData(ssdData)) { file.updateOutput("ERROR");  return false; }
 
 		ssdData[address] = hexData;
-		if (!writeFileFromData()) { file.updateOutput("ERROR");  return false; };
+		if (!file.writeData(ssdData)) { file.updateOutput("ERROR");  return false; };
 
 		file.updateOutput("");
 
@@ -153,7 +154,7 @@ private:
 			return false;
 		}
 
-		if (!readFromFile()) { 
+		if (!file.readData(ssdData)) { 
 			file.updateOutput("ERROR");  
 			return false; 
 		}
@@ -161,7 +162,7 @@ private:
 		for (int i = 0; i < size; i++)
 			ssdData[address + i] = "0x00000000";
 		
-		if (!writeFileFromData()) {
+		if (!file.writeData(ssdData)) {
 			file.updateOutput("ERROR");  
 			return false; 
 		}
