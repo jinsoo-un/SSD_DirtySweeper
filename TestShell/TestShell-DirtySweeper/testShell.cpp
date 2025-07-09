@@ -10,10 +10,40 @@
 #include <direct.h>
 #include <cstdlib>
 #include <ctime>
+#include <iomanip>
+#include <chrono>
+#include <mutex>
 #include <algorithm>
 #include "gmock/gmock.h"
 
 using namespace std;
+
+class Logger {
+public:
+    void print(const std::string& sender, const std::string& message) {
+        std::ofstream logFile("latest.log", std::ios::app);  // append mode
+        if (!logFile.is_open()) return;
+
+        auto now = std::chrono::system_clock::now();
+        std::time_t now_c = std::chrono::system_clock::to_time_t(now);
+        std::tm local_tm;
+        localtime_s(&local_tm, &now_c);
+
+        // Format timestamp [YY.MM.DD HH:MM]
+        logFile << "["
+            << std::setfill('0') << std::setw(2) << (local_tm.tm_year % 100) << "."
+            << std::setw(2) << (local_tm.tm_mon + 1) << "."
+            << std::setw(2) << local_tm.tm_mday << " "
+            << std::setw(2) << local_tm.tm_hour << ":"
+            << std::setw(2) << local_tm.tm_min << "] ";
+
+        // Format sender: left-aligned, 30-character field
+        logFile << std::left << std::setfill(' ') << std::setw(40) << sender;
+
+        // Message
+        logFile << " : " << message << std::endl;
+    }
+};
 
 class SSD {
 public:
@@ -223,6 +253,8 @@ public:
     }
 
     void read(int lba) {
+        logger.print("testShell.read()", "read command called");
+
         if (lba < 0 || lba > 99) {
             printErrorReadResult();
             return;
@@ -234,6 +266,8 @@ public:
     }
 
     void fullRead() {
+        logger.print("testShell.fullRead()", "full read command called");
+
         for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; lba++) {
             ssd->read(lba);
             std::string result = readOutputFile();
@@ -245,8 +279,9 @@ public:
         }
     }
 
-    string write(int lba, string data)
-    {
+    string write(int lba, string data) {
+		logger.print("testShell.write()", "write command called");
+
         ssd->write(lba, data);
         string result = readOutputFile();
         if (result == "ERROR") {
@@ -258,8 +293,9 @@ public:
         return WRITE_SUCCESS_MESSAGE;
     }
 
-    void fullWrite(string data)
-    {
+    void fullWrite(string data) {
+		logger.print("testShell.fullWrite()", "full write command called");
+
         for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; lba++) {
             ssd->write(lba, data);
             string currentResult = readOutputFile();
@@ -427,6 +463,7 @@ public:
 
 private:
     SSD* ssd;
+	Logger logger;
     bool isExitCmd{ false };
 
     const int LBA_START_ADDRESS = 0;
