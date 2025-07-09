@@ -1,5 +1,7 @@
 #include "gmock/gmock.h"
-#include "testShell.cpp"
+#include "logger.h"
+#include "ssd.h"
+#include "testShell.h"
 using namespace testing;
 
 class ReadTestFixture : public Test {
