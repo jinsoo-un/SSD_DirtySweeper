@@ -195,3 +195,59 @@ TEST_F(PartialLBAWrite, FailCase) {
 
     EXPECT_THAT(getPartialLBAWriteResult(), ::testing::HasSubstr("FAIL\n"));
 }
+
+class EraseAndWriteAgingTest : public Test {
+public:
+    NiceMock<SSDMock> ssdMock;
+    MockTestShell sut{ &ssdMock };
+
+    const string SUCCESS_RESULT = "";
+    const string ERROR_RESULT = "ERROR";
+
+    string getEraseAndWriteAgingResult() {
+        testing::internal::CaptureStdout();
+        sut.eraseAndWriteAging();
+        return testing::internal::GetCapturedStdout();
+    }
+};
+
+TEST_F(EraseAndWriteAgingTest, PassCase) {
+
+    const int MAX_AGING_CNT = 30;
+    const int MAX_INTERNAL_LOOP_CNT = 49;
+    const int WRITE_CNT_UNIT = 2;
+    const int ERASE_CNT_UNIT = 1;
+
+    const int MAX_WRITE_CNT = MAX_AGING_CNT * MAX_INTERNAL_LOOP_CNT * WRITE_CNT_UNIT;
+    EXPECT_CALL(ssdMock, write(_, _))
+        .Times(MAX_WRITE_CNT)
+        .WillRepeatedly(Return());
+
+    const int MAX_ERASE_CNT = MAX_AGING_CNT * MAX_INTERNAL_LOOP_CNT * ERASE_CNT_UNIT + 1;
+    EXPECT_CALL(ssdMock, erase(_, _))
+        .Times(MAX_ERASE_CNT)
+        .WillRepeatedly(Return());
+
+    const int MAX_READ_OUPUT_CNT = MAX_WRITE_CNT + MAX_ERASE_CNT;
+    EXPECT_CALL(sut, readOutputFile())
+        .Times(MAX_READ_OUPUT_CNT)
+        .WillRepeatedly(Return(SUCCESS_RESULT));
+
+    EXPECT_THAT(getEraseAndWriteAgingResult(), ::testing::HasSubstr("PASS"));
+}
+TEST_F(EraseAndWriteAgingTest, Fail) {
+    EXPECT_CALL(ssdMock, write(_, _))
+        .WillRepeatedly(Return());
+
+    EXPECT_CALL(ssdMock, erase(_, _))
+        .WillRepeatedly(Return());
+
+    EXPECT_CALL(sut, readOutputFile())
+        .WillOnce(Return(SUCCESS_RESULT))
+        .WillOnce(Return(SUCCESS_RESULT))
+        .WillOnce(Return(SUCCESS_RESULT))
+        .WillRepeatedly(Return(ERROR_RESULT));
+
+    EXPECT_THAT(getEraseAndWriteAgingResult(), ::testing::HasSubstr("FAIL"));
+}
+
