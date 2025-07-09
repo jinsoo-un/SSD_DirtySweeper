@@ -26,6 +26,9 @@ struct params {
 
 class Buffer {
 public:
+    Buffer() {
+        initBuffer();
+	}
     void initBuffer() {
         if (std::filesystem::exists(DIR_NAME) && std::filesystem::is_directory(DIR_NAME))
             return;

@@ -19,6 +19,15 @@ namespace FileNames {
     const std::string OUTPUT_FILE = "ssd_output.txt";
 }
 
+class FileControl {
+public:
+	void updateOutput(string msg) {
+		ofstream fout(FileNames::OUTPUT_FILE);
+		fout << msg;
+		fout.close();
+	}
+};
+
 class SSDCommand {
 public:
 	virtual bool run(int addr, string val, int size) = 0;
@@ -65,13 +74,8 @@ protected:
 		return address < MIN_ADDRESS || address >= MAX_ADDRESS;
 	}
 
-	void updateOutputFile(string msg) {
-		ofstream fout(FileNames::OUTPUT_FILE);
-		fout << msg;
-		fout.close();
-	}
-
 	vector<string> ssdData;
+	FileControl file;
 };
 
 class ReadCommand : public SSDCommand {
@@ -81,10 +85,9 @@ public:
 	}
 private:
 	bool readData(int address, string value) {
-		if (isAddressOutOfRange(address)) { updateOutputFile("ERROR");  return false; }
-		if (!readFromFile()) { updateOutputFile("ERROR");  return false; }
+		if (!readFromFile()) { file.updateOutput("ERROR");  return false; }
 
-		updateOutputFile(ssdData[address]);
+		file.updateOutput(ssdData[address]);
 		return true;
 	}
 };
@@ -96,20 +99,18 @@ public:
 	}
 private:
 	bool writeData(int address, string hexData) {
-		if (isAddressOutOfRange(address)) { updateOutputFile("ERROR");  return false; }
-		if (!isValidWriteData(hexData)) { updateOutputFile("ERROR");  return false; }
-		if (!readFromFile()) { updateOutputFile("ERROR");  return false; }
+		if (!isValidWriteData(hexData)) { file.updateOutput("ERROR");  return false; }
+		if (!readFromFile()) { file.updateOutput("ERROR");  return false; }
 
 		ssdData[address] = hexData;
-		if (!writeFileFromData()) { updateOutputFile("ERROR");  return false; };
+		if (!writeFileFromData()) { file.updateOutput("ERROR");  return false; };
 
-		updateOutputFile("");
+		file.updateOutput("");
 
 		return true;
 	}
 
 	bool isValidWriteData(const std::string& str) {
-
 		if (str.substr(0, 2) != "0x") return false;
 
 		int length;
@@ -144,16 +145,16 @@ public:
 private:
 	bool erase(int address, string val, int size) {
 		if (address + size >= MAX_ADDRESS) {
-			updateOutputFile("ERROR");
+			file.updateOutput("ERROR");
 			return false;
 		}
 		if (size < 1 || size > 10) {
-			updateOutputFile("ERROR");
+			file.updateOutput("ERROR");
 			return false;
 		}
 
 		if (!readFromFile()) { 
-			updateOutputFile("ERROR");  
+			file.updateOutput("ERROR");  
 			return false; 
 		}
 
@@ -161,15 +162,16 @@ private:
 			ssdData[address + i] = "0x00000000";
 		
 		if (!writeFileFromData()) {
-			updateOutputFile("ERROR");  
+			file.updateOutput("ERROR");  
 			return false; 
 		}
 
-		updateOutputFile("");
+		file.updateOutput("");
 
 		return true;
 	}
 };
+
 
 // SSD Interface Class
 class SSD {
@@ -182,13 +184,15 @@ public:
 	virtual string getValue() = 0;
 	virtual int getSize() = 0;
     virtual int getAccessCount() = 0;
+protected:
+	FileControl file;
 };
 
 class RealSSD : public SSD {
 public:
 	bool parseCommand(string command) {
         if (!isValidCommand(command)) {
-	        updateOutputFile("ERROR");
+	        file.updateOutput("ERROR");
 	        return false;
         }
         storeParams(command);
@@ -265,13 +269,7 @@ private:
 	bool isAddressOutOfRange(int address) {
 		return address < MIN_ADDRESS || address >= MAX_ADDRESS;
 	}
-
-	void updateOutputFile(string msg) {
-        ofstream fout(FileNames::OUTPUT_FILE);
-        fout << msg;
-        fout.close();
-	}
-
+	
 	bool isValidCommand(string command) {
         std::istringstream iss(command);
         string arg;
@@ -376,7 +374,7 @@ private:
 				// Address가 일치하는 경우
 				if (bufferCommand.addr == ssd->getAddr()) {
 					// Return the value from buffer
-					//updateOutputFile(param.value);
+					file.updateOutput(bufferCommand.value);
 					return true;
 				}
 			}
@@ -386,7 +384,7 @@ private:
 				for (int checkAddr = bufferCommand.addr; checkAddr < bufferCommand.addr + bufferCommand.size; checkAddr++) {
 					if (checkAddr == ssd->getAddr()) {
 						// Return the initial value
-						//updateOutputFile("0x00000000");
+						file.updateOutput("0x00000000");
 						return true;
 					}
 				}
@@ -407,6 +405,7 @@ private:
 			ssdParams.value = ssd->getValue();
 			// write the command to buffer
 			buffer.writeBuffer(ssdParams);
+			file.updateOutput("");
 		}
 		
 		// check if command can be merged with buffer
@@ -424,6 +423,7 @@ private:
 			ssdParams.size = ssd->getSize();
 			// write the command to buffer
 			buffer.writeBuffer(ssdParams);
+			file.updateOutput("");
 		}
 
 		// check if command can be merged with buffer
@@ -454,5 +454,6 @@ private:
 
 	RealSSD* ssd; // RealSSD instance
 	Buffer buffer; // Buffer instance to manage buffered operations
+	
 };
 
