@@ -180,6 +180,7 @@ public:
 	virtual string getOp() = 0;
 	virtual int getAddr() = 0;
 	virtual string getValue() = 0;
+	virtual int getSize() = 0;
 };
 
 class RealSSD : public SSD {
@@ -225,6 +226,10 @@ public:
 
 	string getValue() {
 		return value;
+	}
+
+	int getSize() {
+		return size;
 	}
 
 private:

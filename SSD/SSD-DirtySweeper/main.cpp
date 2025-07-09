@@ -9,7 +9,6 @@ using std::string;
 class RealSSDTest : public ::testing::Test {
 public:
     SSD* ssd = new RealSSD();
-    EraseCommand eraseCmd;
     string VALID_HEX_DATA = "0x1298CDEF";
     string INVALID_HEX_DATA = "0xABCDEFGH";
     string INITIAL_HEX_DATA = "0x00000000";
@@ -50,9 +49,10 @@ public:
         return true;
     }
 
-    string buildCommand(string rw, int lba, string data = "") {
-        string cmdLine = rw + " " + std::to_string(lba);
-        if (rw == "W") cmdLine = cmdLine + " " + data;
+    string buildCommand(string rwe, int lba, string data = "", int test_size = 0) {
+        string cmdLine = rwe + " " + std::to_string(lba);
+        if (rwe == "W") cmdLine = cmdLine + " " + data;
+		if (rwe == "E") cmdLine = cmdLine + " " + std::to_string(test_size);
         return cmdLine;
     }
 };
@@ -110,6 +110,16 @@ TEST_F(RealSSDTest, ArgparseWrite)
     EXPECT_EQ("W", ssd->getOp());
     EXPECT_EQ(3, ssd->getAddr());
     EXPECT_EQ("0x1298CDEF", ssd->getValue());
+}
+
+TEST_F(RealSSDTest, ArgparseErase)
+{
+    string cmd = buildCommand("E", 3, VALID_HEX_DATA, 10);
+    ssd->parseCommand(cmd);
+    EXPECT_EQ(3, ssd->getArgCount());
+    EXPECT_EQ("E", ssd->getOp());
+    EXPECT_EQ(3, ssd->getAddr());
+	EXPECT_EQ(10, ssd->getSize());
 }
 
 TEST_F(RealSSDTest, ArgparseInvalidOp)
@@ -204,33 +214,45 @@ TEST_F(RealSSDTest, WriteReadVerify00) {
 }
 
 TEST_F(RealSSDTest, ErasePass) {
-    bool isPass = eraseCmd.run(VALID_TEST_ADDRESS, VALID_HEX_DATA, VALID_TEST_SIZE);
+    string cmd = buildCommand("E", VALID_TEST_ADDRESS, VALID_HEX_DATA, VALID_TEST_SIZE);
+	ssd->parseCommand(cmd);
+    bool isPass = ssd->exec();
     EXPECT_TRUE(isPass);
 }
 
 TEST_F(RealSSDTest, EraseFailOutofRange) {
-    bool isPass = eraseCmd.run(INVALID_TEST_ADDRESS, VALID_HEX_DATA, VALID_TEST_SIZE);
+    string cmd = buildCommand("E", INVALID_TEST_ADDRESS, VALID_HEX_DATA, VALID_TEST_SIZE);
+    ssd->parseCommand(cmd);
+    bool isPass = ssd->exec();
     EXPECT_FALSE(isPass);
 }
 
 TEST_F(RealSSDTest, EraseFailOutofRangeDestination) {
-    bool isPass = eraseCmd.run(VALID_TEST_ADDRESS_MAX, VALID_HEX_DATA, VALID_TEST_SIZE);
+    string cmd = buildCommand("E", VALID_TEST_ADDRESS_MAX, VALID_HEX_DATA, VALID_TEST_SIZE);
+    ssd->parseCommand(cmd);
+    bool isPass = ssd->exec();
     EXPECT_FALSE(isPass);
 }
 
 TEST_F(RealSSDTest, EraseFailExceedMaxSize) {
-    bool isPass = eraseCmd.run(VALID_TEST_ADDRESS, VALID_HEX_DATA, INVALID_TEST_SIZE);
+    string cmd = buildCommand("E", VALID_TEST_ADDRESS, VALID_HEX_DATA, INVALID_TEST_SIZE);
+    ssd->parseCommand(cmd);
+    bool isPass = ssd->exec();
     EXPECT_FALSE(isPass);
 }
 
 TEST_F(RealSSDTest, EraseAndReadVerify) {
-    string cmd = buildCommand("W", VALID_TEST_ADDRESS, VALID_HEX_DATA);
-    ssd->parseCommand(cmd);
+    ssd->parseCommand(buildCommand("W", VALID_TEST_ADDRESS, VALID_HEX_DATA));
     bool isPass = ssd->exec();
     EXPECT_TRUE(isPass);
 
-    isPass = eraseCmd.run(VALID_TEST_ADDRESS, VALID_HEX_DATA, VALID_TEST_SIZE);
+    this_thread::sleep_for(chrono::nanoseconds(DELAY_NANOS_FOR_WRITE));
+
+    ssd->parseCommand(buildCommand("E", VALID_TEST_ADDRESS, VALID_HEX_DATA, VALID_TEST_SIZE));
+    isPass = ssd->exec();
     EXPECT_TRUE(isPass);
+
+    this_thread::sleep_for(chrono::nanoseconds(DELAY_NANOS_FOR_WRITE));
 
 	ssd->parseCommand(buildCommand("R", VALID_TEST_ADDRESS));
     isPass = ssd->exec();
