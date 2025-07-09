@@ -143,6 +143,14 @@ public:
         std::filesystem::rename(targetBuffer, newBuffer);
     }
 
+    void clear() {
+        for (int i = 1; i <= MAX_BUFFER_SIZE; i++) {
+            string targetBuffer = DIR_NAME + "/" + readBuffer(i);
+            string newBuffer = DIR_NAME + "/" + std::to_string(i) + EMPTY_FILE_NAME;
+            std::filesystem::rename(targetBuffer, newBuffer);
+        }
+    }
+
 private:
     string paramToBufferName(struct params input) {
         string result = "";
