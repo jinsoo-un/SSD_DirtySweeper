@@ -158,12 +158,16 @@
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'"> %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'"> %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
+    <ClCompile Include="testShell_string_manager.cpp" />
     <ClCompile Include="testShell_write_test.cpp">
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'"> %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'"> %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'"> %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'"> %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="testShell_string_manager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

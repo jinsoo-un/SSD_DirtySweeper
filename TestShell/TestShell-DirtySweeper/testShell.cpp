@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <io.h>
 #include "gmock/gmock.h"
+#include "testShell_string_manager.h"
 
 using namespace std;
 
@@ -137,6 +138,7 @@ public:
     }
 
     void executeCommandLine(std::string commandLine) {
+
         char modulePath[MAX_PATH];
         GetModuleFileNameA(NULL, modulePath, MAX_PATH);
 
@@ -214,32 +216,26 @@ public:
 
     void executeCommand(const std::string& cmd, const std::vector<std::string>& args) {
         if (cmd == "read") {
-            if ((args.size() == 0) || (args.size() >= 2)) {
-                std::cout << "INVALID COMMAND\n";
-                return;
-            }
             int lba = stoi(args[0]);
             this->read(lba);
             return;
         }
 
         if (cmd == "fullread") {
-            if (args.size() > 0) {
-                std::cout << "INVALID COMMAND\n";
-                return;
-            }
             this->fullRead();
             return;
         }
 
         if (cmd == "write") {
-            if (args.size() < 2) {
-                std::cout << "INVALID COMMAND\n";
-                return;
-            }
             int lba = stoi(args[0]);
             std::string data = args[1];
             this->write(lba, data);
+            return;
+        }
+
+        if (cmd == "fullwrite") {
+            std::string data = args[0];
+            this->fullWrite(data);
             return;
         }
 
@@ -253,16 +249,6 @@ public:
             return;
         }
 
-        if (cmd == "fullwrite") {
-            if ((args.size() <= 0) || (args.size() >= 2)) {
-                std::cout << "INVALID COMMAND\n";
-                return;
-            }
-            std::string data = args[0];
-            this->fullWrite(data);
-            return;
-        }
-
         if (cmd == "1_" || cmd == "1_FullWriteAndReadCompare") {
             fullWriteAndReadCompare();
             return;
@@ -273,7 +259,7 @@ public:
             return;
         }
         if (cmd == "3_" || cmd == "3_WriteReadAging") {
-            writeReadAging();
+            this->writeReadAging();
             return;
         }
 
@@ -314,12 +300,12 @@ public:
         const std::string& cmd = tokens[0];
         std::vector<std::string> args(tokens.begin() + 1, tokens.end());
 
-        if (!isValidCommand(cmd)) {
-            std::cout << "INVALID COMMAND\n";
+        if (isValidCommand(cmd) && isArgumentSizeValid(cmd, args.size())) {
+            executeCommand(cmd, args);
             return;
         }
 
-        executeCommand(cmd, args);
+        std::cout << "INVALID COMMAND\n";
     }
 
     void help() {
@@ -340,13 +326,13 @@ public:
         logger.print("testShell.read()", "read command called");
 
         if (lba < 0 || lba > 99) {
-            printErrorReadResult();
+            testShellStringManager.printErrorReadResult();
             return;
         }
         ssd->read(lba);
         std::string result = readOutputFile();
-        if (result == "ERROR") printErrorReadResult();
-        else printSuccessReadResult(result, lba);
+        if (result == "ERROR") testShellStringManager.printErrorReadResult();
+        else testShellStringManager.printSuccessReadResult(result, lba);
     }
 
     void fullRead() {
@@ -356,64 +342,55 @@ public:
             ssd->read(lba);
             std::string result = readOutputFile();
             if (result == "ERROR") {
-                printErrorReadResult();
+                testShellStringManager.printErrorReadResult();
                 break;
             }
-            printSuccessReadResult(result, lba);
+            testShellStringManager.printSuccessReadResult(result, lba);
         }
     }
 
-    string write(int lba, string data) {
-		logger.print("testShell.write()", "write command called");
-
+    void write(int lba, string data)
+    {
+        logger.print("testShell.write()", "write command called");
         ssd->write(lba, data);
         string result = readOutputFile();
         if (result == "ERROR") {
-            printErrorWriteResult();
-            return WRITE_ERROR_MESSAGE;
+            testShellStringManager.printErrorWriteResult();
+            return;
         }
-
-        printSuccessWriteResult();
-        return WRITE_SUCCESS_MESSAGE;
+        testShellStringManager.printSuccessWriteResult();
     }
 
     void fullWrite(string data) {
 		logger.print("testShell.fullWrite()", "full write command called");
-
         for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; lba++) {
             ssd->write(lba, data);
             string currentResult = readOutputFile();
             if (currentResult == "ERROR") {
-                cout << "[Full Write] ERROR\n";
+                testShellStringManager.printErrorFullWriteResult();
                 return;
             }
         }
-        cout << "[Full Write] Done\n";;
-    }
-
-    std::string getWriteDataInFullWriteAndReadCompareScript(int lba){
-        std::string evenData = "0xAAAABBBB";
-        std::string oddData = "0xCCCCDDDD";
-        return (lba / 5 % 2 == 0) ? evenData : oddData;
+        testShellStringManager.printSuccessFullWriteResult();
     }
 
     void fullWriteAndReadCompare() {
 		logger.print("testShell.fullWriteAndReadCompare()", "full write and read compare command called");
 
         for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; ++lba) {
-            std::string writeData = getWriteDataInFullWriteAndReadCompareScript(lba);
+            std::string writeData = testShellStringManager.getWriteDataInFullWriteAndReadCompareScript(lba);
 
             ssd->write(lba, writeData);
             ssd->read(lba);
             std::string readData = readOutputFile();
 
             if (readData != writeData) {
-                std::cout << "[Mismatch] LBA " << lba << " Expected: " << writeData << " Got: " << readData << "\n";
-                std::cout << "FAIL\n";
+                testShellStringManager.printWriteReadMismatch(lba, writeData, readData);
+                testShellStringManager.printScriptFailResult();
                 return;
             }
         }
-        std::cout << "PASS\n";
+        testShellStringManager.printScriptPassResult();
     }
 
     void exit(void) {
@@ -428,43 +405,21 @@ public:
 		logger.print("testShell.writeReadAging()", "write read aging command called");
 
         for (int i = 0; i < WRITE_READ_ITERATION; i++) {
-            string randomString = generateRandomHexString();
-            ssd->write(0, randomString);
-            ssd->read(0);
-            string firstLBAResult = readOutputFile();
-            ssd->write(99, randomString);
-            ssd->read(99);
-            string endLBAResult = readOutputFile();
+            string randomString = getRandomHexString();
+            string firstLBAResult = getWriteReadResult(0, randomString);
+            string endLBAResult = getWriteReadResult(99, randomString);
 
             if (firstLBAResult != endLBAResult) {
-                cout << "FAIL\n";
+                testShellStringManager.printScriptFailResult();
                 return;
             }
         }
-        cout << "PASS\n";
+        testShellStringManager.printScriptPassResult();
     }
 
-    virtual std::string generateRandomHexString() {
-        static const char* hexDigits = "0123456789ABCDEF";
-
-        static bool seeded = false;
-        if (!seeded) {
-            std::srand(static_cast<unsigned int>(std::time(nullptr)));
-            seeded = true;
-        }
-
-        unsigned int value = (static_cast<unsigned int>(std::rand()) << 16) | std::rand();
-
-        std::string result = "0x";
-        for (int i = 7; i >= 0; --i) {
-            int digit = (value >> (i * 4)) & 0xF;
-            result += hexDigits[digit];
-        }
-
-        return result;
+    virtual std::string getRandomHexString() {
+        return testShellStringManager.generateRandomHexString();
     }
-
-    static const int WRITE_READ_ITERATION = 200;
 
     void partialLBAWrite() {
 		logger.print("testShell.partialLBAWrite()", "partial LBA write command called");
@@ -494,12 +449,12 @@ public:
             result.erase(result.begin());
             for (auto nextData : result) {
                 if (firstData != nextData) {
-                    std::cout << "FAIL\n";
+                    testShellStringManager.printScriptFailResult();
                     return;
                 }
             }
         }
-        std::cout << "PASS\n";
+        testShellStringManager.printScriptPassResult();
     }
 
     void eraseWithSize(unsigned int lba, unsigned int size){
@@ -539,9 +494,9 @@ public:
         for (int loopCnt = 0; loopCnt < maxAgingCnt; loopCnt++) {
             for (int lba = 2; lba < LBA_END_ADDRESS; lba += eraseUnitSize){
                 vector<string> result;
-                ssd->write(lba, generateRandomHexString());
+                ssd->write(lba, testShellStringManager.generateRandomHexString());
                 result.push_back(readOutputFile());
-                ssd->write(lba, generateRandomHexString());
+                ssd->write(lba, testShellStringManager.generateRandomHexString());
                 result.push_back(readOutputFile());
                 ssd->erase(lba, eraseUnitSize);
                 result.push_back(readOutputFile());
@@ -556,19 +511,36 @@ public:
             std::cout << "PASS\n";
         }
     }
+    static const int WRITE_READ_ITERATION = 200;
 
 private:
     SSD* ssd;
 	Logger logger;
+    TestShellStringManager testShellStringManager;
+
     bool isExitCmd{ false };
 
     const int LBA_START_ADDRESS = 0;
     const int LBA_END_ADDRESS = 99;
 
-    const string WRITE_ERROR_MESSAGE = "[Write] ERROR";
-    const string WRITE_SUCCESS_MESSAGE = "[Write] Done";
     const string ERASE_ERROR_MESSAGE = "[Erase] ERROR";
     const string ERASE_SUCCESS_MESSAGE = "[Erase] Done";
+
+    bool isArgumentSizeValid(const string& cmd, int argsSize) {
+        if (cmd == "read") {
+            if (argsSize != 1) return false;
+        }
+        else if (cmd == "fullread") {
+            if (argsSize != 0) return false;
+        }
+        else if (cmd == "write") {
+            if (argsSize != 2) return false;
+        }
+        else if (cmd == "fullwrite") {
+            if (argsSize != 1) return false;
+        }
+        return true;
+    }
 
     virtual std::string readOutputFile() {
         // shell.exe의 절대 경로 구하기
@@ -600,6 +572,13 @@ private:
         return content.str();
     }
 
+    std::string getWriteReadResult(int lba, std::string input) {
+        ssd->write(lba, input);
+        ssd->read(lba);
+        string result = readOutputFile();
+        return result;
+    }
+
     std::vector<std::string> tokenize(const std::string& input) {
         std::vector<std::string> tokens;
         std::istringstream iss(input);
@@ -621,7 +600,6 @@ private:
         };
         return valid.count(cmd) > 0;
     }
-
     string erase(unsigned int lba, unsigned int size) {
         const int maxEraseSize = 10;
         int currentLba = lba;
@@ -664,19 +642,7 @@ private:
         }
         return true;
     }
-    void printErrorReadResult() {
-        std::cout << "[Read] ERROR\n";
-    }
 
-    void printSuccessReadResult(std::string result, int lba) {
-        std::cout << "[Read] LBA " << lba << " : " << result << "\n";
-    }
-    void printSuccessWriteResult() {
-        std::cout << WRITE_SUCCESS_MESSAGE << "\n";
-    }
-    void printErrorWriteResult() {
-        std::cout << WRITE_ERROR_MESSAGE << "\n";
-    }
     void printEraseResult(const string header, const string result)
     {
         std::cout <<"["<< header<<"] "<< result << "\n";
@@ -686,7 +652,7 @@ private:
 class MockTestShell : public TestShell {
 public:
 	MockTestShell(SSD* ssd) : TestShell(ssd) {}
-	MOCK_METHOD(void, help, (), ());
-	MOCK_METHOD(std::string, readOutputFile, (), ());
-    MOCK_METHOD(std::string, generateRandomHexString, (), ());
+    MOCK_METHOD(void, help, (), ());
+    MOCK_METHOD(std::string, readOutputFile, (), ());
+    MOCK_METHOD(std::string, getRandomHexString, (), ());
 };
