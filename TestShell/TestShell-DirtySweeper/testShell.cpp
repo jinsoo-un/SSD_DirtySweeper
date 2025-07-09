@@ -652,7 +652,7 @@ private:
 class MockTestShell : public TestShell {
 public:
 	MockTestShell(SSD* ssd) : TestShell(ssd) {}
-	MOCK_METHOD(void, help, (), ());
-	MOCK_METHOD(std::string, readOutputFile, (), ());
+    MOCK_METHOD(void, help, (), ());
+    MOCK_METHOD(std::string, readOutputFile, (), ());
     MOCK_METHOD(std::string, getRandomHexString, (), ());
 };
