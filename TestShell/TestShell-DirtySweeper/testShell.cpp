@@ -7,6 +7,7 @@
 #include <unordered_set>
 #include <windows.h>
 #include <shellapi.h>
+#include <direct.h>
 #include <cstdlib>
 #include <ctime>
 #include "gmock/gmock.h"
@@ -29,21 +30,36 @@ public:
     }
 
     void executeCommandLine(std::string commandLine) {
-        const std::string filePath = "..\\..\\SSD\\x64\\Release\\ssd.exe";
-        const std::string workingDir = "..\\..\\SSD\\x64\\Release";
+        char modulePath[MAX_PATH];
+        GetModuleFileNameA(NULL, modulePath, MAX_PATH);
 
-        std::string fullCommand = "\"" + filePath + "\" " + commandLine;
+        std::string shellFullPath(modulePath);
+        size_t lastSlash = shellFullPath.find_last_of("\\/");
+        std::string shellDir = (lastSlash != std::string::npos) ? shellFullPath.substr(0, lastSlash) : ".";
+
+        // ssd.exe 경로: shellDir 기준으로 상대 위치
+        std::string ssdRelativePath = shellDir + "\\..\\..\\..\\SSD\\x64\\Release\\ssd.exe";
+        std::string workingDirRelative = shellDir + "\\..\\..\\..\\SSD\\x64\\Release";
+
+        // 절대경로로 변환
+        char absSsdPath[MAX_PATH];
+        _fullpath(absSsdPath, ssdRelativePath.c_str(), MAX_PATH);
+
+        char absWorkingDir[MAX_PATH];
+        _fullpath(absWorkingDir, workingDirRelative.c_str(), MAX_PATH);
+
+        std::string fullCommand = "\"" + std::string(absSsdPath) + "\" " + commandLine;
 
         STARTUPINFOA si = { sizeof(STARTUPINFOA) };
         PROCESS_INFORMATION pi;
 
         BOOL success = CreateProcessA(
-            nullptr,
-            &fullCommand[0],        // commandLine (비 const)
-            nullptr, nullptr, FALSE,
+            NULL,
+            &fullCommand[0],  // 반드시 non-const!
+            NULL, NULL, FALSE,
             0,
-            nullptr,
-            workingDir.c_str(),     // working directory 명시
+            NULL,
+            absWorkingDir,
             &si, &pi
         );
 
@@ -85,7 +101,7 @@ public:
 
     void executeCommand(const std::string& cmd, const std::vector<std::string>& args) {
         if (cmd == "read") {
-            if (args.size() < 1) {
+            if ((args.size() == 0) || (args.size() >= 2)) {
                 std::cout << "INVALID COMMAND\n";
                 return;
             }
@@ -95,6 +111,10 @@ public:
         }
 
         if (cmd == "fullread") {
+            if (args.size() > 0) {
+                std::cout << "INVALID COMMAND\n";
+                return;
+            }
             this->fullRead();
             return;
         }
@@ -121,6 +141,10 @@ public:
         }
 
         if (cmd == "fullwrite") {
+            if ((args.size() <= 0) || (args.size() >= 2)) {
+                std::cout << "INVALID COMMAND\n";
+                return;
+            }
             std::string data = args[0];
             this->fullWrite(data);
             return;
@@ -198,10 +222,13 @@ public:
     }
 
     void read(int lba) {
-        if (lba < 0 || lba > 99) throw std::exception();
+        if (lba < 0 || lba > 99) {
+            printErrorReadResult();
+            return;
+        }
         ssd->read(lba);
         std::string result = readOutputFile();
-        if (result == "ERROR") printErrorReadResult(result);
+        if (result == "ERROR") printErrorReadResult();
         else printSuccessReadResult(result, lba);
     }
 
@@ -210,7 +237,7 @@ public:
             ssd->read(lba);
             std::string result = readOutputFile();
             if (result == "ERROR") {
-                printErrorReadResult(result);
+                printErrorReadResult();
                 break;
             }
             printSuccessReadResult(result, lba);
@@ -230,21 +257,17 @@ public:
         return WRITE_SUCCESS_MESSAGE;
     }
 
-    string fullWrite(string data)
+    void fullWrite(string data)
     {
-        string totalResult = "";
         for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; lba++) {
             ssd->write(lba, data);
             string currentResult = readOutputFile();
             if (currentResult == "ERROR") {
-                totalResult += WRITE_ERROR_MESSAGE;
-                printErrorWriteResult();
-                break;
+                cout << "[Full Write] ERROR\n";
+                return;
             }
-            totalResult += WRITE_SUCCESS_MESSAGE + "\n";
-            printSuccessWriteResult();
         }
-        return totalResult;
+        cout << "[Full Write] Done\n";;
     }
 
     std::string getWriteDataInFullWriteAndReadCompareScript(int lba){
@@ -263,8 +286,11 @@ public:
 
             if (readData != writeData) {
                 std::cout << "[Mismatch] LBA " << lba << " Expected: " << writeData << " Got: " << readData << "\n";
+                std::cout << "FAIL\n";
+                return;
             }
         }
+        std::cout << "PASS\n";
     }
 
     void exit(void) {
@@ -286,11 +312,11 @@ public:
             string endLBAResult = readOutputFile();
 
             if (firstLBAResult != endLBAResult) {
-                cout << "FAIL";
+                cout << "FAIL\n";
                 return;
             }
         }
-        cout << "PASS";
+        cout << "PASS\n";
     }
 
     virtual std::string generateRandomHexString() {
@@ -475,18 +501,33 @@ private:
     const string ERASE_SUCCESS_MESSAGE = "[Erase] Done";
 
     virtual std::string readOutputFile() {
-        std::ifstream file("..\\..\\SSD\\x64\\Release\\ssd_output.txt");
+        // shell.exe의 절대 경로 구하기
+        char modulePath[MAX_PATH];
+        GetModuleFileNameA(NULL, modulePath, MAX_PATH);
 
-        if (!file.is_open()) throw std::exception();
+        std::string shellFullPath(modulePath);
+        size_t lastSlash = shellFullPath.find_last_of("\\/");
+        std::string shellDir = (lastSlash != std::string::npos) ? shellFullPath.substr(0, lastSlash) : ".";
+
+        // ssd_output.txt의 상대 경로 → 절대 경로 변환
+        std::string relativePath = shellDir + "\\..\\..\\..\\SSD\\x64\\Release\\ssd_output.txt";
+
+        char absPath[MAX_PATH];
+        _fullpath(absPath, relativePath.c_str(), MAX_PATH);
+
+        std::ifstream file(absPath);
+        if (!file.is_open()) {
+            std::cerr << "Failed to open output file: " << absPath << std::endl;
+            throw std::exception();
+        }
 
         std::ostringstream content;
         std::string line;
         while (std::getline(file, line)) {
             content << line;
         }
-        std::string result = content.str();
 
-        return result;
+        return content.str();
     }
 
     std::vector<std::string> tokenize(const std::string& input) {
@@ -511,8 +552,8 @@ private:
         return valid.count(cmd) > 0;
     }
 
-    void printErrorReadResult(std::string result) {
-        std::cout << "[Read] " << result << "\n";
+    void printErrorReadResult() {
+        std::cout << "[Read] ERROR\n";
     }
 
     void printSuccessReadResult(std::string result, int lba) {
