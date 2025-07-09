@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <io.h>
 #include "gmock/gmock.h"
+#include "testShell_string_manager.h"
 
 using namespace std;
 
@@ -137,6 +138,7 @@ public:
     }
 
     void executeCommandLine(std::string commandLine) {
+
         char modulePath[MAX_PATH];
         GetModuleFileNameA(NULL, modulePath, MAX_PATH);
 
@@ -211,28 +213,9 @@ public:
 class TestShell {
 public:
     TestShell(SSD* ssd) : ssd{ ssd } {}
-    bool isArgumentSizeValid(const string& cmd, int argsSize) {
-        if (cmd == "read") {
-            if (argsSize != 1) return false;
-        }
-        else if (cmd == "fullread") {
-            if (argsSize != 0) return false;
-        }
-        else if (cmd == "write") {
-            if (argsSize != 2) return false;
-        }
-        else if (cmd == "fullwrite"){
-            if (argsSize != 1) return false;
-        }
-
-        return true;
-    }
 
     void executeCommand(const std::string& cmd, const std::vector<std::string>& args) {
-        if (!isArgumentSizeValid(cmd, args.size())) {
-            std::cout << "INVALID COMMAND\n";
-            return;
-        }
+        
 
         if (cmd == "read") {
             int lba = stoi(args[0]);
@@ -319,12 +302,12 @@ public:
         const std::string& cmd = tokens[0];
         std::vector<std::string> args(tokens.begin() + 1, tokens.end());
 
-        if (!isValidCommand(cmd)) {
-            std::cout << "INVALID COMMAND\n";
+        if (isValidCommand(cmd) && isArgumentSizeValid(cmd, args.size())) {
+            executeCommand(cmd, args);
             return;
         }
 
-        executeCommand(cmd, args);
+        std::cout << "INVALID COMMAND\n";
     }
 
     void help() {
@@ -574,6 +557,22 @@ private:
     const string WRITE_SUCCESS_MESSAGE = "[Write] Done";
     const string ERASE_ERROR_MESSAGE = "[Erase] ERROR";
     const string ERASE_SUCCESS_MESSAGE = "[Erase] Done";
+
+    bool isArgumentSizeValid(const string& cmd, int argsSize) {
+        if (cmd == "read") {
+            if (argsSize != 1) return false;
+        }
+        else if (cmd == "fullread") {
+            if (argsSize != 0) return false;
+        }
+        else if (cmd == "write") {
+            if (argsSize != 2) return false;
+        }
+        else if (cmd == "fullwrite") {
+            if (argsSize != 1) return false;
+        }
+        return true;
+    }
 
     virtual std::string readOutputFile() {
         // shell.exe의 절대 경로 구하기
