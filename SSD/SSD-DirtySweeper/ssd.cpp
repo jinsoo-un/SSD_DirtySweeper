@@ -145,7 +145,7 @@ public:
 private:
 	bool erase(int address, string val, int size) {
 		if (address + size > MAX_ADDRESS) {
-			file.updateOutputFile("ERROR");
+			file.updateOutput("ERROR");
 			return false;
 		}
 		if (size < 1 || size > 10) {
