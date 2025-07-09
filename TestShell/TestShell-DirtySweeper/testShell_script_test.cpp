@@ -58,8 +58,10 @@ TEST_F(FullWriteReadTest, FullWriteAndReadCompareShouldPass) {
 TEST_F(FullWriteReadTest, FullWriteAndReadCompareShouldFail) {
     std::string evenData = EVEN_DATA;
     std::string oddData = ODD_DATA;
+    const int ERROR_INJECTED_LBA = 13;
 
     for (int lbaIndex = START_LBA; lbaIndex <= END_LBA; ++lbaIndex) {
+        if (lbaIndex > ERROR_INJECTED_LBA) break;
         std::string data = (lbaIndex / 5 % 2 == 0) ? evenData : oddData;
         EXPECT_CALL(ssd, write(lbaIndex, data)).Times(1);
         EXPECT_CALL(ssd, read(lbaIndex)).Times(1);
@@ -68,8 +70,9 @@ TEST_F(FullWriteReadTest, FullWriteAndReadCompareShouldFail) {
     Sequence seq;
     for (int lbaIndex = START_LBA; lbaIndex <= END_LBA; ++lbaIndex) {
         std::string expected;
+        if (lbaIndex > ERROR_INJECTED_LBA) break;
 
-        if (lbaIndex == 13) {
+        if (lbaIndex == ERROR_INJECTED_LBA) {
             // 일부러 실패하도록 의도적으로 잘못된 값
             expected = "0xWRONGDATA";
         }
