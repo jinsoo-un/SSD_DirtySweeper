@@ -136,6 +136,31 @@ public:
             return;
         }
 
+        if (cmd == "erase") {
+            if (args.size() != 2) {
+                std::cout << "INVALID COMMAND\n";
+                return;
+            }
+            int lba = stoi(args[0]);
+            int size = stoi(args[1]);
+            this->erase(lba, size);
+            return;
+        }
+
+        if (cmd == "erase_range") {
+            if (args.size() != 2) {
+                std::cout << "INVALID COMMAND\n";
+                return;
+            }
+            int startLba = stoi(args[0]);
+            int endLba = stoi(args[1]);
+            this->eraseRange(startLba, endLba);
+            return;
+        }
+        if (cmd == "4_" || cmd == "4_EraseAndWriteAging") {
+            this->eraseAndWriteAging();
+            return;
+        }
         std::cout << "INVALID COMMAND\n";
     }
 
@@ -475,7 +500,9 @@ private:
 			"read", "write", "exit", "help", "fullread", "fullwrite", 
             "testscript", "1_", "1_FullWriteAndReadCompare",
             "2_","2_PartialLBAWrite",
-            "3_", "3_WriteReadAging"
+            "3_", "3_WriteReadAging",
+            "erase","erase_range",
+            "4_", "4_EraseAndWriteAging"
         };
         return valid.count(cmd) > 0;
     }
