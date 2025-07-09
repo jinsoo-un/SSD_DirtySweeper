@@ -52,6 +52,7 @@ std::string TestShellStringManager::generateRandomHexString() {
 
     return result;
 }
+
 std::string TestShellStringManager::getWriteDataInFullWriteAndReadCompareScript(int lba) {
     std::string evenData = "0xAAAABBBB";
     std::string oddData = "0xCCCCDDDD";
