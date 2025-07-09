@@ -38,23 +38,19 @@ void TestShellStringManager::printWriteReadMismatch(int lba, string writeData, s
     cout << "[Mismatch] LBA " << lba << " Expected: " << writeData << " Got: " << readData << "\n";
 }
 
-void TestShellStringManager::printEraseErrorResult()
-{
+void TestShellStringManager::printEraseErrorResult() {
     cout << "[Erase] ERROR\n";
 }
 
-void TestShellStringManager::printErasePassResult()
-{
+void TestShellStringManager::printErasePassResult() {
     cout << "[Erase] Done\n";
 }
 
-void TestShellStringManager::printEraseRangeErrorResult()
-{
+void TestShellStringManager::printEraseRangeErrorResult() {
     cout << "[Erase Range] ERROR\n";
 }
 
-void TestShellStringManager::printEraseRangePassResult()
-{
+void TestShellStringManager::printEraseRangePassResult() {
     cout << "[Erase Range] Done\n";
 }
 

@@ -142,6 +142,7 @@ public:
         string commandLine = buildCommandLine("W", lba, data);
         executeCommandLine(commandLine);
     }
+
     void erase(unsigned int lba, unsigned size) override {
         logger.print("SsdHelpler.erase()", "Erasing LBA: " + to_string(lba) + " with size: " + to_string(size));
         string commandLine = buildCommandLine("E", lba, to_string(size));
@@ -595,6 +596,7 @@ private:
         };
         return valid.count(cmd) > 0;
     }
+
     string erase(unsigned int lba, unsigned int size) {
         const int maxEraseSize = 10;
         int currentLba = lba;
@@ -609,6 +611,7 @@ private:
         }
         return "Done";
     }
+
     bool isValidLbaRange(unsigned int startLba, unsigned int endLba)
     {
         if (startLba < LBA_START_ADDRESS || startLba > LBA_END_ADDRESS) {
@@ -624,6 +627,7 @@ private:
         }
         return true;
     }
+
     bool isValidEraseWithSizeArgument(unsigned int lba, unsigned int size) {
         if (lba > LBA_END_ADDRESS) {
             return false;
@@ -637,6 +641,7 @@ private:
         }
         return true;
     }
+
     bool isCmdExecuteError(const string result) const {
         return result == "ERROR";
     }
