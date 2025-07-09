@@ -49,10 +49,9 @@ public:
         return true;
     }
 
-    string buildCommand(string rwe, int lba, string data = "", int test_size = 0) {
-        string cmdLine = rwe + " " + std::to_string(lba);
-        if (rwe == "W") cmdLine = cmdLine + " " + data;
-		if (rwe == "E") cmdLine = cmdLine + " " + std::to_string(test_size);
+    string buildCommand(string cmd, int lba, string data = "") {
+        string cmdLine = cmd + " " + std::to_string(lba);
+        if (cmd == "W" || cmd == "E") cmdLine = cmdLine + " " + data;
         return cmdLine;
     }
 };
@@ -114,7 +113,7 @@ TEST_F(RealSSDTest, ArgparseWrite)
 
 TEST_F(RealSSDTest, ArgparseErase)
 {
-    string cmd = buildCommand("E", 3, VALID_HEX_DATA, 10);
+    string cmd = buildCommand("E", 3, std::to_string(10));
     ssd->parseCommand(cmd);
     EXPECT_EQ(3, ssd->getArgCount());
     EXPECT_EQ("E", ssd->getOp());
@@ -214,28 +213,28 @@ TEST_F(RealSSDTest, WriteReadVerify00) {
 }
 
 TEST_F(RealSSDTest, ErasePass) {
-    string cmd = buildCommand("E", VALID_TEST_ADDRESS, VALID_HEX_DATA, VALID_TEST_SIZE);
+    string cmd = buildCommand("E", VALID_TEST_ADDRESS, to_string(VALID_TEST_SIZE));
 	ssd->parseCommand(cmd);
     bool isPass = ssd->exec();
     EXPECT_TRUE(isPass);
 }
 
 TEST_F(RealSSDTest, EraseFailOutofRange) {
-    string cmd = buildCommand("E", INVALID_TEST_ADDRESS, VALID_HEX_DATA, VALID_TEST_SIZE);
+    string cmd = buildCommand("E", INVALID_TEST_ADDRESS, to_string(VALID_TEST_SIZE));
     ssd->parseCommand(cmd);
     bool isPass = ssd->exec();
     EXPECT_FALSE(isPass);
 }
 
 TEST_F(RealSSDTest, EraseFailOutofRangeDestination) {
-    string cmd = buildCommand("E", VALID_TEST_ADDRESS_MAX, VALID_HEX_DATA, VALID_TEST_SIZE);
+    string cmd = buildCommand("E", VALID_TEST_ADDRESS_MAX, to_string(VALID_TEST_SIZE));
     ssd->parseCommand(cmd);
     bool isPass = ssd->exec();
     EXPECT_FALSE(isPass);
 }
 
 TEST_F(RealSSDTest, EraseFailExceedMaxSize) {
-    string cmd = buildCommand("E", VALID_TEST_ADDRESS, VALID_HEX_DATA, INVALID_TEST_SIZE);
+    string cmd = buildCommand("E", VALID_TEST_ADDRESS, to_string(INVALID_TEST_SIZE));
     ssd->parseCommand(cmd);
     bool isPass = ssd->exec();
     EXPECT_FALSE(isPass);
@@ -248,7 +247,7 @@ TEST_F(RealSSDTest, EraseAndReadVerify) {
 
     this_thread::sleep_for(chrono::nanoseconds(DELAY_NANOS_FOR_WRITE));
 
-    ssd->parseCommand(buildCommand("E", VALID_TEST_ADDRESS, VALID_HEX_DATA, VALID_TEST_SIZE));
+    ssd->parseCommand(buildCommand("E", VALID_TEST_ADDRESS, to_string(VALID_TEST_SIZE)));
     isPass = ssd->exec();
     EXPECT_TRUE(isPass);
 
