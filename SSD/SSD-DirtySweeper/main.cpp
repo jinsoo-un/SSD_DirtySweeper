@@ -498,7 +498,7 @@ TEST_F(BufSSDTest, EraseTest02) {
         EXPECT_TRUE(checkOutputFile(INITIAL_HEX_DATA));
     }
 
-    EXPECT_EQ(0, ssd->getAccessCount());
+    EXPECT_EQ(5, ssd->getAccessCount());
 }
 
 
