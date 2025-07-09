@@ -9,7 +9,6 @@ using std::string;
 class RealSSDTest : public ::testing::Test {
 public:
     SSD* ssd = new RealSSD();
-    WriteCommand writeCmd;
     EraseCommand eraseCmd;
     string VALID_HEX_DATA = "0x1298CDEF";
     string INVALID_HEX_DATA = "0xABCDEFGH";
@@ -21,7 +20,6 @@ public:
     static const int INVALID_TEST_SIZE = 20;
 
 	static const int DELAY_NANOS_FOR_WRITE = 10000; // 10 millisecond
-
 
     void SetUp() override {
         ofstream file(FileNames::DATA_FILE);
@@ -136,48 +134,52 @@ TEST_F(RealSSDTest, ArgparseInvalidValue)
 }
 
 TEST_F(RealSSDTest, WritePass) {
-    bool isPass = writeCmd.run(VALID_TEST_ADDRESS, VALID_HEX_DATA);
+    string cmd = buildCommand("W", VALID_TEST_ADDRESS, VALID_HEX_DATA);
+    ssd->parseCommand(cmd);
+	bool isPass = ssd->exec();
     EXPECT_TRUE(isPass);
 }
 
 TEST_F(RealSSDTest, WriteFailWithOutOfAddressRange) {
-    bool isPass = writeCmd.run(INVALID_TEST_ADDRESS, VALID_HEX_DATA);
+    string cmd = buildCommand("W", INVALID_TEST_ADDRESS, VALID_HEX_DATA);
+    ssd->parseCommand(cmd);
+    bool isPass = ssd->exec();
     EXPECT_FALSE(isPass);
 }
 
 
 TEST_F(RealSSDTest, WriteInvalidData00) {
-
-    string invalidData = "0x1234567890000";
-    bool isPass = writeCmd.run(VALID_TEST_ADDRESS, invalidData);
+    string cmd = buildCommand("W", VALID_TEST_ADDRESS, "0x1234567890000");
+    ssd->parseCommand(cmd);
+    bool isPass = ssd->exec();
     EXPECT_FALSE(isPass);
 }
 
 TEST_F(RealSSDTest, WriteInvalidData01) {
-
-    string invalidData = "0x1234";
-    bool isPass = writeCmd.run(VALID_TEST_ADDRESS, invalidData);
+    string cmd = buildCommand("W", VALID_TEST_ADDRESS, "0x1234");
+    ssd->parseCommand(cmd);
+    bool isPass = ssd->exec();
     EXPECT_FALSE(isPass);
 }
 
 TEST_F(RealSSDTest, WriteInvalidData02) {
-
-    string invalidData = "12345678";
-    bool isPass = writeCmd.run(VALID_TEST_ADDRESS, invalidData);
+    string cmd = buildCommand("W", VALID_TEST_ADDRESS, "12345678");
+    ssd->parseCommand(cmd);
+    bool isPass = ssd->exec();
     EXPECT_FALSE(isPass);
 }
 
 TEST_F(RealSSDTest, WriteInvalidData03) {
-
-    string invalidData = "0x1234ABzE";
-    bool isPass = writeCmd.run(VALID_TEST_ADDRESS, invalidData);
+    string cmd = buildCommand("W", VALID_TEST_ADDRESS, "0x1234ABzE");
+    ssd->parseCommand(cmd);
+    bool isPass = ssd->exec();
     EXPECT_FALSE(isPass);
 }
 
 TEST_F(RealSSDTest, WriteInvalidData04) {
-
-    string invalidData = "0xA5CCH012";
-    bool isPass = writeCmd.run(VALID_TEST_ADDRESS, invalidData);
+    string cmd = buildCommand("W", VALID_TEST_ADDRESS, "0xA5CCH012");
+    ssd->parseCommand(cmd);
+    bool isPass = ssd->exec();
     EXPECT_FALSE(isPass);
 }
 
@@ -189,9 +191,12 @@ TEST_F(RealSSDTest, WriteReadVerify00) {
     EXPECT_EQ(true, isPass);
     EXPECT_TRUE(checkOutputFile(INITIAL_HEX_DATA));
 
-    isPass = writeCmd.run(VALID_TEST_ADDRESS, VALID_HEX_DATA);
+    cmd = buildCommand("W", VALID_TEST_ADDRESS, VALID_HEX_DATA);
+    ssd->parseCommand(cmd);
+    isPass = ssd->exec();
     EXPECT_TRUE(isPass);
 
+    cmd = buildCommand("R", VALID_TEST_ADDRESS);
     ssd->parseCommand(cmd);
     isPass = ssd->exec();
     EXPECT_EQ(true, isPass);
@@ -219,7 +224,9 @@ TEST_F(RealSSDTest, EraseFailExceedMaxSize) {
 }
 
 TEST_F(RealSSDTest, EraseAndReadVerify) {
-    bool isPass = writeCmd.run(VALID_TEST_ADDRESS, VALID_HEX_DATA);
+    string cmd = buildCommand("W", VALID_TEST_ADDRESS, VALID_HEX_DATA);
+    ssd->parseCommand(cmd);
+    bool isPass = ssd->exec();
     EXPECT_TRUE(isPass);
 
     isPass = eraseCmd.run(VALID_TEST_ADDRESS, VALID_HEX_DATA, VALID_TEST_SIZE);
