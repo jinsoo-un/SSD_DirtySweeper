@@ -117,7 +117,7 @@ void TestShell::processInput(const string& input) {
 }
 
 void TestShell::help() {
-    logger.print("testShell.help()", "help command called");
+    Logger::GetInstance().print("testShell.help()", "help command called");
 
     cout << "Developed by: Team Members - Sooeon Jin, Euncho Bae, Kwangwon Min, Hyeongseok Choi, Yunbae Kim, Seongkyoon Lee" << endl;
     cout << "read (LBA)         : Read data from (LBA)." << endl;
@@ -131,7 +131,7 @@ void TestShell::help() {
 }
 
 void TestShell::read(int lba) {
-    logger.print("testShell.read()", "read command called");
+    Logger::GetInstance().print("testShell.read()", "read command called");
 
     if (lba < 0 || lba > 99) {
         testShellStringManager.printErrorReadResult();
@@ -144,7 +144,7 @@ void TestShell::read(int lba) {
 }
 
 void TestShell::fullRead() {
-    logger.print("testShell.fullRead()", "full read command called");
+    Logger::GetInstance().print("testShell.fullRead()", "full read command called");
 
     for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; lba++) {
         ssd->read(lba);
@@ -159,7 +159,7 @@ void TestShell::fullRead() {
 
 void TestShell::write(int lba, string data)
 {
-    logger.print("testShell.write()", "write command called");
+    Logger::GetInstance().print("testShell.write()", "write command called");
     ssd->write(lba, data);
     if (isCmdExecuteError(readOutputFile())) {
         testShellStringManager.printErrorWriteResult();
@@ -169,7 +169,7 @@ void TestShell::write(int lba, string data)
 }
 
 void TestShell::fullWrite(string data) {
-    logger.print("testShell.fullWrite()", "full write command called");
+    Logger::GetInstance().print("testShell.fullWrite()", "full write command called");
     for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; lba++) {
         ssd->write(lba, data);
         if (isCmdExecuteError(readOutputFile())) {
@@ -181,7 +181,7 @@ void TestShell::fullWrite(string data) {
 }
 
 void TestShell::fullWriteAndReadCompare() {
-    logger.print("testShell.fullWriteAndReadCompare()", "full write and read compare command called");
+    Logger::GetInstance().print("testShell.fullWriteAndReadCompare()", "full write and read compare command called");
 
     for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; ++lba) {
         string writeData = testShellStringManager.getWriteDataInFullWriteAndReadCompareScript(lba);
@@ -208,7 +208,7 @@ bool TestShell::isExit() const {
 }
 
 void TestShell::writeReadAging() {
-    logger.print("testShell.writeReadAging()", "write read aging command called");
+    Logger::GetInstance().print("testShell.writeReadAging()", "write read aging command called");
 
     for (int i = 0; i < WRITE_READ_ITERATION; i++) {
         string randomString = getRandomHexString();
@@ -228,7 +228,7 @@ string TestShell::getRandomHexString() {
 }
 
 void TestShell::partialLBAWrite() {
-    logger.print("testShell.partialLBAWrite()", "partial LBA write command called");
+    Logger::GetInstance().print("testShell.partialLBAWrite()", "partial LBA write command called");
 
     const string testValue = "0x12345678";
     const int repeatCnt = 30;
@@ -264,7 +264,7 @@ void TestShell::partialLBAWrite() {
 }
 
 void TestShell::eraseWithSize(unsigned int lba, unsigned int size) {
-    logger.print("testShell.eraseWithSize()", "erase with size command called");
+    Logger::GetInstance().print("testShell.eraseWithSize()", "erase with size command called");
 
     if (!isValidEraseWithSizeArgument(lba, size)) {
         testShellStringManager.printEraseErrorResult();
@@ -281,7 +281,7 @@ void TestShell::eraseWithSize(unsigned int lba, unsigned int size) {
 }
 
 void TestShell::eraseWithRange(unsigned int startLba, unsigned int endLba) {
-    logger.print("testShell.eraseWithRange()", "erase with range command called");
+    Logger::GetInstance().print("testShell.eraseWithRange()", "erase with range command called");
 
     if (!isValidLbaRange(startLba, endLba)) {
         testShellStringManager.printEraseRangeErrorResult();
@@ -297,7 +297,7 @@ void TestShell::eraseWithRange(unsigned int startLba, unsigned int endLba) {
 }
 
 void TestShell::eraseAndWriteAging(void) {
-    logger.print("testShell.eraseAndWriteAging()", "erase and write aging command called");
+    Logger::GetInstance().print("testShell.eraseAndWriteAging()", "erase and write aging command called");
 
     const int eraseUnitSize = 2;
     const int maxAgingCnt = 30;

@@ -57,7 +57,6 @@ private:
     bool isCmdExecuteError(const string result) const;
 
     SSD* ssd;
-    Logger logger;
     TestShellStringManager testShellStringManager;
 
     bool isExitCmd{ false };

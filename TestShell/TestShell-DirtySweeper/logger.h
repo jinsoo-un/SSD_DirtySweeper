@@ -22,9 +22,11 @@
 using namespace std;
 class Logger {
 public:
+    static Logger& GetInstance();
     void print(const string& sender, const string& message);
 
 private:
+    Logger() = default;
     const string LOG_FILE_NAME = "latest.log";
     const size_t MAX_LOG_FILE_SIZE = 10 * 1024; // 10KB
 

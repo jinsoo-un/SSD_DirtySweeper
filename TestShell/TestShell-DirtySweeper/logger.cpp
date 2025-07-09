@@ -4,6 +4,10 @@
 
 using namespace std;
 
+Logger& Logger::GetInstance() {
+    static Logger instance;
+    return instance;
+}
 void Logger::print(const string& sender, const string& message) {
     rotateIfNeeded();
 
