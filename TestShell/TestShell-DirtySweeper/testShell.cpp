@@ -648,8 +648,6 @@ private:
     bool isExitCmd{ false };
     const int LBA_START_ADDRESS = 0;
     const int LBA_END_ADDRESS = 99;
-    const string ERASE_ERROR_MESSAGE = "[Erase] ERROR";
-    const string ERASE_SUCCESS_MESSAGE = "[Erase] Done";
 };
 
 class MockTestShell : public TestShell {
