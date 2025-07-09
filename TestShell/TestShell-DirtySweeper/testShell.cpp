@@ -258,11 +258,11 @@ public:
             string endLBAResult = readOutputFile();
 
             if (firstLBAResult != endLBAResult) {
-                cout << "FAIL";
+                cout << "FAIL\n";
                 return;
             }
         }
-        cout << "PASS";
+        cout << "PASS\n";
     }
 
     virtual std::string generateRandomHexString() {
