@@ -223,6 +223,237 @@ TEST_F(RealSSDTest, EraseAndReadVerify) {
     EXPECT_TRUE(checkOutputFile(INITIAL_HEX_DATA));
 }
 
+///////////////////////////////////////////////////////////////////////////
+
+TEST_F(RealSSDTest, SameLBAWrite01) {
+    int access_count;
+    int writeLBA = 30;
+    bool isPass;
+
+    for (int i = 0; i < 10; i++) {
+       isPass = writeCmd.run(writeLBA, VALID_HEX_DATA);
+        EXPECT_TRUE(isPass);
+    }
+   
+    access_count = ssd->getAccessCount();
+    
+    EXPECT_EQ(access_count, 0);
+
+    isPass = readCmd.run(writeLBA);
+    EXPECT_EQ(true, isPass);
+    EXPECT_TRUE(checkOutputFile(VALID_HEX_DATA));
+
+}
+
+TEST_F(RealSSDTest, SameLBAWrite02) {
+    int access_count;
+    int writeLBA = 20;
+    bool isPass;
+
+    //precondition
+    for (int i = 0; i < 4; i++) {
+        isPass = writeCmd.run(writeLBA + i, "0x123454678");
+        EXPECT_TRUE(isPass);
+    }
+
+    writeLBA = 50;
+    for (int i = 0; i < 10; i++) {
+        isPass = writeCmd.run(writeLBA, VALID_HEX_DATA);
+        EXPECT_TRUE(isPass);
+    }
+
+    isPass = readCmd.run(writeLBA);
+    EXPECT_EQ(true, isPass);
+    EXPECT_TRUE(checkOutputFile(VALID_HEX_DATA));
+
+    access_count = ssd->getAccessCount();
+    EXPECT_EQ(access_count, 0);
+}
+
+TEST_F(RealSSDTest, SameLBAWrite03) {
+    int access_count;
+    int writeLBA = 20;
+    bool isPass;
+
+    //precondition
+    for (int i = 0; i < 5; i++) {
+        isPass = writeCmd.run(writeLBA + i, "0x123454678");
+        EXPECT_TRUE(isPass);
+    }
+
+    writeLBA = 21;
+    for (int i = 0; i < 10; i++) {
+        isPass = writeCmd.run(writeLBA, VALID_HEX_DATA);
+        EXPECT_TRUE(isPass);
+    }
+
+    isPass = readCmd.run(writeLBA);
+    EXPECT_EQ(true, isPass);
+    EXPECT_TRUE(checkOutputFile(VALID_HEX_DATA));
+
+    access_count = ssd->getAccessCount();
+    EXPECT_EQ(access_count, 0);
+}
+
+TEST_F(RealSSDTest, SameLBAWrite04) {
+    int access_count;
+    int writeLBA = 20;
+    bool isPass;
+
+    //precondition
+    for (int i = 0; i < 6; i++) {
+        isPass = writeCmd.run(writeLBA + i, "0x123454678");
+        EXPECT_TRUE(isPass);
+    }
+
+    access_count = ssd->getAccessCount();
+    EXPECT_EQ(access_count, 5);
+}
+
+TEST_F(RealSSDTest, SameLBAWrite05) {
+    int access_count;
+    int writeLBA = 20;
+    bool isPass;
+
+    //precondition
+    for (int i = 0; i < 10; i++) {
+        isPass = writeCmd.run(writeLBA + i, "0x123454678");
+        EXPECT_TRUE(isPass);
+    }
+
+    access_count = ssd->getAccessCount();
+    EXPECT_EQ(access_count, 5);
+}
+
+TEST_F(RealSSDTest, SameLBAWrite06) {
+    int access_count;
+    int writeLBA = 20;
+    bool isPass;
+
+    //precondition
+    for (int i = 0; i < 11; i++) {
+        isPass = writeCmd.run(writeLBA + i, "0x123454678");
+        EXPECT_TRUE(isPass);
+    }
+
+    access_count = ssd->getAccessCount();
+    EXPECT_EQ(access_count, 5);
+}
+
+TEST_F(RealSSDTest, EraseTest01) {
+    int access_count;
+    int eraseLBA = 20;
+    int erase_size = 1;
+    bool isPass;
+
+    //precondition
+    for (int i = 0; i < 5; i++) {
+        isPass = writeCmd.run(eraseLBA + i, VALID_HEX_DATA);
+        EXPECT_TRUE(isPass);
+    }
+
+    isPass = readCmd.run(eraseLBA);
+    EXPECT_EQ(true, isPass);
+    EXPECT_TRUE(checkOutputFile(VALID_HEX_DATA));
+  
+    isPass = eraseCmd.run(eraseLBA, INVALID_HEX_DATA, erase_size);
+    EXPECT_EQ(true, isPass);
+   
+    isPass = readCmd.run(eraseLBA);
+    EXPECT_EQ(true, isPass);
+    EXPECT_TRUE(checkOutputFile(INITIAL_HEX_DATA));
+    
+    access_count = ssd->getAccessCount();
+    EXPECT_EQ(access_count, 0);
+}
+
+TEST_F(RealSSDTest, EraseTest02) {
+    int access_count;
+    int eraseLBA = 20;
+    int erase_size = 5;
+    bool isPass;
+
+    //precondition
+    for (int i = 0; i < 5; i++) {
+        isPass = writeCmd.run(eraseLBA + i, VALID_HEX_DATA);
+        EXPECT_TRUE(isPass);
+    }
+
+    for (int i = 0; i < 5; i++) {
+        isPass = readCmd.run(eraseLBA + i);
+        EXPECT_EQ(true, isPass);
+        EXPECT_TRUE(checkOutputFile(VALID_HEX_DATA));
+    }
+
+    isPass = eraseCmd.run(eraseLBA, INVALID_HEX_DATA, erase_size);
+    EXPECT_EQ(true, isPass);
+
+    for (int i = 0; i < erase_size; i++) {
+        isPass = readCmd.run(eraseLBA + i);
+        EXPECT_EQ(true, isPass);
+        EXPECT_TRUE(checkOutputFile(INITIAL_HEX_DATA));
+    }
+
+    access_count = ssd->getAccessCount();
+    EXPECT_EQ(access_count, 0);
+}
+
+
+TEST_F(RealSSDTest, EraseTest03) {
+    int access_count;
+    int eraseLBA = 20;
+    int erase_size = 7;
+    bool isPass;
+
+    //precondition
+    for (int i = 0; i < 10; i++) {
+        isPass = writeCmd.run(eraseLBA + i, VALID_HEX_DATA);
+        EXPECT_TRUE(isPass);
+    }
+
+    for (int i = 0; i < erase_size; i++) {
+        isPass = readCmd.run(eraseLBA + i);
+        EXPECT_EQ(true, isPass);
+        EXPECT_TRUE(checkOutputFile(VALID_HEX_DATA));
+        //
+    }
+
+    isPass = eraseCmd.run(eraseLBA, INVALID_HEX_DATA, erase_size);
+    EXPECT_EQ(true, isPass);
+
+    for (int i = 0; i < erase_size; i++) {
+        isPass = readCmd.run(eraseLBA + i);
+        EXPECT_EQ(true, isPass);
+        EXPECT_TRUE(checkOutputFile(INITIAL_HEX_DATA));
+    }
+
+    access_count = ssd->getAccessCount();
+    EXPECT_EQ(access_count, 10); // 5?
+}
+
+TEST_F(RealSSDTest, Erase_Exception) {
+    int access_count;
+    int eraseLBA = 94;
+    int erase_size = 2;
+    bool isPass;
+
+    //precondition
+    for (int i = 0; i < 5; i++) {
+        isPass = writeCmd.run(eraseLBA + i, VALID_HEX_DATA);
+        EXPECT_TRUE(isPass);
+    }
+
+    for (int i = 0; i < 5; i++) {
+        isPass = readCmd.run(eraseLBA + i);
+        EXPECT_EQ(true, isPass);
+        EXPECT_TRUE(checkOutputFile(VALID_HEX_DATA));
+    }
+
+    eraseLBA = 99;
+    isPass = eraseCmd.run(eraseLBA, INVALID_HEX_DATA, erase_size);
+    EXPECT_EQ(false, isPass);
+}
+
 #ifdef NDEBUG
 int main(int argc, char *argv[])
 {

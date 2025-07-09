@@ -180,6 +180,7 @@ public:
 	virtual string getOp() = 0;
 	virtual int getAddr() = 0;
 	virtual string getValue() = 0;
+    virtual int getAccessCount() = 0;
 };
 
 class RealSSD : public SSD {
@@ -230,6 +231,7 @@ public:
     int getAccessCount() {
         return accessCount;
     }
+
 private:
 	void storeParams(string command)
 	{
