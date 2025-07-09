@@ -99,7 +99,7 @@ TEST_F(WriteReadAgingFixture, CallTest) {
     EXPECT_CALL(ssdMock, read(99))
         .Times(TestShell::WRITE_READ_ITERATION);
 
-    EXPECT_CALL(sut, generateRandomHexString())
+    EXPECT_CALL(sut, getRandomHexString())
         .WillRepeatedly(Return(DATA));
 
     EXPECT_CALL(sut, readOutputFile())
@@ -118,7 +118,7 @@ TEST_F(WriteReadAgingFixture, PassTest) {
     EXPECT_CALL(ssdMock, read(99))
         .Times(TestShell::WRITE_READ_ITERATION);
 
-    EXPECT_CALL(sut, generateRandomHexString())
+    EXPECT_CALL(sut, getRandomHexString())
         .WillRepeatedly(Return(DATA));
 
     EXPECT_CALL(sut, readOutputFile())
@@ -128,7 +128,7 @@ TEST_F(WriteReadAgingFixture, PassTest) {
 }
 
 TEST_F(WriteReadAgingFixture, FailTest) {
-    EXPECT_CALL(sut, generateRandomHexString())
+    EXPECT_CALL(sut, getRandomHexString())
         .WillRepeatedly(Return(DATA));
 
     EXPECT_CALL(sut, readOutputFile())

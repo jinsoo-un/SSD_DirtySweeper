@@ -259,7 +259,7 @@ public:
             return;
         }
         if (cmd == "3_" || cmd == "3_WriteReadAging") {
-            writeReadAging();
+            this->writeReadAging();
             return;
         }
 
@@ -385,12 +385,12 @@ public:
             std::string readData = readOutputFile();
 
             if (readData != writeData) {
-                std::cout << "[Mismatch] LBA " << lba << " Expected: " << writeData << " Got: " << readData << "\n";
-                std::cout << "FAIL\n";
+                testShellStringManager.printWriteReadMismatch(lba, writeData, readData);
+                testShellStringManager.printScriptFailResult();
                 return;
             }
         }
-        std::cout << "PASS\n";
+        testShellStringManager.printScriptPassResult();
     }
 
     void exit(void) {
@@ -405,43 +405,21 @@ public:
 		logger.print("testShell.writeReadAging()", "write read aging command called");
 
         for (int i = 0; i < WRITE_READ_ITERATION; i++) {
-            string randomString = generateRandomHexString();
-            ssd->write(0, randomString);
-            ssd->read(0);
-            string firstLBAResult = readOutputFile();
-            ssd->write(99, randomString);
-            ssd->read(99);
-            string endLBAResult = readOutputFile();
+            string randomString = getRandomHexString();
+            string firstLBAResult = getWriteReadResult(0, randomString);
+            string endLBAResult = getWriteReadResult(99, randomString);
 
             if (firstLBAResult != endLBAResult) {
-                cout << "FAIL\n";
+                testShellStringManager.printScriptFailResult();
                 return;
             }
         }
-        cout << "PASS\n";
+        testShellStringManager.printScriptPassResult();
     }
 
-    virtual std::string generateRandomHexString() {
-        static const char* hexDigits = "0123456789ABCDEF";
-
-        static bool seeded = false;
-        if (!seeded) {
-            std::srand(static_cast<unsigned int>(std::time(nullptr)));
-            seeded = true;
-        }
-
-        unsigned int value = (static_cast<unsigned int>(std::rand()) << 16) | std::rand();
-
-        std::string result = "0x";
-        for (int i = 7; i >= 0; --i) {
-            int digit = (value >> (i * 4)) & 0xF;
-            result += hexDigits[digit];
-        }
-
-        return result;
+    virtual std::string getRandomHexString() {
+        return testShellStringManager.generateRandomHexString();
     }
-
-    static const int WRITE_READ_ITERATION = 200;
 
     void partialLBAWrite() {
 		logger.print("testShell.partialLBAWrite()", "partial LBA write command called");
@@ -471,12 +449,12 @@ public:
             result.erase(result.begin());
             for (auto nextData : result) {
                 if (firstData != nextData) {
-                    std::cout << "FAIL\n";
+                    testShellStringManager.printScriptFailResult();
                     return;
                 }
             }
         }
-        std::cout << "PASS\n";
+        testShellStringManager.printScriptPassResult();
     }
 
     void eraseWithSize(unsigned int lba, unsigned int size){
@@ -516,9 +494,9 @@ public:
         for (int loopCnt = 0; loopCnt < maxAgingCnt; loopCnt++) {
             for (int lba = 2; lba < LBA_END_ADDRESS; lba += eraseUnitSize){
                 vector<string> result;
-                ssd->write(lba, generateRandomHexString());
+                ssd->write(lba, testShellStringManager.generateRandomHexString());
                 result.push_back(readOutputFile());
-                ssd->write(lba, generateRandomHexString());
+                ssd->write(lba, testShellStringManager.generateRandomHexString());
                 result.push_back(readOutputFile());
                 ssd->erase(lba, eraseUnitSize);
                 result.push_back(readOutputFile());
@@ -533,6 +511,7 @@ public:
             std::cout << "PASS\n";
         }
     }
+    static const int WRITE_READ_ITERATION = 200;
 
 private:
     SSD* ssd;
@@ -591,6 +570,13 @@ private:
         }
 
         return content.str();
+    }
+
+    std::string getWriteReadResult(int lba, std::string input) {
+        ssd->write(lba, input);
+        ssd->read(lba);
+        string result = readOutputFile();
+        return result;
     }
 
     std::vector<std::string> tokenize(const std::string& input) {
@@ -668,5 +654,5 @@ public:
 	MockTestShell(SSD* ssd) : TestShell(ssd) {}
 	MOCK_METHOD(void, help, (), ());
 	MOCK_METHOD(std::string, readOutputFile, (), ());
-    MOCK_METHOD(std::string, generateRandomHexString, (), ());
+    MOCK_METHOD(std::string, getRandomHexString, (), ());
 };
