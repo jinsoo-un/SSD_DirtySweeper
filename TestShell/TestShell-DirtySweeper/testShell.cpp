@@ -37,7 +37,7 @@ public:
             << std::setw(2) << local_tm.tm_hour << ":"
             << std::setw(2) << local_tm.tm_min << "] ";
 
-        // Format sender: left-aligned, 30-character field
+        // Format sender: left-aligned, 40-character field
         logFile << std::left << std::setfill(' ') << std::setw(40) << sender;
 
         // Message
