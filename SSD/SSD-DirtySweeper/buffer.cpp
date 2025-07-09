@@ -9,15 +9,22 @@ using std::string;
 using std::stringstream;
 using std::vector;
 
-namespace BufferFileNames{
+namespace BufferFileNames {
     const string DIR_NAME = "./buffer";
     const string EMPTY_FILE_NAME = "_empty";
 }
 using namespace BufferFileNames;
 
+struct params {
+    string op;
+    int addr;
+    string value;
+    int size;
+};
+
 class Buffer {
 public:
-	void initBuffer() {
+    void initBuffer() {
         if (std::filesystem::exists(DIR_NAME) && std::filesystem::is_directory(DIR_NAME))
             return;
 
@@ -28,10 +35,10 @@ public:
             std::ofstream ofs(bufferName);
             ofs.close();
         }
-	}
+    }
 
     // Parse buffer which name is "[index]_*", return false if empty
-    bool readAndParseBuffer(int index, string& op, int& addr, string &value, int& size) {
+    bool readAndParseBuffer(int index, struct params& output) {
         if (isOneBufferEmpty(index))
             return false;
 
@@ -44,12 +51,12 @@ public:
             words.push_back(word);
 
         if (words.size() >= 4) {
-            op = words[1];
-            addr = stoi(words[2]);
-            if (op == "W")
-                value = words[3];
-            else if (op == "E")
-                size = stoi(words[3]);
+            output.op = words[1];
+            output.addr = stoi(words[2]);
+            if (output.op == "W")
+                output.value = words[3];
+            else if (output.op == "E")
+                output.size = stoi(words[3]);
             else
                 return false;
         }
@@ -65,13 +72,24 @@ public:
     }
 
     // change the buffer "[index]_*" to "[index]_[data]"
-	void writeBuffer(int index, string data) {
-        string targetBuffer = readBuffer(index);
+    void writeBuffer(int index, struct params input) {
+        string data = paramToBufferName(input);
+        string targetBuffer = DIR_NAME + "/" + readBuffer(index);
         string newBuffer = DIR_NAME + "/" + std::to_string(index) + "_" + data;
-        std::filesystem::rename(DIR_NAME + "/" + targetBuffer, newBuffer);
-	}
+        std::filesystem::rename(targetBuffer, newBuffer);
+    }
 
 private:
+    string paramToBufferName(struct params input) {
+        string result = "";
+        if (input.op == "W")
+            result = input.op + "_" + std::to_string(input.addr) + "_" + input.value;
+        else if (input.op == "E")
+            result = input.op + "_" + std::to_string(input.addr) + "_" + std::to_string(input.size);
+
+        return result;
+    }
+
     bool isOneBufferEmpty(int index) {
         string targetBuffer = readBuffer(index);
         string emptyBuffer = std::to_string(index) + EMPTY_FILE_NAME;
