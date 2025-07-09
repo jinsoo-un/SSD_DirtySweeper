@@ -1,13 +1,14 @@
 #include <iostream>
 #include "ssd.cpp"
 #include "gmock/gmock.h"
+#include <thread>
+#include <chrono>
 
 using std::string;
 
 class RealSSDTest : public ::testing::Test {
 public:
     SSD* ssd = new RealSSD();
-    ReadCommand readCmd;
     WriteCommand writeCmd;
     EraseCommand eraseCmd;
     string VALID_HEX_DATA = "0x1298CDEF";
@@ -18,6 +19,8 @@ public:
     static const int INVALID_TEST_ADDRESS = 100;
     static const int VALID_TEST_SIZE = 10;
     static const int INVALID_TEST_SIZE = 20;
+
+	static const int DELAY_NANOS_FOR_WRITE = 10000; // 10 millisecond
 
 
     void SetUp() override {
@@ -31,6 +34,8 @@ public:
             file << i << "\t" << "0x00000000" << endl;
         }
         file.close();
+
+        this_thread::sleep_for(chrono::nanoseconds(DELAY_NANOS_FOR_WRITE));
     }
 
     bool checkOutputFile(string expected) {
@@ -57,36 +62,36 @@ public:
 
 TEST_F(RealSSDTest, ReadTC_InitialValue)
 {
-    int lba_addr = 1;
-    bool isPass;
-    isPass = readCmd.run(lba_addr);
+    string cmd = buildCommand("R", 1);
+    ssd->parseCommand(cmd);
+    bool isPass = ssd->exec();
     EXPECT_EQ(true, isPass);
 	EXPECT_TRUE(checkOutputFile(INITIAL_HEX_DATA));
 }
 
 TEST_F(RealSSDTest, ReadTC_OutofRange)
 {
-    int lba_addr = 100;
-    bool isPass;
-    isPass = readCmd.run(lba_addr);
+    string cmd = buildCommand("R", 100);
+	ssd->parseCommand(cmd);
+    bool isPass = ssd->exec();
     EXPECT_EQ(false, isPass);
     EXPECT_TRUE(checkOutputFile("ERROR"));
 }
 
 TEST_F(RealSSDTest, ReadTC_ReturnData01)
 {
-    int lba_addr = 50;
-    bool isPass;
-    isPass = readCmd.run(lba_addr);
+    string cmd = buildCommand("R", 50);
+    ssd->parseCommand(cmd);
+    bool isPass = ssd->exec();
     EXPECT_EQ(true, isPass);
     EXPECT_TRUE(checkOutputFile(INITIAL_HEX_DATA));
 }
 
 TEST_F(RealSSDTest, ReadTC_ReturnData02)
 {
-    int lba_addr = 30;
-    bool isPass;
-    isPass = readCmd.run(lba_addr);
+    string cmd = buildCommand("R", 30);
+    ssd->parseCommand(cmd);
+    bool isPass = ssd->exec();
     EXPECT_EQ(true, isPass);
     EXPECT_TRUE(checkOutputFile(INITIAL_HEX_DATA));
 }
@@ -177,8 +182,9 @@ TEST_F(RealSSDTest, WriteInvalidData04) {
 }
 
 TEST_F(RealSSDTest, WriteReadVerify00) {
-
-    bool isPass = readCmd.run(VALID_TEST_ADDRESS);
+    string cmd = buildCommand("R", VALID_TEST_ADDRESS);
+    ssd->parseCommand(cmd);
+    bool isPass = ssd->exec();
 
     EXPECT_EQ(true, isPass);
     EXPECT_TRUE(checkOutputFile(INITIAL_HEX_DATA));
@@ -186,7 +192,8 @@ TEST_F(RealSSDTest, WriteReadVerify00) {
     isPass = writeCmd.run(VALID_TEST_ADDRESS, VALID_HEX_DATA);
     EXPECT_TRUE(isPass);
 
-    isPass = readCmd.run(VALID_TEST_ADDRESS);
+    ssd->parseCommand(cmd);
+    isPass = ssd->exec();
     EXPECT_EQ(true, isPass);
     EXPECT_TRUE(checkOutputFile(VALID_HEX_DATA));
 }
@@ -218,7 +225,8 @@ TEST_F(RealSSDTest, EraseAndReadVerify) {
     isPass = eraseCmd.run(VALID_TEST_ADDRESS, VALID_HEX_DATA, VALID_TEST_SIZE);
     EXPECT_TRUE(isPass);
 
-    isPass = readCmd.run(VALID_TEST_ADDRESS);
+	ssd->parseCommand(buildCommand("R", VALID_TEST_ADDRESS));
+    isPass = ssd->exec();
     EXPECT_EQ(true, isPass);
     EXPECT_TRUE(checkOutputFile(INITIAL_HEX_DATA));
 }
