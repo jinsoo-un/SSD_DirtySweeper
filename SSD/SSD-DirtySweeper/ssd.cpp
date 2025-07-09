@@ -194,6 +194,9 @@ public:
 		if (op == "E")
 			setCommand(&eraseCmd);
 
+		if (command == nullptr)
+			return;
+
 		command->run(addr, value, size);
 	}
 

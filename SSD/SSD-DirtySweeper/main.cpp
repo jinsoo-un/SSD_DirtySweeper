@@ -21,8 +21,16 @@ public:
 
 
     void SetUp() override {
-        for (int i = VALID_TEST_ADDRESS; i < VALID_TEST_ADDRESS_MAX; i += VALID_TEST_SIZE)
-            eraseCmd.run(i, INITIAL_HEX_DATA, VALID_TEST_SIZE);
+        ofstream file(FileNames::DATA_FILE);
+        if (!file.is_open()) {
+            cout << "Error opening file for setup test." << endl;
+            return;
+        }
+
+        for (int i = MIN_ADDRESS; i < MAX_ADDRESS; i++) {
+            file << i << "\t" << "0x00000000" << endl;
+        }
+        file.close();
     }
 
     bool checkOutputFile(string expected) {
