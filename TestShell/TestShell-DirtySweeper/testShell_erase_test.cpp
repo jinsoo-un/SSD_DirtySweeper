@@ -18,7 +18,30 @@ public:
         string output = testing::internal::GetCapturedStdout();
         return output;
     }
+    string getEraseRangeResult(unsigned startLba, unsigned int endLba) {
+        testing::internal::CaptureStdout();
+        sut.eraseRange(startLba, endLba);
+        string output = testing::internal::GetCapturedStdout();
+        return output;
+    }
 };
+
+TEST_F(TestShellEraseTest, EraseFail)
+{
+    const int startLBA = 0;
+    const int size = 10;
+    EXPECT_CALL(ssdMock, erase(startLBA, size))
+        .Times(1)
+        .WillRepeatedly(Return());
+
+    EXPECT_CALL(sut, readOutputFile())
+        .Times(1)
+        .WillOnce(Return("ERROR"));
+
+    auto actual = getEraseResult(startLBA, size);
+    auto expected = ::testing::HasSubstr("[Erase] ERROR");
+    EXPECT_THAT(actual, expected);
+}
 
 TEST_F(TestShellEraseTest, EraseForShort)
 {
@@ -138,3 +161,107 @@ TEST_F(TestShellEraseTest, ExceptionOverMaxRange)
     const int size = 10;
     EXPECT_THROW(sut.erase(startLBA, size), std::exception);
 }
+
+TEST_F(TestShellEraseTest, EraseRangeFail)
+{
+    const int startLBA = 0;
+    const int endLBA = 10;
+    EXPECT_CALL(ssdMock, erase(_, _))
+        .Times(1)
+        .WillRepeatedly(Return());
+
+    EXPECT_CALL(sut, readOutputFile())
+        .Times(1)
+        .WillOnce(Return("ERROR"));
+
+    auto actual = getEraseRangeResult(startLBA, endLBA);
+    auto expected = ::testing::HasSubstr("[Erase Range] ERROR");
+    EXPECT_THAT(actual, expected);
+}
+
+TEST_F(TestShellEraseTest, EraseRangeExceptionUnderMinLBA)
+{
+    const int startLBA = -1;
+    const int endLBA = 10;
+    EXPECT_THROW(sut.eraseRange(startLBA, endLBA), std::exception);
+}
+TEST_F(TestShellEraseTest, EraseRangeExceptionOverMaxLBA)
+{
+    const int startLBA = 0;
+    const int endLBA = 100;
+    EXPECT_THROW(sut.eraseRange(startLBA, endLBA), std::exception);
+}
+
+TEST_F(TestShellEraseTest, EraseRangeExceptionFirstLBAIsLargerThanLastLBA)
+{
+    const int startLBA = 50;
+    const int endLBA = 49;
+    EXPECT_THROW(sut.eraseRange(startLBA, endLBA), std::exception);
+}
+
+TEST_F(TestShellEraseTest, EraseRangeMax)
+{
+    const int startLBA = 0;
+    const int endLBA = 99;
+    EXPECT_CALL(ssdMock, erase(_, _))
+        .Times(10)
+        .WillRepeatedly(Return());
+
+    EXPECT_CALL(sut, readOutputFile())
+        .Times(10)
+        .WillOnce(Return(""));
+
+    auto actual = getEraseRangeResult(startLBA, endLBA);
+    auto expected = ::testing::HasSubstr("[Erase Range] Done");
+    EXPECT_THAT(actual, expected);
+}
+TEST_F(TestShellEraseTest, EraseRangeHalfLowerRange)
+{
+    const int startLBA = 0;
+    const int endLBA = 49;
+    EXPECT_CALL(ssdMock, erase(_, _))
+        .Times(5)
+        .WillRepeatedly(Return());
+
+    EXPECT_CALL(sut, readOutputFile())
+        .Times(5)
+        .WillOnce(Return(""));
+
+    auto actual = getEraseRangeResult(startLBA, endLBA);
+    auto expected = ::testing::HasSubstr("[Erase Range] Done");
+    EXPECT_THAT(actual, expected);
+}
+TEST_F(TestShellEraseTest, EraseRangeHalfUpperRange)
+{
+    const int startLBA = 50;
+    const int endLBA = 99;
+    EXPECT_CALL(ssdMock, erase(_, _))
+        .Times(5)
+        .WillRepeatedly(Return());
+
+    EXPECT_CALL(sut, readOutputFile())
+        .Times(5)
+        .WillOnce(Return(""));
+
+    auto actual = getEraseRangeResult(startLBA, endLBA);
+    auto expected = ::testing::HasSubstr("[Erase Range] Done");
+    EXPECT_THAT(actual, expected);
+}
+TEST_F(TestShellEraseTest, EraseRangeSame)
+{
+    const int startLBA = 55;
+    const int endLBA = 55;
+    EXPECT_CALL(ssdMock, erase(_, _))
+        .Times(1)
+        .WillRepeatedly(Return());
+
+    EXPECT_CALL(sut, readOutputFile())
+        .Times(1)
+        .WillOnce(Return(""));
+
+    auto actual = getEraseRangeResult(startLBA, endLBA);
+    auto expected = ::testing::HasSubstr("[Erase Range] Done");
+    EXPECT_THAT(actual, expected);
+}
+
+
