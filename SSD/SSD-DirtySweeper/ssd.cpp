@@ -345,6 +345,10 @@ public:
 	string getValue() {
 		return ssd->getValue();
 	}
+
+    int getAccessCount() {
+        return ssd->getAccessCount();
+    }
 private:
 	// Buffered SSD methods
 	void read() {
