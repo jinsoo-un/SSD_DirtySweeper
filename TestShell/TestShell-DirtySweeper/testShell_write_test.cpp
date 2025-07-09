@@ -31,9 +31,12 @@ TEST_F(TestShellWriteTest, Write)
     EXPECT_CALL(sut, readOutputFile())
         .Times(1)
         .WillOnce(Return(""));
-    string result = sut.write(VALID_LBA, VALID_DATA);
 
-    EXPECT_EQ(WRITE_SUCCESS_RESULT, result);
+    testing::internal::CaptureStdout();
+    sut.write(VALID_LBA, VALID_DATA);
+    std::string output = testing::internal::GetCapturedStdout();
+    cout << output;
+    EXPECT_THAT(output, ::testing::HasSubstr("[Write] Done"));
 }
 
 TEST_F(TestShellWriteTest, WriteFailWithInvalidLBA)
@@ -46,9 +49,11 @@ TEST_F(TestShellWriteTest, WriteFailWithInvalidLBA)
         .Times(1)
         .WillOnce(Return(SSD_WRITE_ERROR_VALUE));
 
-    string result = sut.write(INVALID_LBA, VALID_DATA);
-
-    EXPECT_EQ(WRITE_FAIL_RESULT, result);
+    testing::internal::CaptureStdout();
+    sut.write(INVALID_LBA, VALID_DATA);
+    std::string output = testing::internal::GetCapturedStdout();
+    cout << output;
+    EXPECT_THAT(output, ::testing::HasSubstr("[Write] ERROR"));
 }
 
 TEST_F(TestShellWriteTest, WriteFailWithInvalidData)
@@ -60,9 +65,11 @@ TEST_F(TestShellWriteTest, WriteFailWithInvalidData)
         .Times(1)
         .WillOnce(Return(SSD_WRITE_ERROR_VALUE));
 
-    string result = sut.write(INVALID_LBA, INVALID_DATA);
-
-    EXPECT_EQ(WRITE_FAIL_RESULT, result);
+    testing::internal::CaptureStdout();
+    sut.write(INVALID_LBA, INVALID_DATA);
+    std::string output = testing::internal::GetCapturedStdout();
+    cout << output;
+    EXPECT_THAT(output, ::testing::HasSubstr("[Write] ERROR"));
 }
 TEST_F(TestShellWriteTest, FullWriteNormalCase)
 {

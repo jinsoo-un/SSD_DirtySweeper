@@ -215,8 +215,6 @@ public:
     TestShell(SSD* ssd) : ssd{ ssd } {}
 
     void executeCommand(const std::string& cmd, const std::vector<std::string>& args) {
-        
-
         if (cmd == "read") {
             int lba = stoi(args[0]);
             this->read(lba);
@@ -328,13 +326,13 @@ public:
         logger.print("testShell.read()", "read command called");
 
         if (lba < 0 || lba > 99) {
-            printErrorReadResult();
+            testShellStringManager.printErrorReadResult();
             return;
         }
         ssd->read(lba);
         std::string result = readOutputFile();
-        if (result == "ERROR") printErrorReadResult();
-        else printSuccessReadResult(result, lba);
+        if (result == "ERROR") testShellStringManager.printErrorReadResult();
+        else testShellStringManager.printSuccessReadResult(result, lba);
     }
 
     void fullRead() {
@@ -344,25 +342,23 @@ public:
             ssd->read(lba);
             std::string result = readOutputFile();
             if (result == "ERROR") {
-                printErrorReadResult();
+                testShellStringManager.printErrorReadResult();
                 break;
             }
-            printSuccessReadResult(result, lba);
+            testShellStringManager.printSuccessReadResult(result, lba);
         }
     }
 
-    string write(int lba, string data) {
-		logger.print("testShell.write()", "write command called");
-
+    void write(int lba, string data)
+    {
+        logger.print("testShell.write()", "write command called");
         ssd->write(lba, data);
         string result = readOutputFile();
         if (result == "ERROR") {
-            printErrorWriteResult();
-            return WRITE_ERROR_MESSAGE;
+            testShellStringManager.printErrorWriteResult();
+            return;
         }
-
-        printSuccessWriteResult();
-        return WRITE_SUCCESS_MESSAGE;
+        testShellStringManager.printSuccessWriteResult();
     }
 
     void fullWrite(string data) {
@@ -548,13 +544,13 @@ public:
 private:
     SSD* ssd;
 	Logger logger;
+    TestShellStringManager testShellStringManager;
+
     bool isExitCmd{ false };
 
     const int LBA_START_ADDRESS = 0;
     const int LBA_END_ADDRESS = 99;
 
-    const string WRITE_ERROR_MESSAGE = "[Write] ERROR";
-    const string WRITE_SUCCESS_MESSAGE = "[Write] Done";
     const string ERASE_ERROR_MESSAGE = "[Erase] ERROR";
     const string ERASE_SUCCESS_MESSAGE = "[Erase] Done";
 
@@ -625,7 +621,6 @@ private:
         };
         return valid.count(cmd) > 0;
     }
-
     string erase(unsigned int lba, unsigned int size) {
         const int maxEraseSize = 10;
         int currentLba = lba;
@@ -668,19 +663,7 @@ private:
         }
         return true;
     }
-    void printErrorReadResult() {
-        std::cout << "[Read] ERROR\n";
-    }
 
-    void printSuccessReadResult(std::string result, int lba) {
-        std::cout << "[Read] LBA " << lba << " : " << result << "\n";
-    }
-    void printSuccessWriteResult() {
-        std::cout << WRITE_SUCCESS_MESSAGE << "\n";
-    }
-    void printErrorWriteResult() {
-        std::cout << WRITE_ERROR_MESSAGE << "\n";
-    }
     void printEraseResult(const string header, const string result)
     {
         std::cout <<"["<< header<<"] "<< result << "\n";
