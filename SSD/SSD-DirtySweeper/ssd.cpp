@@ -19,8 +19,21 @@ namespace FileNames {
     const std::string OUTPUT_FILE = "ssd_output.txt";
 }
 
+
+// Singleton FileControl Class
+// ex : FileControl& file = FileControl::get_instance();
 class FileControl {
+private:
+	FileControl() {}
+	FileControl(const FileControl& c) = delete;
+	FileControl& operator=(const FileControl&) = delete;
+
 public:
+	static FileControl& get_instance() {
+		static FileControl instance;
+		return instance;
+	}
+	
 	void updateOutput(const string& msg) {
 		ofstream fout(FileNames::OUTPUT_FILE);
 		fout << msg;
@@ -76,7 +89,7 @@ protected:
 	}
 
 	vector<string> ssdData;
-	FileControl file;
+	FileControl& file = FileControl::get_instance();
 };
 
 class ReadCommand : public SSDCommand {
@@ -187,7 +200,7 @@ public:
     virtual int getAccessCount() = 0;
     virtual void bufferClear() = 0;
 protected:
-	FileControl file;
+	FileControl& file = FileControl::get_instance();
 };
 
 class RealSSD : public SSD {
