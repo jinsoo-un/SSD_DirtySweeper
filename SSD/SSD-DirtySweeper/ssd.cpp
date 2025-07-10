@@ -60,6 +60,8 @@ public:
 			}
 		}
 		file.close();
+
+		return true;
 	}
 
 	bool writeData(const vector<string>& data)
