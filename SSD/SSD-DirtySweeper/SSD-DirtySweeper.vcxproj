@@ -135,6 +135,7 @@
   <ItemGroup>
     <ClCompile Include="buffer.cpp" />
     <ClCompile Include="command.cpp" />
+    <ClCompile Include="commandParser.cpp" />
     <ClCompile Include="file.cpp" />
     <ClCompile Include="main.cpp">
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">  %(AdditionalOptions)</AdditionalOptions>

@@ -3,7 +3,7 @@
 #include "gmock/gmock.h"
 #include <memory>
 
-using std::string;
+using namespace std;
 
 class RealSSDTest : public ::testing::Test {
 public:
