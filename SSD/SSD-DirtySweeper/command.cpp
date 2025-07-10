@@ -74,3 +74,14 @@ private:
 		return true;
 	}
 };
+
+// Simple Factory for SSD Command
+class SSDCommandFactory {
+public:
+	SSDCommand* getCommand(string cmdType) {
+		if (cmdType == "R") return new ReadCommand();
+		if (cmdType == "W") return new WriteCommand();
+		if (cmdType == "E") return new EraseCommand();
+		return nullptr;
+	}
+};

@@ -1,14 +1,21 @@
 #include <iostream>
 #include "ssd.cpp"
 #include "gmock/gmock.h"
-#include <thread>
-#include <chrono>
+#include <memory>
 
 using std::string;
 
 class RealSSDTest : public ::testing::Test {
+protected:    
+    std::unique_ptr<SSD> ssd;
+
 public:
-    SSD* ssd = new RealSSD();
+    RealSSDTest() {
+        if (!ssd) {
+            ssd = std::make_unique<RealSSD>();
+        }
+    }
+
     string VALID_HEX_DATA = "0x1298CDEF";
     string INVALID_HEX_DATA = "0xABCDEFGH";
     string INITIAL_HEX_DATA = "0x00000000";
@@ -18,9 +25,12 @@ public:
     static const int VALID_TEST_SIZE = 10;
     static const int INVALID_TEST_SIZE = 20;
 
-	static const int DELAY_NANOS_FOR_WRITE = 1000000; // 1 ms
-
     void SetUp() override {
+        initializeDataFile();
+    }
+
+    void initializeDataFile()
+    {
         ofstream file(FileNames::DATA_FILE);
         if (!file.is_open()) {
             cout << "Error opening file for setup test." << endl;
@@ -31,8 +41,6 @@ public:
             file << i << "\t" << "0x00000000" << endl;
         }
         file.close();
-
-        this_thread::sleep_for(chrono::nanoseconds(DELAY_NANOS_FOR_WRITE));
     }
 
     bool checkOutputFile(string expected) {
@@ -63,6 +71,7 @@ public:
         }
         return isPass;
     }
+
 };
 
 TEST_F(RealSSDTest, ReadTC_InitialValue)
@@ -194,16 +203,12 @@ TEST_F(RealSSDTest, WriteReadVerify00) {
     string cmd = buildCommand("R", VALID_TEST_ADDRESS);
     bool isPass = parseAndExecute(cmd);
 
-    this_thread::sleep_for(chrono::nanoseconds(DELAY_NANOS_FOR_WRITE));
-
     ASSERT_EQ(true, isPass);
     ASSERT_TRUE(checkOutputFile(INITIAL_HEX_DATA));
 
     cmd = buildCommand("W", VALID_TEST_ADDRESS, VALID_HEX_DATA);
     isPass = parseAndExecute(cmd);
     ASSERT_TRUE(isPass);
-
-    this_thread::sleep_for(chrono::nanoseconds(DELAY_NANOS_FOR_WRITE));
 
     cmd = buildCommand("R", VALID_TEST_ADDRESS);
     isPass = parseAndExecute(cmd);
@@ -240,13 +245,9 @@ TEST_F(RealSSDTest, EraseAndReadVerify) {
     bool isPass = parseAndExecute(cmd);
     ASSERT_TRUE(isPass);
 
-    this_thread::sleep_for(chrono::nanoseconds(DELAY_NANOS_FOR_WRITE));
-    
     cmd = buildCommand("E", VALID_TEST_ADDRESS, to_string(VALID_TEST_SIZE));
     isPass = parseAndExecute(cmd);
     ASSERT_TRUE(isPass);
-
-    this_thread::sleep_for(chrono::nanoseconds(DELAY_NANOS_FOR_WRITE));
 
 	cmd = buildCommand("R", VALID_TEST_ADDRESS);
     isPass = parseAndExecute(cmd);
@@ -255,56 +256,26 @@ TEST_F(RealSSDTest, EraseAndReadVerify) {
 }
 
 ///////////////////////////////////////////////////////////////////////////
-class BufSSDTest : public ::testing::Test {
+class BufSSDTest : public RealSSDTest {
+protected:
+    std::unique_ptr<SSD> ssd;
+
 public:
-    SSD* ssd = new BufferedSSD();
-
-    string VALID_HEX_DATA = "0x1298CDEF";
+    BufSSDTest() {
+        if (!ssd) {
+            ssd = std::make_unique<BufferedSSD>();
+        }
+    }
+ 
     string PRECONDITION_HEX_DATA = "0xABCDA5A5";
-    string INITIAL_HEX_DATA = "0x00000000";
-
-    static const int VALID_TEST_ADDRESS = 0;
-    static const int VALID_TEST_ADDRESS_MAX = 99;
-    static const int INVALID_TEST_ADDRESS = 100;
-    static const int VALID_TEST_SIZE = 10;
-    static const int INVALID_TEST_SIZE = 20;
-
-	static const int DELAY_NANOS_FOR_WRITE = 1000000; // 1 ms
     
     string cmd;
     int lba;
     int lba_size;
 
     void SetUp() override {
-        ofstream file(FileNames::DATA_FILE);
-        if (!file.is_open()) {
-            cout << "Error opening file for setup test." << endl;
-            return;
-        }
-
-        for (int i = MIN_ADDRESS; i < MAX_ADDRESS; i++) {
-            file << i << "\t" << "0x00000000" << endl;
-        }
-        file.close();
-
+        initializeDataFile();
         ssd->bufferClear();
-
-
-        this_thread::sleep_for(chrono::nanoseconds(DELAY_NANOS_FOR_WRITE));
-    }
-
-    bool checkOutputFile(string expected) {
-        ifstream fin(FileNames::OUTPUT_FILE);
-        if (!fin.is_open()) {
-            cout << "OUTPUT file open failed\n";
-            return false;
-        }
-
-        string line;
-        getline(fin, line);
-        if (line != expected)
-            return false;
-        return true;
     }
 
     string buildCommand(string cmd, int lba, string data = "") {
