@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -6,179 +5,15 @@
 #include <algorithm>
 #include <vector>
 #include <stdexcept>
+#include "command.cpp"
+#include "file.h"
+#include "buffer.cpp"
+
 using namespace std;
 
 using std::string;
 
 const int VALID_DATA_LENGTH = 10;
-const int MIN_ADDRESS = 0;
-const int MAX_ADDRESS = 100;
-
-namespace FileNames {
-    const std::string DATA_FILE = "ssd_nand.txt";
-    const std::string OUTPUT_FILE = "ssd_output.txt";
-}
-
-
-// Singleton FileControl Class
-// ex : FileControl& file = FileControl::get_instance();
-class FileControl {
-private:
-	FileControl() {}
-	FileControl(const FileControl& c) = delete;
-	FileControl& operator=(const FileControl&) = delete;
-
-public:
-	static FileControl& get_instance() {
-		static FileControl instance;
-		return instance;
-	}
-	
-	void updateOutput(const string& msg) {
-		ofstream fout(FileNames::OUTPUT_FILE);
-		fout << msg;
-		fout.close();
-	}
-
-	bool readData(vector<string>& data) {
-		ifstream file(FileNames::DATA_FILE);
-		if (!file.is_open()) {
-			return false;
-		}
-
-		data.clear();
-		data.resize(MAX_ADDRESS, "0x00000000"); // 기본값 0으로 초기화
-
-		string line;
-		while (getline(file, line)) {
-			istringstream iss(line);
-			int fileAddress;
-			string hexData;
-			if (iss >> fileAddress >> hexData) {
-				string value = hexData;
-				data[fileAddress] = value;
-			}
-		}
-		file.close();
-
-		return true;
-	}
-
-	bool writeData(const vector<string>& data)
-	{
-		ofstream file(FileNames::DATA_FILE);
-		if (!file.is_open()) {
-			cout << "Error opening file for writing." << endl;
-			return false;
-		}
-		for (int i = 0; i < data.size(); ++i) {
-			file << i << "\t" << data[i] << endl;
-		}
-		file.close();
-
-		return true;
-	}
-
-};
-
-class SSDCommand {
-public:
-	virtual bool run(int addr, string val, int size) = 0;
-
-protected:
-	bool isAddressOutOfRange(int address) {
-		return address < MIN_ADDRESS || address >= MAX_ADDRESS;
-	}
-
-	vector<string> ssdData;
-	FileControl& file = FileControl::get_instance();
-};
-
-class ReadCommand : public SSDCommand {
-public:
-	bool run(int addr, string val = "0x00000000", int size = 0) override {
-		return read(addr, val);
-	}
-private:
-	bool read(int address, string value) {
-		if (!file.readData(ssdData)) { file.updateOutput("ERROR");  return false; }
-
-		file.updateOutput(ssdData[address]);
-		return true;
-	}
-};
-
-class WriteCommand : public SSDCommand {
-public:
-	bool run(int addr, string val, int size = 0) override {
-		return writeData(addr, val);
-	}
-private:
-	bool writeData(int address, string hexData) {
-		if (!isValidWriteData(hexData)) { file.updateOutput("ERROR");  return false; }
-		if (!file.readData(ssdData)) { file.updateOutput("ERROR");  return false; }
-
-		ssdData[address] = hexData;
-		if (!file.writeData(ssdData)) { file.updateOutput("ERROR");  return false; };
-
-		file.updateOutput("");
-
-		return true;
-	}
-
-	bool isValidWriteData(const std::string& str) {
-		if (str.substr(0, 2) != "0x") return false;
-
-		int length;
-		for (length = 2; length < str.size(); length++) {
-			char ch = static_cast<unsigned char>(str[length]);
-
-			if (!(isNumber(ch) || isHexCharacter(ch))) { return false; }
-
-		}
-
-		if (length != VALID_DATA_LENGTH) { return false; }
-
-		return true;
-	}
-
-	bool isHexCharacter(char ch)
-	{
-		return ((ch >= 'A') && (ch <= 'F'));
-	}
-
-	bool isNumber(char ch)
-	{
-		return ((ch >= '0') && (ch <= '9'));
-	}
-};
-
-class EraseCommand : public SSDCommand {
-public:
-	bool run(int addr, string val, int size) override {
-		return erase(addr, val, size);
-	}
-private:
-	bool erase(int address, string val, int size) {
-		if (!file.readData(ssdData)) { 
-			file.updateOutput("ERROR");  
-			return false; 
-		}
-
-		for (int i = 0; i < size; i++)
-			ssdData[address + i] = "0x00000000";
-		
-		if (!file.writeData(ssdData)) {
-			file.updateOutput("ERROR");  
-			return false; 
-		}
-
-		file.updateOutput("");
-
-		return true;
-	}
-};
-
 
 // SSD Interface Class
 class SSD {
@@ -313,7 +148,7 @@ private:
 					else
 						continue;
 				}
-		        if (!isHexWithPrefix(arg)) return false;
+		        if (!isValidWriteData(arg)) return false;
 	        }
 	        else
 		        return false;
@@ -328,14 +163,28 @@ private:
         return true;
 	}
 
-	bool isHexWithPrefix(const std::string& str) {
-        if (str.size() < 3 || str.substr(0, 2) != "0x")
-	        return false;
-        for (size_t i = 2; i < str.size(); ++i) {
-	        if (!std::isxdigit(static_cast<unsigned char>(str[i])))
-		        return false;
-        }
-        return true;
+	bool isValidWriteData(const std::string& str) {
+		if (str.substr(0, 2) != "0x") return false;
+
+		int length;
+		for (length = 2; length < str.size(); length++) {
+			char ch = static_cast<unsigned char>(str[length]);
+
+			if (!(isNumber(ch) || isHexCharacter(ch))) { return false; }
+
+		}
+
+		if (length != VALID_DATA_LENGTH) { return false; }
+
+		return true;
+	}
+
+	bool isHexCharacter(char ch) {
+		return ((ch >= 'A') && (ch <= 'F'));
+	}
+
+	bool isNumber(char ch) {
+		return ((ch >= '0') && (ch <= '9'));
 	}
 
 	void setCommand(SSDCommand* cmd) {
@@ -351,8 +200,6 @@ private:
 
 	SSDCommand* command = nullptr;
 };
-
-#include "buffer.cpp"
 
 // SSD Proxy Class
 class BufferedSSD : public SSD {
