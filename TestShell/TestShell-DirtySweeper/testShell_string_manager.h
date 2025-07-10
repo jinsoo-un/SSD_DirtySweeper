@@ -16,6 +16,7 @@ public:
 	void printErasePassResult();
 	void printEraseRangeErrorResult();
 	void printEraseRangePassResult();
+	void printSuccessFlushResult();
 
 	string generateRandomHexString();
 	string getWriteDataInFullWriteAndReadCompareScript(int lba);
