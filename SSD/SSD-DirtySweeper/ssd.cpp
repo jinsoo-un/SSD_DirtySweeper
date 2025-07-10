@@ -42,23 +42,10 @@ public:
 	}
 
 	bool exec() {
-		ReadCommand readCmd;
-		WriteCommand writeCmd;
-		EraseCommand eraseCmd;
+		command = factory.getCommand(op);
+		if (command == nullptr) return false;
 
-		if (op == "R")
-			setCommand(&readCmd);
-        if (op == "W") {
-            setCommand(&writeCmd);
-            accessCount++;
-        }
-        if (op == "E") {
-            setCommand(&eraseCmd);
-            accessCount += size;
-        }
-
-		if (command == nullptr)
-			return false;
+		UpdateAccessCount(op);
 
 		return command->run(addr, value, size);
 	}
@@ -181,8 +168,10 @@ private:
 		return ((ch >= '0') && (ch <= '9'));
 	}
 
-	void setCommand(SSDCommand* cmd) {
-		command = cmd;
+	void UpdateAccessCount(const string& cmd)
+	{
+		if (cmd == "W") accessCount++;
+		if (cmd == "E") accessCount += size;
 	}
 
 	string op;
@@ -192,6 +181,7 @@ private:
     int accessCount;
 
 	SSDCommand* command = nullptr;
+	SSDCommandFactory factory;
 };
 
 // SSD Proxy Class

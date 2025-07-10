@@ -11,6 +11,7 @@ public:
 
     const string RANDOM_VALUE = "0xAAAABBBB";
     const string ERROR_RESULT = "ERROR";
+    const string READ_ERROR_RESULT = "[Read] ERROR";
     const int RANDOM_LBA = 11;
     const int LBA_COUNT = 100;
 };
@@ -32,11 +33,8 @@ TEST_F(ReadTestFixture, InvalidAddress) {
     EXPECT_CALL(testShell, readOutputFile())
         .Times(0);
 
-    testing::internal::CaptureStdout();
-    testShell.read(100);
-    string output = testing::internal::GetCapturedStdout();
-    cout << output;
-    EXPECT_THAT(output, ::testing::HasSubstr("ERROR"));
+    auto output = testShell.read(100);
+    EXPECT_EQ(READ_ERROR_RESULT, output);
 }
 
 TEST_F(ReadTestFixture, ReadSuccessTest) {
