@@ -22,31 +22,38 @@ string TestShell::executeCommand(const string& cmd, const vector<string>& args) 
     if (cmd == "write") {
         int lba = stoi(args[0]);
         string data = args[1];
-        return write(lba, data);
+        WriteCommand writeCommand(ssd, lba, data);
+        return writeCommand.execute();
+        //return write(lba, data);
     }
 
     if (cmd == "fullwrite") {
         string data = args[0];
-        return fullWrite(data);
+        FullWriteCommand fullWriteCommand(ssd, data);
+        return fullWriteCommand.execute();
+        //return fullWrite(data);
     }
 
     if (cmd == "help") {
-        return help();
+        //return help();
+        return HelpCommand(ssd).execute();
     }
 
     if (cmd == "exit") {
-        return exit();
+        isExitCmd = true;
+        //return exit();
+        return ExitCommand(ssd).execute();
     }
 
     if (cmd == "1_" || cmd == "1_FullWriteAndReadCompare") {
-        return fullWriteAndReadCompare();
+        return FullWriteAndReadCompareCommand(ssd).execute();
     }
 
     if (cmd == "2_" || cmd == "2_PartialLBAWrite") {
-        return partialLBAWrite();
+        return PartialLBAWriteCommand(ssd).execute();
     }
     if (cmd == "3_" || cmd == "3_WriteReadAging") {
-        return writeReadAging();
+        return WriteReadAgingCommand(ssd).execute();
     }
 
     if (cmd == "erase") {
@@ -55,7 +62,8 @@ string TestShell::executeCommand(const string& cmd, const vector<string>& args) 
         }
         int lba = stoi(args[0]);
         int size = stoi(args[1]);
-        return eraseWithSize(lba, size);
+        return EraseWithSizeCommand(ssd, lba, size).execute();
+        //return eraseWithSize(lba, size);
     }
 
     if (cmd == "erase_range") {
@@ -64,14 +72,17 @@ string TestShell::executeCommand(const string& cmd, const vector<string>& args) 
         }
         int startLba = stoi(args[0]);
         int endLba = stoi(args[1]);
-        return eraseWithRange(startLba, endLba);
+        return EraseWithRangeCommand(ssd, startLba, endLba).execute();
+        //return eraseWithRange(startLba, endLba);
     }
     if (cmd == "4_" || cmd == "4_EraseAndWriteAging") {
-        return eraseAndWriteAging();
+        return EraseAndWriteAgingCommand(ssd).execute();
+        //return eraseAndWriteAging();
     }
 
     if (cmd == "flush") {
         return flushSsdBuffer();
+        return FlushCommand(ssd).execute();
     }
 
     return INVALID_COMMAND;
@@ -183,7 +194,7 @@ string TestShell::fullWriteAndReadCompare() {
 }
 
 string TestShell::exit(void) {
-    isExitCmd = true;
+    
     return "Set Exit Comannd...\n";
 }
 
