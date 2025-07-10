@@ -125,12 +125,13 @@ string TestShell::fullRead() {
 
     for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; lba++) {
         ssd->read(lba);
-        string result = fileAccessor->readOutputFile();
-        if (result == "ERROR") {
+        string outputResult = fileAccessor->readOutputFile();
+        if (outputResult == "ERROR") {
             result += testShellStringManager.getErrorReadResult();
             return result;
         }
-        result += testShellStringManager.getSuccessReadResult(result, lba);
+        result += testShellStringManager.getSuccessReadResult(outputResult, lba);
+        result += "\n";
     }
     return result;
 }
