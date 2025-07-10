@@ -323,7 +323,7 @@ private:
 	}
 
 	bool isValidOp(string arg) {
-        if (arg != "R" && arg != "W" && arg != "E")
+        if (arg != "R" && arg != "W" && arg != "E" && arg != "F")
 	        return false;
         return true;
 	}
@@ -365,7 +365,16 @@ public:
 		string operation = ssd->getOp();
 		if (operation == "R") return read();
 		if (operation == "W") return write();
-		if (operation == "E") return erase();	
+		if (operation == "E") return erase();
+        if (operation == "F") {
+            if (flushBuffer() == false) {
+                file.updateOutput("ERROR");
+            }
+            else {
+                file.updateOutput("");
+            }
+            return true;
+        }
 	}
 	int getArgCount() {
 		return ssd->getArgCount();
@@ -433,8 +442,9 @@ private:
         ssdParams.value = ssd->getValue();
 
         if (buffer.isFull()) {
-            flushBuffer();
-            buffer.clear();
+            if (flushBuffer() == false) {
+                file.updateOutput("ERROR");
+            }
         }
 
         buffer.writeBuffer(ssdParams);
@@ -447,19 +457,17 @@ private:
             if (bufferCommand.op == "W") {
                 if (bufferCommand.addr == ssd->getAddr()) {
                      buffer.eraseBuffer(i);
-                    return true;
                 }
             }
 
             if (bufferCommand.op == "E") {
                 if ((bufferCommand.size == 1) && (bufferCommand.addr == ssd->getAddr())) {
                     buffer.eraseBuffer(i);
-                    return true;
                 }
             }
         }
   
-        return false;        
+        return true;        
 	}
 
 	bool erase() {
@@ -469,7 +477,11 @@ private:
 			ssdParams.op = ssd->getOp();
 			ssdParams.addr = ssd->getAddr();
 			ssdParams.size = ssd->getSize();
-			flushBuffer();
+
+            if (flushBuffer() == false) {
+                file.updateOutput("ERROR");
+            }
+
 			// write the command to buffer
 			buffer.writeBuffer(ssdParams);
 			file.updateOutput("");
@@ -569,17 +581,24 @@ private:
 		return cmdLine;
 	}
 
-	void flushBuffer() {
-		// Flush the buffer to RealSSD
-		for (int i = 1; i <= buffer.getFilledCount(); i++) {
-			struct params commandParam;
-			if (buffer.readAndParseBuffer(i, commandParam)) {
-				string cmdLine = buildCommand(commandParam);
-				ssd->parseCommand(cmdLine);
-				ssd->exec();
-			}
-		}
-		buffer.clear();
+	bool flushBuffer() {
+        struct params commandParam;
+        bool bIsPass = false;
+        const int buffer_head = 1;
+        while (buffer.getFilledCount() != 0) {
+            bIsPass = buffer.readAndParseBuffer(buffer_head, commandParam);
+            if (bIsPass == false) return false;
+
+            string cmdLine = buildCommand(commandParam);
+            ssd->parseCommand(cmdLine);
+
+            bIsPass = ssd->exec();
+            if (bIsPass == false) return false;      
+
+            buffer.eraseBuffer(buffer_head);    
+        }
+
+        return true;
 	}
 
 	RealSSD* ssd; // RealSSD instance
