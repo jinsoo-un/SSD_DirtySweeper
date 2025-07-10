@@ -252,7 +252,7 @@ private:
         }
 
         buffer.writeBuffer(ssdParams);
-		checkAndEraseBuffer();
+		CheckBufferCmdErasable();
   
         return true;        
 	}
@@ -298,7 +298,7 @@ private:
 		return false;
 	}
 
-	void checkAndEraseBuffer() {
+	void CheckBufferCmdErasable() {
 		for (int i = buffer.getFilledCount() - 1; i > 0; i--) {
 			struct params bufferCommand;
 			buffer.readAndParseBuffer(i, bufferCommand);
