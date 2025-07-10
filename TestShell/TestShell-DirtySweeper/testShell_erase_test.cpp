@@ -8,24 +8,16 @@ using namespace testing;
 
 namespace {
     const int MAX_SIZE = 100;
+    const string ERASE_ERROR_RESULT = "[Erase] ERROR";
+    const string ERASE_PASS_RESULT = "[Erase] Done";
+    const string ERASE_RANGE_PASS_RESULT = "[Erase Range] Done";
+    const string ERASE_RANGE_ERROR_RESULT = "[Erase Range] ERROR";
 }
 
 class TestShellEraseTest : public Test {
 public:
     NiceMock< SSDMock> ssdMock;
     NiceMock< MockTestShell> sut{ &ssdMock };
-    string getEraseResult(unsigned lba, unsigned int size) {
-        testing::internal::CaptureStdout();
-        sut.eraseWithSize(lba, size);
-        string output = testing::internal::GetCapturedStdout();
-        return output;
-    }
-    string getEraseRangeResult(unsigned startLba, unsigned int endLba) {
-        testing::internal::CaptureStdout();
-        sut.eraseWithRange(startLba, endLba);
-        string output = testing::internal::GetCapturedStdout();
-        return output;
-    }
 };
 
 TEST_F(TestShellEraseTest, EraseFail) {
@@ -39,9 +31,8 @@ TEST_F(TestShellEraseTest, EraseFail) {
         .Times(1)
         .WillOnce(Return("ERROR"));
 
-    auto actual = getEraseResult(startLBA, size);
-    auto expected = ::testing::HasSubstr("[Erase] ERROR");
-    EXPECT_THAT(actual, expected);
+    auto actual = sut.eraseWithSize(startLBA, size);
+    EXPECT_EQ(ERASE_ERROR_RESULT, actual);
 }
 
 TEST_F(TestShellEraseTest, EraseForShort) {
@@ -55,9 +46,8 @@ TEST_F(TestShellEraseTest, EraseForShort) {
         .Times(1)
         .WillOnce(Return(""));
 
-    auto actual = getEraseResult(startLBA, size);
-    auto expected = ::testing::HasSubstr("[Erase] Done");
-    EXPECT_THAT(actual, expected);
+    auto actual = sut.eraseWithSize(startLBA, size);
+    EXPECT_EQ(ERASE_PASS_RESULT, actual);
 }
 
 TEST_F(TestShellEraseTest, EraseForHalf) {
@@ -71,9 +61,8 @@ TEST_F(TestShellEraseTest, EraseForHalf) {
         .Times(5)
         .WillOnce(Return(""));
 
-    auto actual = getEraseResult(startLBA, size);
-    auto expected = ::testing::HasSubstr("[Erase] Done");
-    EXPECT_THAT(actual, expected);
+    auto actual = sut.eraseWithSize(startLBA, size);
+    EXPECT_EQ(ERASE_PASS_RESULT, actual);
 }
 
 TEST_F(TestShellEraseTest, EraseForMax) {
@@ -87,9 +76,8 @@ TEST_F(TestShellEraseTest, EraseForMax) {
         .Times(10)
         .WillOnce(Return(""));
 
-    auto actual = getEraseResult(startLBA, size);
-    auto expected = ::testing::HasSubstr("[Erase] Done");
-    EXPECT_THAT(actual, expected);
+    auto actual = sut.eraseWithSize(startLBA, size);
+    EXPECT_EQ(ERASE_PASS_RESULT, actual);
 }
 TEST_F(TestShellEraseTest, EraseStartFromMiddle) {
     const int startLBA = 50;
@@ -102,9 +90,8 @@ TEST_F(TestShellEraseTest, EraseStartFromMiddle) {
         .Times(4)
         .WillOnce(Return(""));
 
-    auto actual = getEraseResult(startLBA, size);
-    auto expected = ::testing::HasSubstr("[Erase] Done");
-    EXPECT_THAT(actual, expected);
+    auto actual = sut.eraseWithSize(startLBA, size);
+    EXPECT_EQ(ERASE_PASS_RESULT, actual);
 }
 TEST_F(TestShellEraseTest, EraseForLastSingle) {
     const int startLBA = MAX_SIZE - 1;
@@ -117,9 +104,8 @@ TEST_F(TestShellEraseTest, EraseForLastSingle) {
         .Times(1)
         .WillOnce(Return(""));
 
-    auto actual = getEraseResult(startLBA, size);
-    auto expected = ::testing::HasSubstr("[Erase] Done");
-    EXPECT_THAT(actual, expected);
+    auto actual = sut.eraseWithSize(startLBA, size);
+    EXPECT_EQ(ERASE_PASS_RESULT, actual);
 }
 
 TEST_F(TestShellEraseTest, EraseForFirstSingle) {
@@ -133,33 +119,32 @@ TEST_F(TestShellEraseTest, EraseForFirstSingle) {
         .Times(1)
         .WillOnce(Return(""));
 
-    auto actual = getEraseResult(startLBA, size);
-    auto expected = ::testing::HasSubstr("[Erase] Done");
-    EXPECT_THAT(actual, expected);
+    auto actual = sut.eraseWithSize(startLBA, size);
+    EXPECT_EQ(ERASE_PASS_RESULT, actual);
 }
 
 TEST_F(TestShellEraseTest, ExceptionOverMaxSize) {
     const int startLBA = 0;
     const int size = 1000;
-    auto actual = getEraseResult(startLBA, size);
-    auto expected = ::testing::HasSubstr("[Erase] ERROR");
-    EXPECT_THAT(actual, expected);
+
+    auto actual = sut.eraseWithSize(startLBA, size);
+    EXPECT_EQ(ERASE_ERROR_RESULT, actual);
 }
 
 TEST_F(TestShellEraseTest, ExceptionUnderMinSize) {
     const int startLBA = 0;
     const int size = 0;
-    auto actual = getEraseResult(startLBA, size);
-    auto expected = ::testing::HasSubstr("[Erase] ERROR");
-    EXPECT_THAT(actual, expected);
+
+    auto actual = sut.eraseWithSize(startLBA, size);
+    EXPECT_EQ(ERASE_ERROR_RESULT, actual);
 }
 
 TEST_F(TestShellEraseTest, ExceptionOverMaxRange) {
     const int startLBA = 99;
     const int size = 10;
-    auto actual = getEraseResult(startLBA, size);
-    auto expected = ::testing::HasSubstr("[Erase] ERROR");
-    EXPECT_THAT(actual, expected);
+
+    auto actual = sut.eraseWithSize(startLBA, size);
+    EXPECT_EQ(ERASE_ERROR_RESULT, actual);
 }
 
 TEST_F(TestShellEraseTest, EraseRangeFail) {
@@ -173,33 +158,32 @@ TEST_F(TestShellEraseTest, EraseRangeFail) {
         .Times(1)
         .WillOnce(Return("ERROR"));
 
-    auto actual = getEraseRangeResult(startLBA, endLBA);
-    auto expected = ::testing::HasSubstr("[Erase Range] ERROR");
-    EXPECT_THAT(actual, expected);
+    auto actual = sut.eraseWithRange(startLBA, endLBA);
+    EXPECT_EQ(ERASE_RANGE_ERROR_RESULT, actual);
 }
 
 TEST_F(TestShellEraseTest, EraseRangeExceptionUnderMinLBA) {
     const int startLBA = -1;
     const int endLBA = 10;
-    auto actual = getEraseRangeResult(startLBA, endLBA);
-    auto expected = ::testing::HasSubstr("[Erase Range] ERROR");
-    EXPECT_THAT(actual, expected);
+
+    auto actual = sut.eraseWithRange(startLBA, endLBA);
+    EXPECT_EQ(ERASE_RANGE_ERROR_RESULT, actual);
 }
 
 TEST_F(TestShellEraseTest, EraseRangeExceptionOverMaxLBA) {
     const int startLBA = 0;
     const int endLBA = 100;
-    auto actual = getEraseRangeResult(startLBA, endLBA);
-    auto expected = ::testing::HasSubstr("[Erase Range] ERROR");
-    EXPECT_THAT(actual, expected);
+
+    auto actual = sut.eraseWithRange(startLBA, endLBA);
+    EXPECT_EQ(ERASE_RANGE_ERROR_RESULT, actual);
 }
 
 TEST_F(TestShellEraseTest, EraseRangeExceptionFirstLBAIsLargerThanLastLBA) {
     const int startLBA = 50;
     const int endLBA = 49;
-    auto actual = getEraseRangeResult(startLBA, endLBA);
-    auto expected = ::testing::HasSubstr("[Erase Range] ERROR");
-    EXPECT_THAT(actual, expected);
+
+    auto actual = sut.eraseWithRange(startLBA, endLBA);
+    EXPECT_EQ(ERASE_RANGE_ERROR_RESULT, actual);
 }
 
 TEST_F(TestShellEraseTest, EraseRangeMax) {
@@ -213,9 +197,8 @@ TEST_F(TestShellEraseTest, EraseRangeMax) {
         .Times(10)
         .WillOnce(Return(""));
 
-    auto actual = getEraseRangeResult(startLBA, endLBA);
-    auto expected = ::testing::HasSubstr("[Erase Range] Done");
-    EXPECT_THAT(actual, expected);
+    auto actual = sut.eraseWithRange(startLBA, endLBA);
+    EXPECT_EQ(ERASE_RANGE_PASS_RESULT, actual);
 }
 
 TEST_F(TestShellEraseTest, EraseRangeHalfLowerRange) {
@@ -229,9 +212,8 @@ TEST_F(TestShellEraseTest, EraseRangeHalfLowerRange) {
         .Times(5)
         .WillOnce(Return(""));
 
-    auto actual = getEraseRangeResult(startLBA, endLBA);
-    auto expected = ::testing::HasSubstr("[Erase Range] Done");
-    EXPECT_THAT(actual, expected);
+    auto actual = sut.eraseWithRange(startLBA, endLBA);
+    EXPECT_EQ(ERASE_RANGE_PASS_RESULT, actual);
 }
 
 TEST_F(TestShellEraseTest, EraseRangeHalfUpperRange) {
@@ -245,9 +227,8 @@ TEST_F(TestShellEraseTest, EraseRangeHalfUpperRange) {
         .Times(5)
         .WillOnce(Return(""));
 
-    auto actual = getEraseRangeResult(startLBA, endLBA);
-    auto expected = ::testing::HasSubstr("[Erase Range] Done");
-    EXPECT_THAT(actual, expected);
+    auto actual = sut.eraseWithRange(startLBA, endLBA);
+    EXPECT_EQ(ERASE_RANGE_PASS_RESULT, actual);
 }
 
 TEST_F(TestShellEraseTest, EraseRangeSame) {
@@ -261,7 +242,6 @@ TEST_F(TestShellEraseTest, EraseRangeSame) {
         .Times(1)
         .WillOnce(Return(""));
 
-    auto actual = getEraseRangeResult(startLBA, endLBA);
-    auto expected = ::testing::HasSubstr("[Erase Range] Done");
-    EXPECT_THAT(actual, expected);
+    auto actual = sut.eraseWithRange(startLBA, endLBA);
+    EXPECT_EQ(ERASE_RANGE_PASS_RESULT, actual);
 }
