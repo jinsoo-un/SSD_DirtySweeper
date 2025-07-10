@@ -142,6 +142,7 @@
     <ClCompile Include="ssd.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="commandParam.h" />
     <ClInclude Include="file.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

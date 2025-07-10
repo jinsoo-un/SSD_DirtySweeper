@@ -5,6 +5,8 @@
 #include <vector>
 #include <sstream>
 
+#include "commandParam.h"
+
 using std::string;
 using std::stringstream;
 using std::vector;
@@ -16,13 +18,6 @@ namespace BufferFileNames {
     const string EMPTY_FILE_NAME = "_empty";
 }
 using namespace BufferFileNames;
-
-struct params {
-    string op;
-    int addr;
-    string value;
-    int size;
-};
 
 class Buffer {
 public:
@@ -43,7 +38,7 @@ public:
     }
 
     // Parse buffer which name is "[index]_*", return false if empty
-    bool readAndParseBuffer(int index, struct params& output) {
+    bool readAndParseBuffer(int index, struct commandParams& output) {
         if (isOneBufferEmpty(index))
             return false;
 
@@ -135,7 +130,7 @@ public:
         std::filesystem::rename(targetBuffer, newBuffer);
     }
 
-    void writeBuffer(struct params input) {
+    void writeBuffer(struct commandParams input) {
         string data = paramToBufferName(input);
         int index = getFilledCount();
         if (index >= 5)
@@ -156,7 +151,7 @@ public:
 
 
 private:
-    string paramToBufferName(struct params input) {
+    string paramToBufferName(struct commandParams input) {
         string result = "";
         if (input.op == "W")
             result = input.op + "_" + std::to_string(input.addr) + "_" + input.value;

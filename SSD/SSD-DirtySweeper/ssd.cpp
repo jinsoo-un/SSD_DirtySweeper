@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include "command.cpp"
 #include "file.h"
+#include "commandParam.h"
 #include "buffer.cpp"
 
 using namespace std;
@@ -15,94 +16,46 @@ using std::string;
 
 const int VALID_DATA_LENGTH = 10;
 
-// SSD Interface Class
-class SSD {
+
+class CommandParser {
 public:
-	virtual bool parseCommand(string command) = 0;
-	virtual bool exec() = 0;
-	virtual int getArgCount() = 0;
-	virtual string getOp() = 0;
-	virtual int getAddr() = 0;
-	virtual string getValue() = 0;
-	virtual int getSize() = 0;
-    virtual int getAccessCount() = 0;
-    virtual void bufferClear() = 0;
-protected:
-	FileControl& file = FileControl::get_instance();
-};
-
-class RealSSD : public SSD {
-public:
-	bool parseCommand(string command) {
-        if (!isValidCommand(command)) {
-	        file.updateOutput("ERROR");
-	        return false;
-        }
-        storeParams(command);
-        return true;
+	bool parseCommand(string command, commandParams& param) {
+		if (!isValidCommand(command)) {
+			file.updateOutput("ERROR");
+			return false;
+		}
+		param = extractParams(command);
+		
+		return true;
 	}
 
-	bool exec() {
-		command = factory.getCommand(op);
-		if (command == nullptr) return false;
-
-		UpdateAccessCount(op);
-
-		return command->run(addr, value, size);
-	}
-
-	int getArgCount() {
-		return argCount;
-	}
-
-	string getOp() {
-		return op;
-	}
-
-	int getAddr() {
-		return addr;
-	}
-
-	string getValue() {
-		return value;
-	}
-
-	int getSize() {
-		return size;
-	}
-
-    int getAccessCount() {
-        return accessCount;
-    }
-
-    void bufferClear() {
-        return;
-    }
 private:
-	void storeParams(string command)
+	commandParams extractParams(string command)
 	{
-        std::istringstream iss(command);
-        string arg;
-        int cnt = 0;
-        /* scan the command line input */
-        while (iss >> arg) {
-	        cnt++;
-	        if (cnt == 1)
-		        op = arg;
-	        if (cnt == 2)
-		        addr = std::stoi(arg);
+		commandParams param;
+		std::istringstream iss(command);
+		string arg;
+		int cnt = 0;
+		/* scan the command line input */
+		while (iss >> arg) {
+			cnt++;
+			if (cnt == 1)
+				param.op = arg;
+			if (cnt == 2)
+				param.addr = std::stoi(arg);
 			if (cnt == 3) {
-				if (op == "E") size = std::stoi(arg);
-				else value = arg;
+				if (param.op == "E") param.size = std::stoi(arg);
+				else param.value = arg;
 			}
-        }
-        argCount = cnt;
+		}
+		param.argCount = cnt;
+		return param;
 	}
 
 	bool isAddressOutOfRange(int address) {
 		return address < MIN_ADDRESS || address >= MAX_ADDRESS;
 	}
-	
+
 	bool isEraseOutOfRange(int address, int size) {
 		if (address + size > MAX_ADDRESS)
 			return true;
@@ -112,42 +65,42 @@ private:
 	}
 
 	bool isValidCommand(string command) {
-        std::istringstream iss(command);
-        string arg;
-        int cnt = 0;
+		std::istringstream iss(command);
+		string arg;
+		int cnt = 0;
 		int tmpAddr = 0;
 		bool isErase = false;
 
-        while (iss >> arg) {
-	        cnt++;
-	        if (cnt == 1) {
-		        if (!isValidOp(arg)) return false;
+		while (iss >> arg) {
+			cnt++;
+			if (cnt == 1) {
+				if (!isValidOp(arg)) return false;
 				if (arg == "E") isErase = true;
-	        }
-	        else if (cnt == 2) {
-		        if (isAddressOutOfRange(stoi(arg))) return false;
+			}
+			else if (cnt == 2) {
+				if (isAddressOutOfRange(stoi(arg))) return false;
 				if (isErase) tmpAddr = stoi(arg);
-	        }
-	        else if (cnt == 3) {
+			}
+			else if (cnt == 3) {
 				if (isErase) {
 					if (isEraseOutOfRange(tmpAddr, stoi(arg)))
 						return false;
 					else
 						continue;
 				}
-		        if (!isValidWriteData(arg)) return false;
-	        }
-	        else
-		        return false;
-        }
+				if (!isValidWriteData(arg)) return false;
+			}
+			else
+				return false;
+		}
 
-        return true;
+		return true;
 	}
 
 	bool isValidOp(string arg) {
-        if (arg != "R" && arg != "W" && arg != "E" && arg != "F")
-	        return false;
-        return true;
+		if (arg != "R" && arg != "W" && arg != "E" && arg != "F")
+			return false;
+		return true;
 	}
 
 	bool isValidWriteData(const std::string& str) {
@@ -174,19 +127,59 @@ private:
 		return ((ch >= '0') && (ch <= '9'));
 	}
 
+	FileControl& file = FileControl::get_instance();
+};
+
+// SSD Interface Class
+class SSD {
+public:
+	virtual bool parseCommand(string command) = 0;
+	virtual bool exec() = 0;
+	virtual commandParams getCommandParams() = 0;
+    virtual int getAccessCount() = 0;
+    virtual void bufferClear() = 0;
+protected:
+	FileControl& file = FileControl::get_instance();
+};
+
+class RealSSD : public SSD {
+public:
+	bool parseCommand(string command) {
+		return parser.parseCommand(command, param);;
+	}
+	bool exec() {
+		command = factory.getCommand(param.op);
+		if (command == nullptr) return false;
+
+		UpdateAccessCount(param.op);
+
+		return command->run(param.addr, param.value, param.size);
+	}
+	
+	commandParams getCommandParams() {
+		return param;
+	}
+
+    int getAccessCount() {
+        return accessCount;
+    }
+
+    void bufferClear() {
+        return;
+    }
+
+private:
 	void UpdateAccessCount(const string& cmd)
 	{
 		if (cmd == "W") accessCount++;
-		if (cmd == "E") accessCount += size;
+		if (cmd == "E") accessCount += param.size;
 	}
 
-	int argCount;
-	string op;
-	int addr;
-	string value;
-	int size;
+	commandParams param;
+
     int accessCount;
 
+	CommandParser parser;
 	SSDCommand* command = nullptr;
 	SSDCommandFactory factory;
 };
@@ -199,7 +192,8 @@ public:
 		return ssd->parseCommand(command);
 	}
 	bool exec() {
-		string operation = ssd->getOp();
+		commandParams currentCmd = ssd->getCommandParams();
+		string operation = currentCmd.op;
 		if (operation == "R") return read();
 		if (operation == "W") return write();
 		if (operation == "E") return erase();
@@ -213,20 +207,9 @@ public:
             return true;
         }
 	}
-	int getArgCount() {
-		return ssd->getArgCount();
-	}
-	string getOp() {
-		return ssd->getOp();
-	}
-	int getAddr() {
-		return ssd->getAddr();
-	}
-	string getValue() {
-		return ssd->getValue();
-	}
-	int getSize() {
-		return ssd->getSize();
+
+	commandParams getCommandParams() {
+		return ssd->getCommandParams();
 	}
 
     int getAccessCount() {
@@ -240,16 +223,17 @@ public:
 private:
 	// Buffered SSD methods
 	bool read() {
+		commandParams currentCmd = ssd->getCommandParams();
 		// Buffer 에 아무것도 없는 경우 RealSSD 에서 읽어오기
 		if (buffer.isEmpty()) return ssd->exec();
 		// Buffer 에 있는 마지막 명령어부터 Check
 		for (int i = buffer.getFilledCount(); i > 0; i--) {
-			struct params bufferCommand;
+			struct commandParams bufferCommand;
 			buffer.readAndParseBuffer(i, bufferCommand);
 			// buffer command 가 write 인 경우
 			if (bufferCommand.op == "W") {
 				// Address가 일치하는 경우
-				if (bufferCommand.addr == ssd->getAddr()) {
+				if (bufferCommand.addr == currentCmd.addr) {
 					// Return the value from buffer
 					file.updateOutput(bufferCommand.value);
 					return true;
@@ -259,7 +243,7 @@ private:
 			if (bufferCommand.op == "E") {
 				// Address가 일치하는 경우
 				for (int checkAddr = bufferCommand.addr; checkAddr < bufferCommand.addr + bufferCommand.size; checkAddr++) {
-					if (checkAddr == ssd->getAddr()) {
+					if (checkAddr == currentCmd.addr) {
 						// Return the initial value
 						file.updateOutput("0x00000000");
 						return true;
@@ -273,32 +257,28 @@ private:
 	}
 
 	bool write() {
-        struct params ssdParams;
-        ssdParams.op = ssd->getOp();
-        ssdParams.addr = ssd->getAddr();
-        ssdParams.value = ssd->getValue();
-
         if (buffer.isFull()) {
             if (flushBuffer() == false) {
                 file.updateOutput("ERROR");
             }
         }
 
-        buffer.writeBuffer(ssdParams);
+		commandParams currentCmd = ssd->getCommandParams();
+        buffer.writeBuffer(currentCmd);
 
         if (buffer.getFilledCount() == 1) return true;
 
         for (int i = buffer.getFilledCount()-1; i > 0; i--) {
-            struct params bufferCommand;
+            struct commandParams bufferCommand;
             buffer.readAndParseBuffer(i, bufferCommand);
             if (bufferCommand.op == "W") {
-                if (bufferCommand.addr == ssd->getAddr()) {
+                if (bufferCommand.addr == currentCmd.addr) {
                      buffer.eraseBuffer(i);
                 }
             }
 
             if (bufferCommand.op == "E") {
-                if ((bufferCommand.size == 1) && (bufferCommand.addr == ssd->getAddr())) {
+                if ((bufferCommand.size == 1) && (bufferCommand.addr == currentCmd.addr)) {
                     buffer.eraseBuffer(i);
                 }
             }
@@ -308,30 +288,26 @@ private:
 	}
 
 	bool erase() {
+		commandParams currentCmd = ssd->getCommandParams();
 		// check if buffer is full, flush to RealSSD
 		if (buffer.isFull()) {
-			struct params ssdParams;
-			ssdParams.op = ssd->getOp();
-			ssdParams.addr = ssd->getAddr();
-			ssdParams.size = ssd->getSize();
-
             if (flushBuffer() == false) {
                 file.updateOutput("ERROR");
             }
 
 			// write the command to buffer
-			buffer.writeBuffer(ssdParams);
+			buffer.writeBuffer(currentCmd);
 			file.updateOutput("");
 			return true;
 		}
 
-		int startAddr = ssd->getAddr();
-		int endAddr = startAddr + ssd->getSize() - 1;
+		int startAddr = currentCmd.addr;
+		int endAddr = startAddr + currentCmd.size - 1;
 
 		// check ascending writes
 		int index = buffer.getFilledCount();
 		for (int i = index; i > 0; i--) {
-			struct params bufferCommand;
+			struct commandParams bufferCommand;
 			buffer.readAndParseBuffer(i, bufferCommand);
 
 			// check if writes are in erase range
@@ -346,13 +322,13 @@ private:
 		vector<int> markedEraseIndex;
 
 		for (int i = 1; i <= index; i++) {
-			struct params bufferCommand;
+			struct commandParams bufferCommand;
 			buffer.readAndParseBuffer(i, bufferCommand);
 
 			// write after erase, just mark that erase if matters
 			if (bufferCommand.op == "E") {
 				for (int j = i + 1; j <= index; j++) {
-					struct params innerBufferCommand;
+					struct commandParams innerBufferCommand;
 					buffer.readAndParseBuffer(j, innerBufferCommand);
 					if (innerBufferCommand.op == "W" &&
 						innerBufferCommand.addr >= bufferCommand.addr &&
@@ -366,7 +342,7 @@ private:
 		// check ascending erases, merge if it can
 		index = buffer.getFilledCount();
 		for (int i = index; i > 0; i--) {
-			struct params bufferCommand;
+			struct commandParams bufferCommand;
 			buffer.readAndParseBuffer(i, bufferCommand);
 			
 			// check if ascending erase can be merged
@@ -391,8 +367,8 @@ private:
 			}
 		}
 
-		struct params ssdParams;
-		ssdParams.op = ssd->getOp();
+		struct commandParams ssdParams;
+		ssdParams.op = currentCmd.op;
 		ssdParams.addr = startAddr;
 		ssdParams.size = endAddr - startAddr + 1;
 
@@ -410,7 +386,7 @@ private:
 		return { -1, -1 };
 	}
 
-	string buildCommand(struct params& commandParam) {
+	string buildCommand(struct commandParams& commandParam) {
 		//string cmd, int lba, string data = ""
 		string cmdLine = commandParam.op + " " + std::to_string(commandParam.addr);
 		if (commandParam.op == "W") cmdLine = cmdLine + " " + commandParam.value;
@@ -419,7 +395,7 @@ private:
 	}
 
 	bool flushBuffer() {
-        struct params commandParam;
+        struct commandParams commandParam;
         bool bIsPass = false;
         const int buffer_head = 1;
         while (buffer.getFilledCount() != 0) {
