@@ -14,7 +14,7 @@ TEST_F(FlushTestFixture, FlushSuccess) {
     EXPECT_CALL(ssdMock, flushSsdBuffer())
         .Times(1);
 
-    EXPECT_CALL(testShell, readOutputFile())
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .WillRepeatedly(Return(""));
 
     string output = testShell.flushSsdBuffer();
@@ -25,7 +25,7 @@ TEST_F(FlushTestFixture, FlushFail) {
     EXPECT_CALL(ssdMock, flushSsdBuffer())
         .Times(1);
 
-    EXPECT_CALL(testShell, readOutputFile())
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .WillRepeatedly(Return("ERROR"));
 
     string output = testShell.flushSsdBuffer();
@@ -36,7 +36,7 @@ TEST_F(FlushTestFixture, FlushCallTest) {
     EXPECT_CALL(ssdMock, flushSsdBuffer())
         .Times(1);
 
-    EXPECT_CALL(testShell, readOutputFile())
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .WillRepeatedly(Return(""));
 
     testing::internal::CaptureStdout();

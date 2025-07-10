@@ -172,7 +172,8 @@ string TestShell::fullWrite(string data) {
     logger.print("testShell.fullWrite()", "full write command called");
     for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; lba++) {
         ssd->write(lba, data);
-        if (isCmdExecuteError(readOutputFile())) {
+
+        if (isCmdExecuteError(fileAccessor->readOutputFile())) {
             return testShellStringManager.getErrorFullWriteResult();
         }
     }
@@ -187,7 +188,7 @@ string TestShell::fullWriteAndReadCompare() {
 
         ssd->write(lba, writeData);
         ssd->read(lba);
-        string readData = readOutputFile();
+        string readData = fileAccessor->readOutputFile();
 
         if (readData != writeData) {
             return testShellStringManager.getWriteReadMismatch(lba, writeData, readData)
@@ -239,15 +240,15 @@ string TestShell::partialLBAWrite() {
 
         vector<string> result;
         ssd->read(4);
-        result.push_back(readOutputFile());
+        result.push_back(fileAccessor->readOutputFile());
         ssd->read(0);
-        result.push_back(readOutputFile());
+        result.push_back(fileAccessor->readOutputFile());
         ssd->read(3);
-        result.push_back(readOutputFile());
+        result.push_back(fileAccessor->readOutputFile());
         ssd->read(1);
-        result.push_back(readOutputFile());
+        result.push_back(fileAccessor->readOutputFile());
         ssd->read(2);
-        result.push_back(readOutputFile());
+        result.push_back(fileAccessor->readOutputFile());
 
         auto firstData = result[0];
         result.erase(result.begin());
@@ -297,7 +298,8 @@ string TestShell::eraseAndWriteAging(void) {
     const int eraseUnitSize = 2;
     const int maxAgingCnt = 30;
     ssd->erase(0, eraseUnitSize);
-    if (isCmdExecuteError(readOutputFile())) {
+
+    if (isCmdExecuteError(fileAccessor->readOutputFile())) {
         return testShellStringManager.getScriptFailResult();
     }
 
@@ -305,11 +307,11 @@ string TestShell::eraseAndWriteAging(void) {
         for (int lba = 2; lba < LBA_END_ADDRESS; lba += eraseUnitSize) {
             vector<string> result;
             ssd->write(lba, getRandomHexString());
-            result.push_back(readOutputFile());
+            result.push_back(fileAccessor->readOutputFile());
             ssd->write(lba, getRandomHexString());
-            result.push_back(readOutputFile());
+            result.push_back(fileAccessor->readOutputFile());
             ssd->erase(lba, eraseUnitSize);
-            result.push_back(readOutputFile());
+            result.push_back(fileAccessor->readOutputFile());
 
             for (auto data : result) {
                 if (isCmdExecuteError(data)) {
@@ -324,7 +326,7 @@ string TestShell::eraseAndWriteAging(void) {
 string TestShell::flushSsdBuffer(void) {
     logger.print("testShell.flushSsdBuffer()", "flush command called");    
     ssd->flushSsdBuffer();
-    string result = readOutputFile();
+    string result = fileAccessor->readOutputFile();
     if (result == "ERROR") return testShellStringManager.getErrorFlushResult();
     return testShellStringManager.getSuccessFlushResult();
 }
@@ -378,7 +380,7 @@ string TestShell::readOutputFile() {
 string TestShell::getWriteReadResult(int lba, string input) {
     ssd->write(lba, input);
     ssd->read(lba);
-    string result = readOutputFile();
+    string result = fileAccessor->readOutputFile();
     return result;
 }
 
@@ -413,7 +415,7 @@ string TestShell::erase(unsigned int lba, unsigned int size) {
         ssd->erase(currentLba, chunkSize);
         remainedSize -= chunkSize;
         currentLba += chunkSize;
-        if (readOutputFile() == "ERROR") {
+        if (fileAccessor->readOutputFile() == "ERROR") {
             return "ERROR";
         }
     }

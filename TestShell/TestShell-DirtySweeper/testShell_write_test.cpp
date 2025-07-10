@@ -69,7 +69,7 @@ TEST_F(TestShellWriteTest, FullWriteNormalCase) {
         .Times(100)
         .WillRepeatedly(Return());
 
-    EXPECT_CALL(sut, readOutputFile())
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .Times(100)
         .WillRepeatedly(Return(SSD_WRITE_DONE_VALUE));
 
@@ -82,7 +82,7 @@ TEST_F(TestShellWriteTest, FullWriteFailWithInvalidData) {
         .Times(1)
         .WillRepeatedly(Return());
 
-    EXPECT_CALL(sut, readOutputFile())
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .Times(1)
         .WillRepeatedly(Return(SSD_WRITE_ERROR_VALUE));
 
