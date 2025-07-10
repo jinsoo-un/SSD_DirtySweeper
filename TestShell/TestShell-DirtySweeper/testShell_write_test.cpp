@@ -31,7 +31,7 @@ TEST_F(TestShellWriteTest, Write) {
     EXPECT_CALL(ssdMock, write(VALID_LBA, VALID_DATA))
         .Times(1);
 
-    EXPECT_CALL(sut, readOutputFile())
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .Times(1)
         .WillOnce(Return(""));
 
@@ -44,7 +44,7 @@ TEST_F(TestShellWriteTest, WriteFailWithInvalidLBA) {
         .Times(1)
         .WillOnce(Return());
 
-    EXPECT_CALL(sut, readOutputFile())
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .Times(1)
         .WillOnce(Return(SSD_WRITE_ERROR_VALUE));
 
@@ -56,7 +56,7 @@ TEST_F(TestShellWriteTest, WriteFailWithInvalidData) {
     EXPECT_CALL(ssdMock, write(VALID_LBA, INVALID_DATA))
         .Times(1)
         .WillOnce(Return());
-    EXPECT_CALL(sut, readOutputFile())
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .Times(1)
         .WillOnce(Return(SSD_WRITE_ERROR_VALUE));
 

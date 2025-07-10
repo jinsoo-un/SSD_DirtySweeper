@@ -147,7 +147,7 @@ string TestShell::fullRead() {
 
     for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; lba++) {
         ssd->read(lba);
-        string result = readOutputFile();
+        string result = fileAccessor->readOutputFile();
         if (result == "ERROR") {
             result += testShellStringManager.getErrorReadResult();
             return result;
@@ -161,7 +161,8 @@ string TestShell::write(int lba, string data)
 {
     logger.print("testShell.write()", "write command called");
     ssd->write(lba, data);
-    if (isCmdExecuteError(readOutputFile())) {
+
+    if (isCmdExecuteError(fileAccessor->readOutputFile())) {
         return testShellStringManager.getErrorWriteResult();
     }
     return testShellStringManager.getSuccessWriteResult();

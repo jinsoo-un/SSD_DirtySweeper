@@ -29,13 +29,13 @@ TEST_F(TestShellLogicTest, ProcessInputReadShouldTriggerReadLogic) {
 
 TEST_F(TestShellLogicTest, FullReadShouldCallSSDReadForAllLBA) {
     EXPECT_CALL(ssd, read(_)).Times(100);
-    EXPECT_CALL(shell, readOutputFile()).Times(100).WillRepeatedly(Return("DATA"));
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile()).Times(100).WillRepeatedly(Return("DATA"));
     shell.fullRead();
 }
 
 TEST_F(TestShellLogicTest, WriteShouldCallSSDWriteAndReturnDoneOnSuccess) {
     EXPECT_CALL(ssd, write(5, "abc")).Times(1);
-    EXPECT_CALL(shell, readOutputFile()).WillOnce(Return("OK"));
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile()).WillOnce(Return("OK"));
 
     auto output = shell.write(5, "abc");
     EXPECT_THAT("[Write] Done", output);
@@ -43,7 +43,7 @@ TEST_F(TestShellLogicTest, WriteShouldCallSSDWriteAndReturnDoneOnSuccess) {
 
 TEST_F(TestShellLogicTest, WriteShouldReturnErrorOnFailure) {
     EXPECT_CALL(ssd, write(5, "abc")).Times(1);
-    EXPECT_CALL(shell, readOutputFile()).WillOnce(Return("ERROR"));
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile()).WillOnce(Return("ERROR"));
 
     auto output = shell.write(5, "abc");
 
@@ -52,7 +52,7 @@ TEST_F(TestShellLogicTest, WriteShouldReturnErrorOnFailure) {
 
 TEST_F(TestShellLogicTest, ProcessInputWriteShouldCallSSDWrite) {
     EXPECT_CALL(ssd, write(5, "hello")).Times(1);
-    EXPECT_CALL(shell, readOutputFile()).WillOnce(Return("OK"));
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile()).WillOnce(Return("OK"));
 
     shell.processInput("write 5 hello");
 }
