@@ -6,15 +6,9 @@
 using std::string;
 
 class RealSSDTest : public ::testing::Test {
-protected:    
-    std::unique_ptr<SSD> ssd;
-
 public:
-    RealSSDTest() {
-        if (!ssd) {
-            ssd = std::make_unique<RealSSD>();
-        }
-    }
+    RealSSDTest() : ssd {new RealSSD } { }
+    SSD* ssd;
 
     string VALID_HEX_DATA = "0x1298CDEF";
     string INVALID_HEX_DATA = "0xABCDEFGH";
@@ -257,16 +251,10 @@ TEST_F(RealSSDTest, EraseAndReadVerify) {
 
 ///////////////////////////////////////////////////////////////////////////
 class BufSSDTest : public RealSSDTest {
-protected:
-    std::unique_ptr<SSD> ssd;
-
 public:
-    BufSSDTest() {
-        if (!ssd) {
-            ssd = std::make_unique<BufferedSSD>();
-        }
-    }
- 
+    BufSSDTest() : ssd { new BufferedSSD } { }
+    SSD* ssd;
+
     string PRECONDITION_HEX_DATA = "0xABCDA5A5";
     
     string cmd;
