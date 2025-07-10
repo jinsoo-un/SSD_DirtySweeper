@@ -414,7 +414,7 @@ private:
 	}
 
 	std::pair<int, int> checkOverlap(int a, int b, int c, int d) {
-		if (b >= c && a <= d) {
+		if (b + 1 >= c && a <= d + 1) {
 			return { std::min(a, c), std::max(b, d) };
 		}
 		return { -1, -1 };

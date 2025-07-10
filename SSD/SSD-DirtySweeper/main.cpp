@@ -531,7 +531,7 @@ TEST_F(BufSSDTest, EraseTest03) {
     EXPECT_EQ(10, ssd->getAccessCount());   //5 write + 5 erase
 }
 
-TEST_F(BufSSDTest, Erase_Exception) {
+TEST_F(BufSSDTest, EraseException) {
     lba = 94;
     lba_size = 2;
 
@@ -546,6 +546,99 @@ TEST_F(BufSSDTest, Erase_Exception) {
     EXPECT_EQ(false, parseAndExecute(cmd));
 
     EXPECT_TRUE(checkOutputFile("ERROR"));
+}
+
+TEST_F(BufSSDTest, EraseMergeEraseTest) {
+    lba = 30;
+    cmd = buildCommand("E", lba, std::to_string(2));
+    EXPECT_EQ(true, parseAndExecute(cmd));
+
+    cmd = buildCommand("E", lba + 2, to_string(3));
+    EXPECT_EQ(true, parseAndExecute(cmd));
+
+    lba = 40;
+    for (int i = 0; i < 4; i++) {
+        cmd = buildCommand("W", lba + i, PRECONDITION_HEX_DATA);
+        EXPECT_EQ(true, parseAndExecute(cmd));
+    }
+
+    // If erase are merged, flush should not be called;
+    EXPECT_EQ(0, ssd->getAccessCount());
+}
+
+TEST_F(BufSSDTest, EraseMergeOutOfRangeTest) {
+    lba = 30;
+    cmd = buildCommand("E", lba, std::to_string(5));
+    EXPECT_EQ(true, parseAndExecute(cmd));
+
+    cmd = buildCommand("E", lba + 4, to_string(8));
+    EXPECT_EQ(true, parseAndExecute(cmd));
+
+    lba = 40;
+    for (int i = 0; i < 4; i++) {
+        cmd = buildCommand("W", lba + i, PRECONDITION_HEX_DATA);
+        EXPECT_EQ(true, parseAndExecute(cmd));
+    }
+
+    // If erase are merged, flush should not be called;
+    // if erase are not merged, flush should be called;
+    EXPECT_EQ(16, ssd->getAccessCount());
+}
+
+TEST_F(BufSSDTest, EraseMergeSingleWriteTest) {
+    lba = 30;
+    cmd = buildCommand("W", lba, PRECONDITION_HEX_DATA);
+    EXPECT_EQ(true, parseAndExecute(cmd));
+
+    cmd = buildCommand("E", lba, to_string(3));
+    EXPECT_EQ(true, parseAndExecute(cmd));
+
+    lba = 40;
+    for (int i = 0; i < 4; i++) {
+        cmd = buildCommand("W", lba + i, PRECONDITION_HEX_DATA);
+        EXPECT_EQ(true, parseAndExecute(cmd));
+    }
+
+    // If erase are merged, flush should not be called;
+    EXPECT_EQ(0, ssd->getAccessCount());
+}
+
+TEST_F(BufSSDTest, EraseMergeMultipleWriteTest) {
+    lba = 30;
+    for (int i = 0; i < 3; i++) {
+        cmd = buildCommand("W", lba + i, PRECONDITION_HEX_DATA);
+        EXPECT_EQ(true, parseAndExecute(cmd));
+    }
+
+    cmd = buildCommand("E", lba, to_string(3));
+    EXPECT_EQ(true, parseAndExecute(cmd));
+
+    lba = 40;
+    for (int i = 0; i < 4; i++) {
+        cmd = buildCommand("W", lba + i, PRECONDITION_HEX_DATA);
+        EXPECT_EQ(true, parseAndExecute(cmd));
+    }
+
+    // If erase are merged, flush should not be called;
+    EXPECT_EQ(0, ssd->getAccessCount());
+}
+
+// In case of order "E W E", last "E" cannot merge the "E" before "W"
+// if overlapped
+TEST_F(BufSSDTest, EraseNotMergeEraseBeforeWriteTest) {
+    lba = 30;
+    cmd = buildCommand("E", lba, to_string(3)); // erase 30, 31, 32
+    EXPECT_EQ(true, parseAndExecute(cmd));
+
+    cmd = buildCommand("W", lba, PRECONDITION_HEX_DATA); // write 30
+    EXPECT_EQ(true, parseAndExecute(cmd));
+
+    cmd = buildCommand("E", lba + 2, to_string(3)); // erase 32, 33, 34
+    EXPECT_EQ(true, parseAndExecute(cmd));
+
+    cmd = buildCommand("R", lba); // if read 30, must not be erased
+    EXPECT_EQ(true, parseAndExecute(cmd));
+    EXPECT_TRUE(checkOutputFile(PRECONDITION_HEX_DATA));
 }
 
 TEST_F(BufSSDTest, Flush01) {
