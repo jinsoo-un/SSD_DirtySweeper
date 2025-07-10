@@ -107,7 +107,6 @@ TEST_F(RealSSDTest, ArgparseRead) {
     string cmd = buildCommand("R", 3);
     parser.parseCommand(cmd, param);
     
-    EXPECT_EQ(2, param.argCount);
     EXPECT_EQ("R", param.op);
     EXPECT_EQ(3, param.addr);
 }
@@ -116,7 +115,6 @@ TEST_F(RealSSDTest, ArgparseWrite)
 {
     string cmd = buildCommand("W", 3, VALID_HEX_DATA);
     parser.parseCommand(cmd, param);
-    EXPECT_EQ(3, param.argCount);
     EXPECT_EQ("W", param.op);
     EXPECT_EQ(3, param.addr);
     EXPECT_EQ("0x1298CDEF", param.value);
@@ -126,7 +124,6 @@ TEST_F(RealSSDTest, ArgparseErase)
 {
     string cmd = buildCommand("E", 3, std::to_string(10));
     parser.parseCommand(cmd, param);
-    EXPECT_EQ(3, param.argCount);
     EXPECT_EQ("E", param.op);
     EXPECT_EQ(3, param.addr);
 	EXPECT_EQ(10, param.size);

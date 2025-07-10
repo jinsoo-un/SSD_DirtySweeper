@@ -48,7 +48,6 @@ private:
 				else param.value = arg;
 			}
 		}
-		param.argCount = cnt;
 		return param;
 	}
 
@@ -223,111 +222,134 @@ public:
 private:
 	// Buffered SSD methods
 	bool read() {
+		if (buffer.isEmpty())
+			return ssd->exec();
+
+		if (checkAndReadFromBuffer())
+				return true;
+
+		return ssd->exec();
+	}
+
+	bool write() {
 		commandParams currentCmd = ssd->getCommandParams();
-		// Buffer 에 아무것도 없는 경우 RealSSD 에서 읽어오기
-		if (buffer.isEmpty()) return ssd->exec();
-		// Buffer 에 있는 마지막 명령어부터 Check
+        if (buffer.isFull()) {
+            if (flushBuffer() == false) {
+                file.updateOutput("ERROR");
+            }
+        }
+		
+        buffer.writeBuffer(currentCmd);
+		CheckBufferCmdErasable();
+  
+        return true;        
+	}
+
+	bool erase() {
+		if (buffer.isFull()) {
+			flushBufferandAddCurrentCmd();
+			return true;
+		}
+
+		commandParams currentCmd = ssd->getCommandParams();
+		int startAddr = currentCmd.addr;
+		int endAddr = startAddr + currentCmd.size - 1;
+		vector<int> markedEraseIndex;
+
+		checkAndMergeWrites(startAddr, endAddr);
+		markEraseBeforeWritesInBuffer(markedEraseIndex);
+		checkAndMergeErase(startAddr, endAddr, markedEraseIndex);
+
+		addEraseCmdToBuffer(startAddr, endAddr);
+
+		return true;
+	}
+
+	bool checkAndReadFromBuffer() {
+		struct commandParams currentCmd = ssd->getCommandParams();
+		struct commandParams bufferCommand;
 		for (int i = buffer.getFilledCount(); i > 0; i--) {
-			struct commandParams bufferCommand;
 			buffer.readAndParseBuffer(i, bufferCommand);
-			// buffer command 가 write 인 경우
 			if (bufferCommand.op == "W") {
-				// Address가 일치하는 경우
 				if (bufferCommand.addr == currentCmd.addr) {
-					// Return the value from buffer
 					file.updateOutput(bufferCommand.value);
 					return true;
 				}
 			}
-			// buffer command 가 erase 인 경우
 			if (bufferCommand.op == "E") {
-				// Address가 일치하는 경우
 				for (int checkAddr = bufferCommand.addr; checkAddr < bufferCommand.addr + bufferCommand.size; checkAddr++) {
 					if (checkAddr == currentCmd.addr) {
-						// Return the initial value
 						file.updateOutput("0x00000000");
 						return true;
 					}
 				}
 			}
 		}
-
-		// if all command buffer is not matched, read from RealSSD
-		return ssd->exec(); // read from RealSSD
+		return false;
 	}
 
-	bool write() {
-        if (buffer.isFull()) {
-            if (flushBuffer() == false) {
-                file.updateOutput("ERROR");
-            }
-        }
-
-		commandParams currentCmd = ssd->getCommandParams();
-        buffer.writeBuffer(currentCmd);
-
-        if (buffer.getFilledCount() == 1) return true;
-
-        for (int i = buffer.getFilledCount()-1; i > 0; i--) {
-            struct commandParams bufferCommand;
-            buffer.readAndParseBuffer(i, bufferCommand);
-            if (bufferCommand.op == "W") {
-                if (bufferCommand.addr == currentCmd.addr) {
-                     buffer.eraseBuffer(i);
-                }
-            }
-
-            if (bufferCommand.op == "E") {
-                if ((bufferCommand.size == 1) && (bufferCommand.addr == currentCmd.addr)) {
-                    buffer.eraseBuffer(i);
-                }
-            }
-        }
-  
-        return true;        
-	}
-
-	bool erase() {
-		commandParams currentCmd = ssd->getCommandParams();
-		// check if buffer is full, flush to RealSSD
-		if (buffer.isFull()) {
-            if (flushBuffer() == false) {
-                file.updateOutput("ERROR");
-            }
-
-			// write the command to buffer
-			buffer.writeBuffer(currentCmd);
-			file.updateOutput("");
-			return true;
-		}
-
-		int startAddr = currentCmd.addr;
-		int endAddr = startAddr + currentCmd.size - 1;
-
-		// check ascending writes
-		int index = buffer.getFilledCount();
-		for (int i = index; i > 0; i--) {
+	void CheckBufferCmdErasable() {
+		struct commandParams currentCmd = ssd->getCommandParams();
+		for (int i = buffer.getFilledCount() - 1; i > 0; i--) {
 			struct commandParams bufferCommand;
 			buffer.readAndParseBuffer(i, bufferCommand);
-
-			// check if writes are in erase range
 			if (bufferCommand.op == "W") {
-				if (bufferCommand.addr >= startAddr && bufferCommand.addr <= endAddr) {
+				if (bufferCommand.addr == currentCmd.addr) {
+					buffer.eraseBuffer(i);
+				}
+			}
+
+			if (bufferCommand.op == "E") {
+				if ((bufferCommand.size == 1) && (bufferCommand.addr == currentCmd.addr)) {
 					buffer.eraseBuffer(i);
 				}
 			}
 		}
+	}
 
-		index = buffer.getFilledCount();
-		vector<int> markedEraseIndex;
+	void addEraseCmdToBuffer(int startAddr, int endAddr) {
+		struct commandParams currentCmd = ssd->getCommandParams();
+		struct commandParams ssdParams;
+		ssdParams.op = currentCmd.op;
+		ssdParams.addr = startAddr;
+		ssdParams.size = endAddr - startAddr + 1;
 
-		for (int i = 1; i <= index; i++) {
-			struct commandParams bufferCommand;
+		buffer.writeBuffer(ssdParams);
+		file.updateOutput("");
+	}
+
+	void checkAndMergeErase(int& startAddr, int& endAddr, std::vector<int>& markedEraseIndex) {
+		struct commandParams bufferCommand;
+
+		for (int i = buffer.getFilledCount(); i > 0; i--) {
 			buffer.readAndParseBuffer(i, bufferCommand);
 
-			// write after erase, just mark that erase if matters
 			if (bufferCommand.op == "E") {
-				for (int j = i + 1; j <= index; j++) {
+				int bufStartAddr = bufferCommand.addr;
+				int bufEndAddr = bufferCommand.addr + bufferCommand.size - 1;
+				std::pair<int, int> merged = checkOverlap(startAddr, endAddr, bufStartAddr, bufEndAddr);
+
+				if (merged.first == -1)
+					continue;
+				if (merged.second - merged.first >= 10)
+					continue;
+				if (find(markedEraseIndex.begin(), markedEraseIndex.end(), i) != markedEraseIndex.end())
+					continue;
+
+				buffer.eraseBuffer(i);
+				startAddr = merged.first;
+				endAddr = merged.second;
+			}
+		}
+	}
+
+	void markEraseBeforeWritesInBuffer(std::vector<int>& markedEraseIndex) {
+		struct commandParams bufferCommand;
+		for (int i = 1; i <= buffer.getFilledCount(); i++) {
+			buffer.readAndParseBuffer(i, bufferCommand);
+
+			if (bufferCommand.op == "E") {
+				for (int j = i + 1; j <= buffer.getFilledCount(); j++) {
 					struct commandParams innerBufferCommand;
 					buffer.readAndParseBuffer(j, innerBufferCommand);
 					if (innerBufferCommand.op == "W" &&
@@ -338,45 +360,30 @@ private:
 				}
 			}
 		}
+	}
 
-		// check ascending erases, merge if it can
-		index = buffer.getFilledCount();
-		for (int i = index; i > 0; i--) {
-			struct commandParams bufferCommand;
+	void checkAndMergeWrites(int startAddr, int endAddr) {
+		struct commandParams bufferCommand;
+		for (int i = buffer.getFilledCount(); i > 0; i--) {
 			buffer.readAndParseBuffer(i, bufferCommand);
-			
-			// check if ascending erase can be merged
-			if (bufferCommand.op == "E") {
-				int bufStartAddr = bufferCommand.addr;
-				int bufEndAddr = bufferCommand.addr + bufferCommand.size - 1;
-				std::pair<int, int> merged = checkOverlap(startAddr, endAddr, bufStartAddr, bufEndAddr);
-				
-				// if no overlapped section, do nothing
-				if (merged.first == -1)
-					continue;
-				// if overlapped section's size exceed 10, do nothing
-				if (merged.second - merged.first >= 10)
-					continue;
-				// if target erase command is marked before, do nothing
-				if (find(markedEraseIndex.begin(), markedEraseIndex.end(), i) != markedEraseIndex.end())
-					continue;
 
-				buffer.eraseBuffer(i);
-				startAddr = merged.first;
-				endAddr = merged.second;
+			if (bufferCommand.op == "W") {
+				if (bufferCommand.addr >= startAddr && bufferCommand.addr <= endAddr) {
+					buffer.eraseBuffer(i);
+				}
 			}
 		}
+	}
 
-		struct commandParams ssdParams;
-		ssdParams.op = currentCmd.op;
-		ssdParams.addr = startAddr;
-		ssdParams.size = endAddr - startAddr + 1;
+	void flushBufferandAddCurrentCmd() {
+		struct commandParams currentCmd = ssd->getCommandParams();
 
-		// write the command to buffer
-		buffer.writeBuffer(ssdParams);
+		if (flushBuffer() == false) {
+			file.updateOutput("ERROR");
+		}
+
+		buffer.writeBuffer(currentCmd);
 		file.updateOutput("");
-
-		return true;
 	}
 
 	std::pair<int, int> checkOverlap(int a, int b, int c, int d) {

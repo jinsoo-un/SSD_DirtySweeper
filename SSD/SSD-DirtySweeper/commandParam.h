@@ -9,5 +9,4 @@ struct commandParams
     int addr;
     string value;
     int size;
-    int argCount;
 };

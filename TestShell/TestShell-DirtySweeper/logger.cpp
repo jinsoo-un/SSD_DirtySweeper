@@ -1,5 +1,3 @@
-#include "gmock/gmock.h"
-#include "testShell_output_manager.h"
 #include "logger.h"
 
 using namespace std;

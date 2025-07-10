@@ -73,7 +73,7 @@ TEST_F(ReadTestFixture, FulLReadFail) {
     EXPECT_CALL(ssdMock, read(_))
         .Times(4);
 
-    EXPECT_CALL(testShell, readOutputFile())
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .WillOnce(Return(RANDOM_VALUE))
         .WillOnce(Return(RANDOM_VALUE))
         .WillOnce(Return(RANDOM_VALUE))

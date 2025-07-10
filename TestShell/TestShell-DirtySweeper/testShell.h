@@ -2,29 +2,25 @@
 #include <iostream>
 #include <string>
 #include <stdexcept>
-#include <fstream>
-#include <sstream>
 #include <vector>
 #include <unordered_set>
-#include <windows.h>
-#include <shellapi.h>
-#include <direct.h>
-#include <cstdlib>
-#include <ctime>
-#include <iomanip>
-#include <chrono>
-#include <mutex>
-#include <algorithm>
-#include <io.h>
 #include "gmock/gmock.h"
 #include "testShell_output_manager.h"
 #include "logger.h"
 #include "ssd.h"
+#include "testShell.h"
+#include "file_accessor.h"
 
 using namespace std;
 class TestShell {
 public:
-    TestShell(SSD* ssd) : ssd{ ssd } {}
+    TestShell(SSD* ssd) : ssd{ ssd } {
+#ifndef NDEBUG
+        fileAccessor = MockFileAccessor::GetInstance(); // Debug ¿ë
+#else
+        fileAccessor = FileAccessor::GetInstance();
+#endif
+    }
 
     string executeCommand(const string& cmd, const vector<string>& args);
     void processInput(const string& input);
@@ -61,6 +57,7 @@ private:
     SSD* ssd;
     Logger& logger{ Logger::GetInstance()};
     TestShellOutputManager testShellStringManager;
+    IFileAccessor* fileAccessor;
 
     bool isExitCmd{ false };
     const int LBA_START_ADDRESS = 0;
