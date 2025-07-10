@@ -17,33 +17,32 @@
 #include <algorithm>
 #include <io.h>
 #include "gmock/gmock.h"
-#include "testShell_string_manager.h"
+#include "testShell_output_manager.h"
 #include "logger.h"
 #include "ssd.h"
 
 using namespace std;
-
 class TestShell {
 public:
     TestShell(SSD* ssd) : ssd{ ssd } {}
 
-    void executeCommand(const string& cmd, const vector<string>& args);
+    string executeCommand(const string& cmd, const vector<string>& args);
     void processInput(const string& input);
-    void help();
-    void read(int lba);
-    void fullRead();
-    void write(int lba, string data);
-    void fullWrite(string data);
-    void fullWriteAndReadCompare();
-    void exit(void);
+    string help();
+    string read(int lba);
+    string fullRead();
+    string write(int lba, string data);
+    string fullWrite(string data);
+    string fullWriteAndReadCompare();
+    string exit(void);
     bool isExit() const;
-    void writeReadAging();
+    string writeReadAging();
     virtual string getRandomHexString();
-    void partialLBAWrite();
-    void eraseWithSize(unsigned int lba, unsigned int size);
-    void eraseWithRange(unsigned int startLba, unsigned int endLba);
-    void eraseAndWriteAging(void);
-    void flushSsdBuffer(void);
+    string partialLBAWrite();
+    string eraseWithSize(unsigned int lba, unsigned int size);
+    string eraseWithRange(unsigned int startLba, unsigned int endLba);
+    string eraseAndWriteAging(void);
+    string flushSsdBuffer(void);
 
     static const int WRITE_READ_ITERATION = 200;
 private:
@@ -56,10 +55,12 @@ private:
     bool isValidLbaRange(unsigned int startLba, unsigned int endLba);
     bool isValidEraseWithSizeArgument(unsigned int lba, unsigned int size);
     bool isCmdExecuteError(const string result) const;
+    string getWriteDataInFullWriteAndReadCompareScript(int lba);
+    string generateRandomHexString();
 
     SSD* ssd;
     Logger& logger{ Logger::GetInstance()};
-    TestShellStringManager testShellStringManager;
+    TestShellOutputManager testShellStringManager;
 
     bool isExitCmd{ false };
     const int LBA_START_ADDRESS = 0;

@@ -36,22 +36,17 @@ TEST_F(TestShellLogicTest, WriteShouldCallSSDWriteAndReturnDoneOnSuccess) {
     EXPECT_CALL(ssd, write(5, "abc")).Times(1);
     EXPECT_CALL(shell, readOutputFile()).WillOnce(Return("OK"));
 
-    testing::internal::CaptureStdout();
-    shell.write(5, "abc");
-    string output = testing::internal::GetCapturedStdout();
-    cout << output;
-    EXPECT_THAT(output, ::testing::HasSubstr("[Write] Done"));
+    auto output = shell.write(5, "abc");
+    EXPECT_THAT("[Write] Done", output);
 }
 
 TEST_F(TestShellLogicTest, WriteShouldReturnErrorOnFailure) {
     EXPECT_CALL(ssd, write(5, "abc")).Times(1);
     EXPECT_CALL(shell, readOutputFile()).WillOnce(Return("ERROR"));
 
-    testing::internal::CaptureStdout();
-    shell.write(5, "abc");
-    string output = testing::internal::GetCapturedStdout();
-    cout << output;
-    EXPECT_THAT(output, ::testing::HasSubstr("[Write] ERROR"));
+    auto output = shell.write(5, "abc");
+
+    EXPECT_THAT("[Write] ERROR", output);
 }
 
 TEST_F(TestShellLogicTest, ProcessInputWriteShouldCallSSDWrite) {

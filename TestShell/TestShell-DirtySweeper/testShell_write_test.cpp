@@ -15,6 +15,8 @@ namespace {
     static const string INVALID_DATA = "AHAHHAHAA";
     static const string WRITE_SUCCESS_RESULT = "[Write] Done";
     static const string WRITE_FAIL_RESULT = "[Write] ERROR";
+    static const string FULL_WRITE_SUCCESS_RESULT = "[Full Write] Done";
+    static const string FULL_WRITE_FAIL_RESULT = "[Full Write] ERROR";
     static const string SSD_WRITE_DONE_VALUE = "";
     static const string SSD_WRITE_ERROR_VALUE = "ERROR";
 }
@@ -33,11 +35,8 @@ TEST_F(TestShellWriteTest, Write) {
         .Times(1)
         .WillOnce(Return(""));
 
-    testing::internal::CaptureStdout();
-    sut.write(VALID_LBA, VALID_DATA);
-    string output = testing::internal::GetCapturedStdout();
-    cout << output;
-    EXPECT_THAT(output, ::testing::HasSubstr("[Write] Done"));
+    auto actual = sut.write(VALID_LBA, VALID_DATA);
+    EXPECT_EQ(WRITE_SUCCESS_RESULT, actual);
 }
 
 TEST_F(TestShellWriteTest, WriteFailWithInvalidLBA) {
@@ -49,31 +48,23 @@ TEST_F(TestShellWriteTest, WriteFailWithInvalidLBA) {
         .Times(1)
         .WillOnce(Return(SSD_WRITE_ERROR_VALUE));
 
-    testing::internal::CaptureStdout();
-    sut.write(INVALID_LBA, VALID_DATA);
-    string output = testing::internal::GetCapturedStdout();
-    cout << output;
-    EXPECT_THAT(output, ::testing::HasSubstr("[Write] ERROR"));
+    auto actual = sut.write(INVALID_LBA, VALID_DATA);
+    EXPECT_EQ(WRITE_FAIL_RESULT, actual);
 }
 
 TEST_F(TestShellWriteTest, WriteFailWithInvalidData) {
-    EXPECT_CALL(ssdMock, write(INVALID_LBA, INVALID_DATA))
+    EXPECT_CALL(ssdMock, write(VALID_LBA, INVALID_DATA))
         .Times(1)
         .WillOnce(Return());
     EXPECT_CALL(sut, readOutputFile())
         .Times(1)
         .WillOnce(Return(SSD_WRITE_ERROR_VALUE));
 
-    testing::internal::CaptureStdout();
-    sut.write(INVALID_LBA, INVALID_DATA);
-    string output = testing::internal::GetCapturedStdout();
-    cout << output;
-    EXPECT_THAT(output, ::testing::HasSubstr("[Write] ERROR"));
+    auto actual = sut.write(VALID_LBA, INVALID_DATA);
+    EXPECT_EQ(WRITE_FAIL_RESULT, actual);
 }
 
 TEST_F(TestShellWriteTest, FullWriteNormalCase) {
-    string actual = SSD_WRITE_DONE_VALUE;
-    for (int lba = START_LBA; lba <= END_LBA; lba++) actual += WRITE_SUCCESS_RESULT + "\n";
     EXPECT_CALL(ssdMock, write(_, VALID_DATA))
         .Times(100)
         .WillRepeatedly(Return());
@@ -82,11 +73,8 @@ TEST_F(TestShellWriteTest, FullWriteNormalCase) {
         .Times(100)
         .WillRepeatedly(Return(SSD_WRITE_DONE_VALUE));
 
-    testing::internal::CaptureStdout();
-    sut.fullWrite(VALID_DATA);
-    string output = testing::internal::GetCapturedStdout();
-    cout << output;
-    EXPECT_THAT(output, ::testing::HasSubstr("[Full Write] Done"));
+    auto actual = sut.fullWrite(VALID_DATA);
+    EXPECT_EQ(FULL_WRITE_SUCCESS_RESULT, actual);
 }
 
 TEST_F(TestShellWriteTest, FullWriteFailWithInvalidData) {
@@ -98,9 +86,6 @@ TEST_F(TestShellWriteTest, FullWriteFailWithInvalidData) {
         .Times(1)
         .WillRepeatedly(Return(SSD_WRITE_ERROR_VALUE));
 
-    testing::internal::CaptureStdout();
-    sut.fullWrite(INVALID_DATA);
-    string output = testing::internal::GetCapturedStdout();
-    cout << output;
-    EXPECT_THAT(output, ::testing::HasSubstr("[Full Write] ERROR"));
+    auto actual = sut.fullWrite(INVALID_DATA);
+    EXPECT_EQ(FULL_WRITE_FAIL_RESULT, actual);
 }
