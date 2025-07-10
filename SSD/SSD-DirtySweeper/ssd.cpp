@@ -365,7 +365,12 @@ public:
 		if (operation == "W") return write();
 		if (operation == "E") return erase();
         if (operation == "F") {
-            flushBuffer();           
+            if (flushBuffer() == false) {
+                file.updateOutput("ERROR");
+            }
+            else {
+                file.updateOutput("");
+            }
             return true;
         }
 	}
@@ -435,8 +440,9 @@ private:
         ssdParams.value = ssd->getValue();
 
         if (buffer.isFull()) {
-            flushBuffer();
-            buffer.clear();
+            if (flushBuffer() == false) {
+                file.updateOutput("ERROR");
+            }
         }
 
         buffer.writeBuffer(ssdParams);
@@ -469,7 +475,11 @@ private:
 			ssdParams.op = ssd->getOp();
 			ssdParams.addr = ssd->getAddr();
 			ssdParams.size = ssd->getSize();
-			flushBuffer();
+
+            if (flushBuffer() == false) {
+                file.updateOutput("ERROR");
+            }
+
 			// write the command to buffer
 			buffer.writeBuffer(ssdParams);
 			file.updateOutput("");
@@ -569,17 +579,24 @@ private:
 		return cmdLine;
 	}
 
-	void flushBuffer() {
-		// Flush the buffer to RealSSD
-		for (int i = 1; i <= buffer.getFilledCount(); i++) {
-			struct params commandParam;
-			if (buffer.readAndParseBuffer(i, commandParam)) {
-				string cmdLine = buildCommand(commandParam);
-				ssd->parseCommand(cmdLine);
-				ssd->exec();
-			}
-		}
-		buffer.clear();
+	bool flushBuffer() {
+        struct params commandParam;
+        bool bIsPass = false;
+        const int buffer_head = 1;
+        while (buffer.getFilledCount() != 0) {
+            bIsPass = buffer.readAndParseBuffer(buffer_head, commandParam);
+            if (bIsPass == false) return false;
+
+            string cmdLine = buildCommand(commandParam);
+            ssd->parseCommand(cmdLine);
+
+            bIsPass = ssd->exec();
+            if (bIsPass == false) return false;      
+
+            buffer.eraseBuffer(buffer_head);    
+        }
+
+        return true;
 	}
 
 	RealSSD* ssd; // RealSSD instance

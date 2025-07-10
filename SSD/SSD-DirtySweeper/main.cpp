@@ -363,7 +363,7 @@ TEST_F(BufSSDTest, SameLBAWrite01) {
 
     for (int i = 0; i < lba_size; i++) {
         cmd = buildCommand("W", lba, VALID_HEX_DATA);
-        parseAndExecute(cmd);
+        EXPECT_EQ(true, parseAndExecute(cmd));
     }
 
     EXPECT_EQ(0, ssd->getAccessCount());
@@ -375,17 +375,17 @@ TEST_F(BufSSDTest, SameLBAWrite02) {
 
     for (int i = 0; i < 4; i++) {
         cmd = buildCommand("W", lba+i, PRECONDITION_HEX_DATA);
-        parseAndExecute(cmd);
+        EXPECT_EQ(true, parseAndExecute(cmd));
     }
 
     lba = 50;
     for (int i = 0; i < lba_size; i++) {
         cmd = buildCommand("W", lba, VALID_HEX_DATA);
-        parseAndExecute(cmd);
+        EXPECT_EQ(true, parseAndExecute(cmd));
     }
 
     cmd = buildCommand("R", lba);
-    parseAndExecute(cmd);
+    EXPECT_EQ(true, parseAndExecute(cmd));
     EXPECT_TRUE(checkOutputFile(VALID_HEX_DATA));
     EXPECT_EQ(5, ssd->getAccessCount());
    
@@ -398,18 +398,18 @@ TEST_F(BufSSDTest, SameLBAWrite03) {
     //precondition
     for (int i = 0; i < lba_size; i++) {
         cmd = buildCommand("W", lba + i, PRECONDITION_HEX_DATA);
-        parseAndExecute(cmd);
+        EXPECT_EQ(true, parseAndExecute(cmd));
     }
 
     lba = 21;
 
     for (int i = 0; i < 10; i++) {
         cmd = buildCommand("W", lba, VALID_HEX_DATA);
-        parseAndExecute(cmd);
+        EXPECT_EQ(true, parseAndExecute(cmd));
     }
 
     cmd = buildCommand("R", lba);
-    parseAndExecute(cmd);
+    EXPECT_EQ(true, parseAndExecute(cmd));
     EXPECT_TRUE(checkOutputFile(VALID_HEX_DATA));
 
     EXPECT_EQ(5, ssd->getAccessCount());
@@ -421,7 +421,7 @@ TEST_F(BufSSDTest, SameLBAWrite04) {
 
     for (int i = 0; i < lba_size; i++) {
         cmd = buildCommand("W", lba + i, VALID_HEX_DATA);
-        parseAndExecute(cmd);
+        EXPECT_EQ(true, parseAndExecute(cmd));
     }
 
     EXPECT_EQ(5, ssd->getAccessCount());
@@ -433,7 +433,7 @@ TEST_F(BufSSDTest, SameLBAWrite05) {
 
     for (int i = 0; i < lba_size; i++) {
         cmd = buildCommand("W", lba + i, VALID_HEX_DATA);
-        parseAndExecute(cmd);
+        EXPECT_EQ(true, parseAndExecute(cmd));
     }
 
     EXPECT_EQ(5, ssd->getAccessCount());
@@ -446,7 +446,7 @@ TEST_F(BufSSDTest, SameLBAWrite06) {
     //precondition
     for (int i = 0; i < lba_size; i++) {
         cmd = buildCommand("W", lba + i, VALID_HEX_DATA);
-        parseAndExecute(cmd);
+        EXPECT_EQ(true, parseAndExecute(cmd));
     }
 
     EXPECT_EQ(10, ssd->getAccessCount());
@@ -459,18 +459,18 @@ TEST_F(BufSSDTest, EraseTest01) {
     //make precondition
     for (int i = 0; i < 5; i++) {
         cmd = buildCommand("W", lba + i, PRECONDITION_HEX_DATA);
-        parseAndExecute(cmd);
+        EXPECT_EQ(true, parseAndExecute(cmd));
     }
 
     cmd = buildCommand("R", lba);
-    parseAndExecute(cmd);
+    EXPECT_EQ(true, parseAndExecute(cmd));
     EXPECT_TRUE(checkOutputFile(PRECONDITION_HEX_DATA));
   
     cmd = buildCommand("E", lba, std::to_string(lba_size));
-    parseAndExecute(cmd);
+    EXPECT_EQ(true, parseAndExecute(cmd));;
    
     cmd = buildCommand("R", lba);
-    parseAndExecute(cmd);
+    EXPECT_EQ(true, parseAndExecute(cmd));
     EXPECT_TRUE(checkOutputFile(INITIAL_HEX_DATA));
 }
 
@@ -481,21 +481,21 @@ TEST_F(BufSSDTest, EraseTest02) {
     //make precondition
     for (int i = 0; i < lba_size; i++) {
         cmd = buildCommand("W", lba + i, PRECONDITION_HEX_DATA);
-        parseAndExecute(cmd);
+        EXPECT_EQ(true, parseAndExecute(cmd));
     }
 
     for (int i = 0; i < lba_size; i++) {
         cmd = buildCommand("R", lba);
-        parseAndExecute(cmd);
+        EXPECT_EQ(true, parseAndExecute(cmd));;
         EXPECT_TRUE(checkOutputFile(PRECONDITION_HEX_DATA));
     }
 
     cmd = buildCommand("E", lba, std::to_string(lba_size));
-    parseAndExecute(cmd);
+    EXPECT_EQ(true, parseAndExecute(cmd));
 
     for (int i = 0; i < lba_size; i++) {
         cmd = buildCommand("R", lba);
-        parseAndExecute(cmd);
+        EXPECT_EQ(true, parseAndExecute(cmd));
         EXPECT_TRUE(checkOutputFile(INITIAL_HEX_DATA));
     }
 
@@ -510,21 +510,21 @@ TEST_F(BufSSDTest, EraseTest03) {
     //make precondition
     for (int i = 0; i < 10; i++) {
         cmd = buildCommand("W", lba + i, PRECONDITION_HEX_DATA);
-        parseAndExecute(cmd);
+        EXPECT_EQ(true, parseAndExecute(cmd));
     }
 
     for (int i = 0; i < lba_size; i++) {
         cmd = buildCommand("R", lba + i);
-        parseAndExecute(cmd);
+        EXPECT_EQ(true, parseAndExecute(cmd));
         EXPECT_TRUE(checkOutputFile(PRECONDITION_HEX_DATA));
     }
 
     cmd = buildCommand("E", lba, std::to_string(lba_size));
-    parseAndExecute(cmd);
+    EXPECT_EQ(true, parseAndExecute(cmd));
 
     for (int i = 0; i < lba_size; i++) {
         cmd = buildCommand("R", lba + i);
-        parseAndExecute(cmd);
+        EXPECT_EQ(true, parseAndExecute(cmd));
         EXPECT_TRUE(checkOutputFile(INITIAL_HEX_DATA));
     }
 
@@ -538,12 +538,12 @@ TEST_F(BufSSDTest, Erase_Exception) {
     //make precondition
     for (int i = 0; i < 5; i++) {
         cmd = buildCommand("W", lba + i, PRECONDITION_HEX_DATA);
-        parseAndExecute(cmd);
+        EXPECT_EQ(true, parseAndExecute(cmd));
     }
 
     lba = 99;
     cmd = buildCommand("E", lba, std::to_string(lba_size));
-    parseAndExecute(cmd);
+    EXPECT_EQ(false, parseAndExecute(cmd));
 
     EXPECT_TRUE(checkOutputFile("ERROR"));
 }
@@ -554,13 +554,13 @@ TEST_F(BufSSDTest, Flush01) {
 
     for (int i = 0; i < lba_size; i++) {
         cmd = buildCommand("W", lba + i, VALID_HEX_DATA);
-        parseAndExecute(cmd);
+        EXPECT_EQ(true, parseAndExecute(cmd));
     }
 
     EXPECT_EQ(0, ssd->getAccessCount());
 
     cmd = buildCommand("F", 0, VALID_HEX_DATA);
-    parseAndExecute(cmd);
+    EXPECT_EQ(true, parseAndExecute(cmd));
 
     EXPECT_EQ(5, ssd->getAccessCount());
 }
@@ -571,13 +571,13 @@ TEST_F(BufSSDTest, Flush02) {
 
     for (int i = 0; i < lba_size; i++) {
         cmd = buildCommand("W", lba + i, VALID_HEX_DATA);
-        parseAndExecute(cmd);
+        EXPECT_EQ(true, parseAndExecute(cmd));
     }
 
     EXPECT_EQ(5, ssd->getAccessCount());
 
     cmd = buildCommand("F", 0, VALID_HEX_DATA);
-    parseAndExecute(cmd);
+    EXPECT_EQ(true, parseAndExecute(cmd));
 
     EXPECT_EQ(10, ssd->getAccessCount());
 }
@@ -588,20 +588,50 @@ TEST_F(BufSSDTest, Flush03) {
 
     for (int i = 0; i < lba_size; i++) {
         cmd = buildCommand("W", lba + i, VALID_HEX_DATA);
-        parseAndExecute(cmd);;
+        EXPECT_EQ(true, parseAndExecute(cmd));
     }
 
     EXPECT_EQ(0, ssd->getAccessCount());
 
     cmd = buildCommand("E", lba, std::to_string(2));
-    parseAndExecute(cmd);
+    EXPECT_EQ(true, parseAndExecute(cmd));
 
     cmd = buildCommand("F", 0, VALID_HEX_DATA);
-    parseAndExecute(cmd);
+    EXPECT_EQ(true, parseAndExecute(cmd));
 
     EXPECT_EQ(4, ssd->getAccessCount());
 }
 
+TEST_F(BufSSDTest, OutOfRange) {
+    lba = 10;
+    lba_size = 10;
+
+    cmd = buildCommand("E", lba, std::to_string(lba_size));
+    EXPECT_EQ(true, parseAndExecute(cmd));
+
+    lba = 20;
+    lba_size = 15;
+    cmd = buildCommand("E", lba, std::to_string(lba_size));
+    EXPECT_EQ(false, parseAndExecute(cmd));
+
+
+    lba = -1;    
+    cmd = buildCommand("W", lba, VALID_HEX_DATA);
+    EXPECT_EQ(false, parseAndExecute(cmd));
+
+    lba = 100;
+    cmd = buildCommand("W", lba, VALID_HEX_DATA);
+    EXPECT_EQ(false, parseAndExecute(cmd));
+
+    cmd = buildCommand("R", lba, VALID_HEX_DATA);
+    EXPECT_EQ(false, parseAndExecute(cmd));
+
+    cmd = buildCommand("S", lba, VALID_HEX_DATA);
+    EXPECT_EQ(false, parseAndExecute(cmd));
+
+    cmd = buildCommand("F", 0, VALID_HEX_DATA);
+    EXPECT_EQ(true, parseAndExecute(cmd));
+}
 #ifdef NDEBUG
 int main(int argc, char *argv[])
 {
