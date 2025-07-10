@@ -337,7 +337,9 @@ void TestShell::eraseAndWriteAging(void) {
 void TestShell::flushSsdBuffer(void) {
     logger.print("testShell.flushSsdBuffer()", "flush command called");    
     ssd->flushSsdBuffer();
-    testShellStringManager.printSuccessFlushResult();
+    string result = readOutputFile();
+    if (result == "ERROR") testShellStringManager.printErrorFlushResult();
+    else testShellStringManager.printSuccessFlushResult();
 }
 
 bool TestShell::isArgumentSizeValid(const string& cmd, int argsSize) {
