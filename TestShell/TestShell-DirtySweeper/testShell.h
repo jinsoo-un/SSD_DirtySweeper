@@ -57,6 +57,7 @@ private:
     bool isCmdExecuteError(const string result) const;
 
     SSD* ssd;
+    Logger& logger{ Logger::GetInstance()};
     TestShellStringManager testShellStringManager;
 
     bool isExitCmd{ false };

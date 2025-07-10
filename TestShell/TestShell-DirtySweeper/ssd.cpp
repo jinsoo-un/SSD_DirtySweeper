@@ -6,19 +6,19 @@
 using namespace std;
 
 void SsdHelpler::read(int lba) {
-    Logger::GetInstance().print("SsdHelpler.read()", "Reading LBA: " + to_string(lba));
+    logger.print("SsdHelpler.read()", "Reading LBA: " + to_string(lba));
     string commandLine = buildCommandLine("R", lba);
     executeCommandLine(commandLine);
 }
 
 void SsdHelpler::write(int lba, string data) {
-    Logger::GetInstance().print("SsdHelpler.write()", "Writing to LBA: " + to_string(lba) + " with data: " + data);
+    logger.print("SsdHelpler.write()", "Writing to LBA: " + to_string(lba) + " with data: " + data);
     string commandLine = buildCommandLine("W", lba, data);
     executeCommandLine(commandLine);
 }
 
 void SsdHelpler::erase(unsigned int lba, unsigned size) {
-    Logger::GetInstance().print("SsdHelpler.erase()", "Erasing LBA: " + to_string(lba) + " with size: " + to_string(size));
+    logger.print("SsdHelpler.erase()", "Erasing LBA: " + to_string(lba) + " with size: " + to_string(size));
     string commandLine = buildCommandLine("E", lba, to_string(size));
     executeCommandLine(commandLine);
 }

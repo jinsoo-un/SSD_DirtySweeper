@@ -32,7 +32,7 @@ public:
     void erase(unsigned int lba, unsigned size) override;
 
 private:
-
+    Logger& logger{ Logger::GetInstance() };
     string buildCommandLine(string cmd, int lba, string data = "");
     void executeCommandLine(string commandLine);
 };
