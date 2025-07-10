@@ -11,7 +11,7 @@ public:
 
     const string RANDOM_VALUE = "0xAAAABBBB";
     const string ERROR_RESULT = "ERROR";
-    const string READE_ERROR_RESULT = "[Read] ERROR";
+    const string READ_ERROR_RESULT = "[Read] ERROR";
     const int RANDOM_LBA = 11;
     const int LBA_COUNT = 100;
 };
@@ -34,7 +34,7 @@ TEST_F(ReadTestFixture, InvalidAddress) {
         .Times(0);
 
     auto output = testShell.read(100);
-    EXPECT_EQ(READE_ERROR_RESULT, output);
+    EXPECT_EQ(READ_ERROR_RESULT, output);
 }
 
 TEST_F(ReadTestFixture, ReadSuccessTest) {
