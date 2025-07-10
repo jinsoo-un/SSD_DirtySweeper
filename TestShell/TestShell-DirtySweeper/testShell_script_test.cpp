@@ -42,7 +42,7 @@ TEST_F(FullWriteReadTest, FullWriteAndReadCompareShouldPass) {
     Sequence seq;
     for (int lbaIndex = START_LBA; lbaIndex <= END_LBA; ++lbaIndex) {
         string expected = (lbaIndex / 5 % 2 == 0) ? "0xAAAABBBB" : "0xCCCCDDDD";
-        EXPECT_CALL(shell, readOutputFile())
+        EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
             .InSequence(seq)
             .WillOnce(Return(expected));
     }
@@ -75,7 +75,7 @@ TEST_F(FullWriteReadTest, FullWriteAndReadCompareShouldFail) {
             expected = (lbaIndex / 5 % 2 == 0) ? "0xAAAABBBB" : "0xCCCCDDDD";
         }
 
-        EXPECT_CALL(shell, readOutputFile())
+        EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
             .InSequence(seq)
             .WillOnce(Return(expected));
     }
@@ -97,7 +97,7 @@ TEST_F(WriteReadAgingFixture, CallTest) {
     EXPECT_CALL(sut, getRandomHexString())
         .WillRepeatedly(Return(DATA));
 
-    EXPECT_CALL(sut, readOutputFile())
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .WillRepeatedly(Return(DATA));
 
     sut.writeReadAging();
@@ -116,7 +116,7 @@ TEST_F(WriteReadAgingFixture, PassTest) {
     EXPECT_CALL(sut, getRandomHexString())
         .WillRepeatedly(Return(DATA));
 
-    EXPECT_CALL(sut, readOutputFile())
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .WillRepeatedly(Return(DATA));
 
     EXPECT_EQ("PASS", sut.writeReadAging());
@@ -126,7 +126,7 @@ TEST_F(WriteReadAgingFixture, FailTest) {
     EXPECT_CALL(sut, getRandomHexString())
         .WillRepeatedly(Return(DATA));
 
-    EXPECT_CALL(sut, readOutputFile())
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .WillOnce(Return(DATA))
         .WillOnce(Return(DATA))
         .WillOnce(Return(DATA))
@@ -155,7 +155,7 @@ TEST_F(PartialLBAWrite, PassCase) {
         .Times(5 * 30)
         .WillRepeatedly(Return());
 
-    EXPECT_CALL(sut, readOutputFile())
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .Times(5 * 30)
         .WillRepeatedly(Return(DATA));
 
@@ -171,7 +171,7 @@ TEST_F(PartialLBAWrite, FailCase) {
     EXPECT_CALL(ssdMock, read(_))
         .WillRepeatedly(Return());
 
-    EXPECT_CALL(sut, readOutputFile())
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .WillOnce(Return(DATA))
         .WillOnce(Return(DATA))
         .WillOnce(Return(DATA))
@@ -211,7 +211,7 @@ TEST_F(EraseAndWriteAgingTest, PassCase) {
         .WillRepeatedly(Return("0x12345678"));
 
     const int MAX_READ_OUPUT_CNT = MAX_WRITE_CNT + MAX_ERASE_CNT;
-    EXPECT_CALL(sut, readOutputFile())
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .Times(MAX_READ_OUPUT_CNT)
         .WillRepeatedly(Return(SUCCESS_RESULT));
 
@@ -229,7 +229,7 @@ TEST_F(EraseAndWriteAgingTest, Fail) {
     EXPECT_CALL(ssdMock, erase(_, _))
         .WillRepeatedly(Return());
 
-    EXPECT_CALL(sut, readOutputFile())
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .WillOnce(Return(SUCCESS_RESULT))
         .WillOnce(Return(SUCCESS_RESULT))
         .WillOnce(Return(SUCCESS_RESULT))

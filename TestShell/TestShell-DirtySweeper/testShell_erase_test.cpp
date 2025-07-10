@@ -27,7 +27,7 @@ TEST_F(TestShellEraseTest, EraseFail) {
         .Times(1)
         .WillRepeatedly(Return());
 
-    EXPECT_CALL(sut, readOutputFile())
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .Times(1)
         .WillOnce(Return("ERROR"));
 
@@ -42,7 +42,7 @@ TEST_F(TestShellEraseTest, EraseForShort) {
         .Times(1)
         .WillRepeatedly(Return());
 
-    EXPECT_CALL(sut, readOutputFile())
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .Times(1)
         .WillOnce(Return(""));
 
@@ -57,7 +57,7 @@ TEST_F(TestShellEraseTest, EraseForHalf) {
         .Times(5)
         .WillRepeatedly(Return());
 
-    EXPECT_CALL(sut, readOutputFile())
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .Times(5)
         .WillRepeatedly(Return(""));
 
@@ -72,7 +72,7 @@ TEST_F(TestShellEraseTest, EraseForMax) {
         .Times(10)
         .WillRepeatedly(Return());
 
-    EXPECT_CALL(sut, readOutputFile())
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .Times(10)
         .WillRepeatedly(Return(""));
 
@@ -86,7 +86,7 @@ TEST_F(TestShellEraseTest, EraseStartFromMiddle) {
         .Times(4)
         .WillRepeatedly(Return());
 
-    EXPECT_CALL(sut, readOutputFile())
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .Times(4)
         .WillRepeatedly(Return(""));
 
@@ -100,7 +100,7 @@ TEST_F(TestShellEraseTest, EraseForLastSingle) {
         .Times(1)
         .WillRepeatedly(Return());
 
-    EXPECT_CALL(sut, readOutputFile())
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .Times(1)
         .WillOnce(Return(""));
 
@@ -115,7 +115,7 @@ TEST_F(TestShellEraseTest, EraseForFirstSingle) {
         .Times(1)
         .WillRepeatedly(Return());
 
-    EXPECT_CALL(sut, readOutputFile())
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .Times(1)
         .WillOnce(Return(""));
 
@@ -154,7 +154,7 @@ TEST_F(TestShellEraseTest, EraseRangeFail) {
         .Times(1)
         .WillRepeatedly(Return());
 
-    EXPECT_CALL(sut, readOutputFile())
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .Times(1)
         .WillOnce(Return("ERROR"));
 
@@ -193,7 +193,7 @@ TEST_F(TestShellEraseTest, EraseRangeMax) {
         .Times(10)
         .WillRepeatedly(Return());
 
-    EXPECT_CALL(sut, readOutputFile())
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .Times(10)
         .WillRepeatedly(Return(""));
 
@@ -208,7 +208,7 @@ TEST_F(TestShellEraseTest, EraseRangeHalfLowerRange) {
         .Times(5)
         .WillRepeatedly(Return());
 
-    EXPECT_CALL(sut, readOutputFile())
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .Times(5)
         .WillRepeatedly(Return(""));
 
@@ -223,7 +223,7 @@ TEST_F(TestShellEraseTest, EraseRangeHalfUpperRange) {
         .Times(5)
         .WillRepeatedly(Return());
 
-    EXPECT_CALL(sut, readOutputFile())
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .Times(5)
         .WillRepeatedly(Return(""));
 
@@ -238,7 +238,7 @@ TEST_F(TestShellEraseTest, EraseRangeSame) {
         .Times(1)
         .WillRepeatedly(Return());
 
-    EXPECT_CALL(sut, readOutputFile())
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .Times(1)
         .WillOnce(Return(""));
 
