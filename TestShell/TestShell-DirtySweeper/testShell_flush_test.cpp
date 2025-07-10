@@ -37,3 +37,17 @@ TEST_F(FlushTestFixture, FlushFail) {
     cout << output;
     EXPECT_THAT(output, ::testing::HasSubstr("[Flush] ERROR"));
 }
+
+TEST_F(FlushTestFixture, FlushCallTest) {
+    EXPECT_CALL(ssdMock, flushSsdBuffer())
+        .Times(1);
+
+    EXPECT_CALL(testShell, readOutputFile())
+        .WillRepeatedly(Return(""));
+
+    testing::internal::CaptureStdout();
+    testShell.processInput("flush");
+    string output = testing::internal::GetCapturedStdout();
+    cout << output;
+    EXPECT_THAT(output, ::testing::HasSubstr("[Flush] Done"));
+}
