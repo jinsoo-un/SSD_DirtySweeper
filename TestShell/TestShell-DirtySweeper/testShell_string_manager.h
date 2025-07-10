@@ -21,5 +21,4 @@ public:
 
 	string generateRandomHexString();
 	string getWriteDataInFullWriteAndReadCompareScript(int lba);
-	string getNewLine();
 };

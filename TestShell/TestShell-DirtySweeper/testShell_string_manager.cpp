@@ -90,7 +90,4 @@ string TestShellStringManager::getWriteDataInFullWriteAndReadCompareScript(int l
     return (lba / 5 % 2 == 0) ? evenData : oddData;
 }
 
-string TestShellStringManager::getNewLine() {
-    return "\n";
-}
 

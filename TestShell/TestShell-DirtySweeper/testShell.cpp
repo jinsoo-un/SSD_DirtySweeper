@@ -187,7 +187,7 @@ string TestShell::fullWriteAndReadCompare() {
 
         if (readData != writeData) {
             return testShellStringManager.getWriteReadMismatch(lba, writeData, readData)
-                + testShellStringManager.getNewLine()
+                + "\n"
                 + testShellStringManager.getScriptFailResult();
         }
     }
