@@ -14,7 +14,6 @@ using namespace std;
 using std::string;
 
 const int VALID_DATA_LENGTH = 10;
-const int MIN_ADDRESS = 0;
 
 // SSD Interface Class
 class SSD {

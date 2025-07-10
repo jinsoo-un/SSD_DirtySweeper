@@ -18,6 +18,7 @@ namespace FileNames {
 }
 
 const int MAX_ADDRESS = 100;
+const int MIN_ADDRESS = 0;
 
 // Singleton FileControl Class
 // ex : FileControl& file = FileControl::get_instance();
