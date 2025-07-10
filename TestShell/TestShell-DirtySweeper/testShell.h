@@ -42,6 +42,7 @@ public:
     string eraseWithSize(unsigned int lba, unsigned int size);
     string eraseWithRange(unsigned int startLba, unsigned int endLba);
     string eraseAndWriteAging(void);
+    void flushSsdBuffer(void);
 
     static const int WRITE_READ_ITERATION = 200;
 private:
@@ -56,7 +57,7 @@ private:
     bool isCmdExecuteError(const string result) const;
 
     SSD* ssd;
-    Logger logger;
+    Logger& logger{ Logger::GetInstance()};
     TestShellStringManager testShellStringManager;
 
     bool isExitCmd{ false };

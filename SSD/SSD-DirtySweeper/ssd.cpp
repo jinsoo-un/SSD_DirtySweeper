@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -6,173 +5,15 @@
 #include <algorithm>
 #include <vector>
 #include <stdexcept>
+#include "command.cpp"
+#include "file.h"
+#include "buffer.cpp"
+
 using namespace std;
 
 using std::string;
 
 const int VALID_DATA_LENGTH = 10;
-const int MIN_ADDRESS = 0;
-const int MAX_ADDRESS = 100;
-
-namespace FileNames {
-    const std::string DATA_FILE = "ssd_nand.txt";
-    const std::string OUTPUT_FILE = "ssd_output.txt";
-}
-
-class FileControl {
-public:
-	void updateOutput(const string& msg) {
-		ofstream fout(FileNames::OUTPUT_FILE);
-		fout << msg;
-		fout.close();
-	}
-
-	bool readData(vector<string>& data) {
-		ifstream file(FileNames::DATA_FILE);
-		if (!file.is_open()) {
-			return false;
-		}
-
-		data.clear();
-		data.resize(MAX_ADDRESS, "0x00000000"); // 기본값 0으로 초기화
-
-		string line;
-		while (getline(file, line)) {
-			istringstream iss(line);
-			int fileAddress;
-			string hexData;
-			if (iss >> fileAddress >> hexData) {
-				string value = hexData;
-				data[fileAddress] = value;
-			}
-		}
-		file.close();
-	}
-
-	bool writeData(const vector<string>& data)
-	{
-		ofstream file(FileNames::DATA_FILE);
-		if (!file.is_open()) {
-			cout << "Error opening file for writing." << endl;
-			return false;
-		}
-		for (int i = 0; i < data.size(); ++i) {
-			file << i << "\t" << data[i] << endl;
-		}
-		file.close();
-
-		return true;
-	}
-
-};
-
-class SSDCommand {
-public:
-	virtual bool run(int addr, string val, int size) = 0;
-
-protected:
-	bool isAddressOutOfRange(int address) {
-		return address < MIN_ADDRESS || address >= MAX_ADDRESS;
-	}
-
-	vector<string> ssdData;
-	FileControl file;
-};
-
-class ReadCommand : public SSDCommand {
-public:
-	bool run(int addr, string val = "0x00000000", int size = 0) override {
-		return read(addr, val);
-	}
-private:
-	bool read(int address, string value) {
-		if (!file.readData(ssdData)) { file.updateOutput("ERROR");  return false; }
-
-		file.updateOutput(ssdData[address]);
-		return true;
-	}
-};
-
-class WriteCommand : public SSDCommand {
-public:
-	bool run(int addr, string val, int size = 0) override {
-		return writeData(addr, val);
-	}
-private:
-	bool writeData(int address, string hexData) {
-		if (!isValidWriteData(hexData)) { file.updateOutput("ERROR");  return false; }
-		if (!file.readData(ssdData)) { file.updateOutput("ERROR");  return false; }
-
-		ssdData[address] = hexData;
-		if (!file.writeData(ssdData)) { file.updateOutput("ERROR");  return false; };
-
-		file.updateOutput("");
-
-		return true;
-	}
-
-	bool isValidWriteData(const std::string& str) {
-		if (str.substr(0, 2) != "0x") return false;
-
-		int length;
-		for (length = 2; length < str.size(); length++) {
-			char ch = static_cast<unsigned char>(str[length]);
-
-			if (!(isNumber(ch) || isHexCharacter(ch))) { return false; }
-
-		}
-
-		if (length != VALID_DATA_LENGTH) { return false; }
-
-		return true;
-	}
-
-	bool isHexCharacter(char ch)
-	{
-		return ((ch >= 'A') && (ch <= 'F'));
-	}
-
-	bool isNumber(char ch)
-	{
-		return ((ch >= '0') && (ch <= '9'));
-	}
-};
-
-class EraseCommand : public SSDCommand {
-public:
-	bool run(int addr, string val, int size) override {
-		return erase(addr, val, size);
-	}
-private:
-	bool erase(int address, string val, int size) {
-		if (address + size > MAX_ADDRESS) {
-			file.updateOutput("ERROR");
-			return false;
-		}
-		if (size < 1 || size > 10) {
-			file.updateOutput("ERROR");
-			return false;
-		}
-
-		if (!file.readData(ssdData)) { 
-			file.updateOutput("ERROR");  
-			return false; 
-		}
-
-		for (int i = 0; i < size; i++)
-			ssdData[address + i] = "0x00000000";
-		
-		if (!file.writeData(ssdData)) {
-			file.updateOutput("ERROR");  
-			return false; 
-		}
-
-		file.updateOutput("");
-
-		return true;
-	}
-};
-
 
 // SSD Interface Class
 class SSD {
@@ -187,7 +28,7 @@ public:
     virtual int getAccessCount() = 0;
     virtual void bufferClear() = 0;
 protected:
-	FileControl file;
+	FileControl& file = FileControl::get_instance();
 };
 
 class RealSSD : public SSD {
@@ -275,10 +116,19 @@ private:
 		return address < MIN_ADDRESS || address >= MAX_ADDRESS;
 	}
 	
+	bool isEraseOutOfRange(int address, int size) {
+		if (address + size > MAX_ADDRESS)
+			return true;
+		if (size < 1 || size > 10)
+			return true;
+		return false;
+	}
+
 	bool isValidCommand(string command) {
         std::istringstream iss(command);
         string arg;
         int cnt = 0;
+		int tmpAddr = 0;
 		bool isErase = false;
 
         while (iss >> arg) {
@@ -289,10 +139,16 @@ private:
 	        }
 	        else if (cnt == 2) {
 		        if (isAddressOutOfRange(stoi(arg))) return false;
+				if (isErase) tmpAddr = stoi(arg);
 	        }
 	        else if (cnt == 3) {
-				if (isErase) continue;
-		        if (!isHexWithPrefix(arg)) return false;
+				if (isErase) {
+					if (isEraseOutOfRange(tmpAddr, stoi(arg)))
+						return false;
+					else
+						continue;
+				}
+		        if (!isValidWriteData(arg)) return false;
 	        }
 	        else
 		        return false;
@@ -302,19 +158,33 @@ private:
 	}
 
 	bool isValidOp(string arg) {
-        if (arg != "R" && arg != "W" && arg != "E")
+        if (arg != "R" && arg != "W" && arg != "E" && arg != "F")
 	        return false;
         return true;
 	}
 
-	bool isHexWithPrefix(const std::string& str) {
-        if (str.size() < 3 || str.substr(0, 2) != "0x")
-	        return false;
-        for (size_t i = 2; i < str.size(); ++i) {
-	        if (!std::isxdigit(static_cast<unsigned char>(str[i])))
-		        return false;
-        }
-        return true;
+	bool isValidWriteData(const std::string& str) {
+		if (str.substr(0, 2) != "0x") return false;
+
+		int length;
+		for (length = 2; length < str.size(); length++) {
+			char ch = static_cast<unsigned char>(str[length]);
+
+			if (!(isNumber(ch) || isHexCharacter(ch))) { return false; }
+
+		}
+
+		if (length != VALID_DATA_LENGTH) { return false; }
+
+		return true;
+	}
+
+	bool isHexCharacter(char ch) {
+		return ((ch >= 'A') && (ch <= 'F'));
+	}
+
+	bool isNumber(char ch) {
+		return ((ch >= '0') && (ch <= '9'));
 	}
 
 	void setCommand(SSDCommand* cmd) {
@@ -331,8 +201,6 @@ private:
 	SSDCommand* command = nullptr;
 };
 
-#include "buffer.cpp"
-
 // SSD Proxy Class
 class BufferedSSD : public SSD {
 public:
@@ -344,7 +212,16 @@ public:
 		string operation = ssd->getOp();
 		if (operation == "R") return read();
 		if (operation == "W") return write();
-		if (operation == "E") return erase();	
+		if (operation == "E") return erase();
+        if (operation == "F") {
+            if (flushBuffer() == false) {
+                file.updateOutput("ERROR");
+            }
+            else {
+                file.updateOutput("");
+            }
+            return true;
+        }
 	}
 	int getArgCount() {
 		return ssd->getArgCount();
@@ -412,8 +289,9 @@ private:
         ssdParams.value = ssd->getValue();
 
         if (buffer.isFull()) {
-            flushBuffer();
-            buffer.clear();
+            if (flushBuffer() == false) {
+                file.updateOutput("ERROR");
+            }
         }
 
         buffer.writeBuffer(ssdParams);
@@ -426,37 +304,120 @@ private:
             if (bufferCommand.op == "W") {
                 if (bufferCommand.addr == ssd->getAddr()) {
                      buffer.eraseBuffer(i);
-                    return true;
                 }
             }
 
             if (bufferCommand.op == "E") {
                 if ((bufferCommand.size == 1) && (bufferCommand.addr == ssd->getAddr())) {
                     buffer.eraseBuffer(i);
-                    return true;
                 }
             }
         }
   
-        return false;        
+        return true;        
 	}
 
 	bool erase() {
 		// check if buffer is full, flush to RealSSD
 		if (buffer.isFull()) {
-			flushBuffer();
 			struct params ssdParams;
 			ssdParams.op = ssd->getOp();
 			ssdParams.addr = ssd->getAddr();
 			ssdParams.size = ssd->getSize();
+
+            if (flushBuffer() == false) {
+                file.updateOutput("ERROR");
+            }
+
 			// write the command to buffer
 			buffer.writeBuffer(ssdParams);
 			file.updateOutput("");
+			return true;
 		}
 
-		// check if command can be merged with buffer
-		// if buffer has room, write to buffer
-		return ssd->exec(); // Erase RealSSD
+		int startAddr = ssd->getAddr();
+		int endAddr = startAddr + ssd->getSize() - 1;
+
+		// check ascending writes
+		int index = buffer.getFilledCount();
+		for (int i = index; i > 0; i--) {
+			struct params bufferCommand;
+			buffer.readAndParseBuffer(i, bufferCommand);
+
+			// check if writes are in erase range
+			if (bufferCommand.op == "W") {
+				if (bufferCommand.addr >= startAddr && bufferCommand.addr <= endAddr) {
+					buffer.eraseBuffer(i);
+				}
+			}
+		}
+
+		index = buffer.getFilledCount();
+		vector<int> markedEraseIndex;
+
+		for (int i = 1; i <= index; i++) {
+			struct params bufferCommand;
+			buffer.readAndParseBuffer(i, bufferCommand);
+
+			// write after erase, just mark that erase if matters
+			if (bufferCommand.op == "E") {
+				for (int j = i + 1; j <= index; j++) {
+					struct params innerBufferCommand;
+					buffer.readAndParseBuffer(j, innerBufferCommand);
+					if (innerBufferCommand.op == "W" &&
+						innerBufferCommand.addr >= bufferCommand.addr &&
+						innerBufferCommand.addr <= bufferCommand.addr + bufferCommand.size - 1) {
+						markedEraseIndex.push_back(i);
+					}
+				}
+			}
+		}
+
+		// check ascending erases, merge if it can
+		index = buffer.getFilledCount();
+		for (int i = index; i > 0; i--) {
+			struct params bufferCommand;
+			buffer.readAndParseBuffer(i, bufferCommand);
+			
+			// check if ascending erase can be merged
+			if (bufferCommand.op == "E") {
+				int bufStartAddr = bufferCommand.addr;
+				int bufEndAddr = bufferCommand.addr + bufferCommand.size - 1;
+				std::pair<int, int> merged = checkOverlap(startAddr, endAddr, bufStartAddr, bufEndAddr);
+				
+				// if no overlapped section, do nothing
+				if (merged.first == -1)
+					continue;
+				// if overlapped section's size exceed 10, do nothing
+				if (merged.second - merged.first >= 10)
+					continue;
+				// if target erase command is marked before, do nothing
+				if (find(markedEraseIndex.begin(), markedEraseIndex.end(), i) != markedEraseIndex.end())
+					continue;
+
+				buffer.eraseBuffer(i);
+				startAddr = merged.first;
+				endAddr = merged.second;
+			}
+		}
+
+		struct params ssdParams;
+		ssdParams.op = ssd->getOp();
+		ssdParams.addr = startAddr;
+		ssdParams.size = endAddr - startAddr + 1;
+
+		// write the command to buffer
+		buffer.writeBuffer(ssdParams);
+		file.updateOutput("");
+
+		return true;
+	}
+
+	std::pair<int, int> checkOverlap(int a, int b, int c, int d) {
+		if (b >= c && a <= d) {
+			return { std::min(a, c), std::max(b, d) };
+		}
+		return { -1, -1 };
 	}
 
 	string buildCommand(struct params& commandParam) {
@@ -467,17 +428,24 @@ private:
 		return cmdLine;
 	}
 
-	void flushBuffer() {
-		// Flush the buffer to RealSSD
-		for (int i = 1; i <= buffer.getFilledCount(); i++) {
-			struct params commandParam;
-			if (buffer.readAndParseBuffer(i, commandParam)) {
-				string cmdLine = buildCommand(commandParam);
-				ssd->parseCommand(cmdLine);
-				ssd->exec();
-			}
-		}
-		//buffer.clear();
+	bool flushBuffer() {
+        struct params commandParam;
+        bool bIsPass = false;
+        const int buffer_head = 1;
+        while (buffer.getFilledCount() != 0) {
+            bIsPass = buffer.readAndParseBuffer(buffer_head, commandParam);
+            if (bIsPass == false) return false;
+
+            string cmdLine = buildCommand(commandParam);
+            ssd->parseCommand(cmdLine);
+
+            bIsPass = ssd->exec();
+            if (bIsPass == false) return false;      
+
+            buffer.eraseBuffer(buffer_head);    
+        }
+
+        return true;
 	}
 
 	RealSSD* ssd; // RealSSD instance

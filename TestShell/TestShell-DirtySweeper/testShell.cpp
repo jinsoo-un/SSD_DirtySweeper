@@ -86,6 +86,11 @@ string TestShell::executeCommand(const string& cmd, const vector<string>& args) 
         return eraseAndWriteAging();
     }
 
+    if (cmd == "flush") {
+        this->flushSsdBuffer();
+        return;
+    }
+
     return INVALID_COMMAND;
 }
 
@@ -313,6 +318,14 @@ string TestShell::eraseAndWriteAging(void) {
     return testShellStringManager.getScriptPassResult();
 }
 
+void TestShell::flushSsdBuffer(void) {
+    logger.print("testShell.flushSsdBuffer()", "flush command called");    
+    ssd->flushSsdBuffer();
+    string result = readOutputFile();
+    if (result == "ERROR") testShellStringManager.printErrorFlushResult();
+    else testShellStringManager.printSuccessFlushResult();
+}
+
 bool TestShell::isArgumentSizeValid(const string& cmd, int argsSize) {
     if (cmd == "read") {
         if (argsSize != 1) return false;
@@ -383,7 +396,8 @@ bool TestShell::isValidCommand(const string& cmd) const {
         "2_","2_PartialLBAWrite",
         "3_", "3_WriteReadAging",
         "erase","erase_range",
-        "4_", "4_EraseAndWriteAging"
+        "4_", "4_EraseAndWriteAging",
+        "flush"
     };
     return valid.count(cmd) > 0;
 }
