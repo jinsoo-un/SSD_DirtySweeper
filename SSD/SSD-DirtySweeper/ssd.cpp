@@ -11,9 +11,8 @@ using std::string;
 // SSD Interface Class
 class SSD {
 public:
-    virtual bool parseCommand(string command) = 0;
-    virtual bool exec() = 0;
-    virtual commandParams getCommandParams() = 0;
+    virtual bool exec(string command) = 0;
+    virtual bool doCommand(commandParams cmd) = 0;
     virtual int getAccessCount() = 0;
     virtual void bufferClear() = 0;
 protected:
@@ -22,20 +21,20 @@ protected:
 
 class RealSSD : public SSD {
 public:
-    bool parseCommand(string command) {
-        return parser.parseCommand(command, param);;
+    bool exec(string command) {
+        commandParams currentCmd;
+        if (parser.parseCommand(command, currentCmd) == false) return false;
+        
+        return doCommand(currentCmd);
     }
-    bool exec() {
-        command = factory.getCommand(param.op);
+
+    bool doCommand(commandParams cmd) {
+        command = factory.getCommand(cmd.op);
         if (command == nullptr) return false;
 
-        UpdateAccessCount(param.op);
+        UpdateAccessCount(cmd);
 
-        return command->run(param.addr, param.value, param.size);
-    }
-    
-    commandParams getCommandParams() {
-        return param;
+        return command->run(cmd.addr, cmd.value, cmd.size);
     }
 
     int getAccessCount() {
@@ -47,13 +46,11 @@ public:
     }
 
 private:
-    void UpdateAccessCount(const string& cmd)
+    void UpdateAccessCount(const commandParams& cmd)
     {
-        if (cmd == "W") accessCount++;
-        if (cmd == "E") accessCount += param.size;
+        if (cmd.op == "W") accessCount++;
+        if (cmd.op == "E") accessCount += cmd.size;
     }
-
-    commandParams param;
 
     int accessCount;
 
@@ -66,15 +63,18 @@ private:
 class BufferedSSD : public SSD {
 public:
     BufferedSSD() : ssd{ new RealSSD() } {}
-    bool parseCommand(string command) {
-        return ssd->parseCommand(command);
+    bool exec(string command) {
+        commandParams currentCmd;
+        if (parser.parseCommand(command, currentCmd) == false) return false;
+
+        return doCommand(currentCmd);
     }
-    bool exec() {
-        commandParams currentCmd = ssd->getCommandParams();
-        string operation = currentCmd.op;
-        if (operation == "R") return read();
-        if (operation == "W") return write();
-        if (operation == "E") return erase();
+ 
+    bool doCommand(commandParams cmd) {
+        string operation = cmd.op;
+        if (operation == "R") return read(cmd);
+        if (operation == "W") return write(cmd);
+        if (operation == "E") return erase(cmd);
         if (operation == "F") {
             if (flushBuffer() == false) {
                 file.updateOutput("ERROR");
@@ -84,10 +84,6 @@ public:
             }
             return true;
         }
-    }
-
-    commandParams getCommandParams() {
-        return ssd->getCommandParams();
     }
 
     int getAccessCount() {
@@ -100,39 +96,37 @@ public:
     }
 private:
     // Buffered SSD methods
-    bool read() {
+    bool read(commandParams cmd) {
         if (buffer.isEmpty())
-            return ssd->exec();
+            return ssd->doCommand(cmd);
 
-        if (checkAndReadFromBuffer())
+        if (checkAndReadFromBuffer(cmd))
                 return true;
 
-        return ssd->exec();
+        return ssd->doCommand(cmd);
     }
 
-    bool write() {
-        commandParams currentCmd = ssd->getCommandParams();
+    bool write(const commandParams& cmd) {
         if (buffer.isFull()) {
             if (flushBuffer() == false) {
                 file.updateOutput("ERROR");
             }
         }
         
-        buffer.writeBuffer(currentCmd);
-        CheckBufferCmdErasable();
+        buffer.writeBuffer(cmd);
+        CheckBufferCmdErasable(cmd);
   
         return true;        
     }
 
-    bool erase() {
+    bool erase(const commandParams& cmd) {
         if (buffer.isFull()) {
-            flushBufferandAddCurrentCmd();
+            flushBufferandAddCurrentCmd(cmd);
             return true;
         }
-
-        commandParams currentCmd = ssd->getCommandParams();
-        int startAddr = currentCmd.addr;
-        int endAddr = startAddr + currentCmd.size - 1;
+   
+        int startAddr = cmd.addr;
+        int endAddr = startAddr + cmd.size - 1;
         vector<int> markedEraseIndex;
 
         checkAndMergeWrites(startAddr, endAddr);
@@ -144,20 +138,19 @@ private:
         return true;
     }
 
-    bool checkAndReadFromBuffer() {
-        struct commandParams currentCmd = ssd->getCommandParams();
+    bool checkAndReadFromBuffer(const commandParams& cmd) {
         struct commandParams bufferCommand;
         for (int i = buffer.getFilledCount(); i > 0; i--) {
             buffer.readAndParseBuffer(i, bufferCommand);
             if (bufferCommand.op == "W") {
-                if (bufferCommand.addr == currentCmd.addr) {
+                if (bufferCommand.addr == cmd.addr) {
                     file.updateOutput(bufferCommand.value);
                     return true;
                 }
             }
             if (bufferCommand.op == "E") {
                 for (int checkAddr = bufferCommand.addr; checkAddr < bufferCommand.addr + bufferCommand.size; checkAddr++) {
-                    if (checkAddr == currentCmd.addr) {
+                    if (checkAddr == cmd.addr) {
                         file.updateOutput("0x00000000");
                         return true;
                     }
@@ -167,19 +160,18 @@ private:
         return false;
     }
 
-    void CheckBufferCmdErasable() {
-        struct commandParams currentCmd = ssd->getCommandParams();
+    void CheckBufferCmdErasable(const commandParams& cmd) {
         for (int i = buffer.getFilledCount() - 1; i > 0; i--) {
             struct commandParams bufferCommand;
             buffer.readAndParseBuffer(i, bufferCommand);
             if (bufferCommand.op == "W") {
-                if (bufferCommand.addr == currentCmd.addr) {
+                if (bufferCommand.addr == cmd.addr) {
                     buffer.eraseBuffer(i);
                 }
             }
 
             if (bufferCommand.op == "E") {
-                if ((bufferCommand.size == 1) && (bufferCommand.addr == currentCmd.addr)) {
+                if ((bufferCommand.size == 1) && (bufferCommand.addr == cmd.addr)) {
                     buffer.eraseBuffer(i);
                 }
             }
@@ -187,9 +179,8 @@ private:
     }
 
     void addEraseCmdToBuffer(int startAddr, int endAddr) {
-        struct commandParams currentCmd = ssd->getCommandParams();
         struct commandParams ssdParams;
-        ssdParams.op = currentCmd.op;
+        ssdParams.op = "E";
         ssdParams.addr = startAddr;
         ssdParams.size = endAddr - startAddr + 1;
 
@@ -254,14 +245,12 @@ private:
         }
     }
 
-    void flushBufferandAddCurrentCmd() {
-        struct commandParams currentCmd = ssd->getCommandParams();
-
+    void flushBufferandAddCurrentCmd(const commandParams& cmd) {
         if (flushBuffer() == false) {
             file.updateOutput("ERROR");
         }
 
-        buffer.writeBuffer(currentCmd);
+        buffer.writeBuffer(cmd);
         file.updateOutput("");
     }
 
@@ -289,9 +278,8 @@ private:
             if (bIsPass == false) return false;
 
             string cmdLine = buildCommand(commandParam);
-            ssd->parseCommand(cmdLine);
 
-            bIsPass = ssd->exec();
+            bIsPass = ssd->doCommand(commandParam);
             if (bIsPass == false) return false;      
 
             buffer.eraseBuffer(buffer_head);    
@@ -300,8 +288,8 @@ private:
         return true;
     }
 
+    CommandParser parser;
     RealSSD* ssd; // RealSSD instance
     Buffer buffer; // Buffer instance to manage buffered operations
-    
 };
 
