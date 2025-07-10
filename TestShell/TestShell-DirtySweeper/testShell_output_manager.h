@@ -1,7 +1,7 @@
 #pragma once
 using namespace std;
 
-class TestShellStringManager {
+class TestShellOutputManager {
 public:
 	string getErrorReadResult();
 	string getSuccessReadResult(string result, int lba);
@@ -18,7 +18,4 @@ public:
 	string getEraseRangePassResult();
 	string getSuccessFlushResult();
 	string getErrorFlushResult();
-
-	string generateRandomHexString();
-	string getWriteDataInFullWriteAndReadCompareScript(int lba);
 };

@@ -16,7 +16,7 @@
 #include <algorithm>
 #include <io.h>
 #include "gmock/gmock.h"
-#include "testShell_string_manager.h"
+#include "testShell_output_manager.h"
 #include "logger.h"
 #include "ssd.h"
 #include "testShell.h"
@@ -179,7 +179,7 @@ string TestShell::fullWriteAndReadCompare() {
     logger.print("testShell.fullWriteAndReadCompare()", "full write and read compare command called");
 
     for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; ++lba) {
-        string writeData = testShellStringManager.getWriteDataInFullWriteAndReadCompareScript(lba);
+        string writeData = getWriteDataInFullWriteAndReadCompareScript(lba);
 
         ssd->write(lba, writeData);
         ssd->read(lba);
@@ -218,7 +218,7 @@ string TestShell::writeReadAging() {
 }
 
 string TestShell::getRandomHexString() {
-    return testShellStringManager.generateRandomHexString();
+    return generateRandomHexString();
 }
 
 string TestShell::partialLBAWrite() {
@@ -300,9 +300,9 @@ string TestShell::eraseAndWriteAging(void) {
     for (int loopCnt = 0; loopCnt < maxAgingCnt; loopCnt++) {
         for (int lba = 2; lba < LBA_END_ADDRESS; lba += eraseUnitSize) {
             vector<string> result;
-            ssd->write(lba, testShellStringManager.generateRandomHexString());
+            ssd->write(lba, getRandomHexString());
             result.push_back(readOutputFile());
-            ssd->write(lba, testShellStringManager.generateRandomHexString());
+            ssd->write(lba, getRandomHexString());
             result.push_back(readOutputFile());
             ssd->erase(lba, eraseUnitSize);
             result.push_back(readOutputFile());
@@ -449,3 +449,30 @@ bool TestShell::isValidEraseWithSizeArgument(unsigned int lba, unsigned int size
 bool TestShell::isCmdExecuteError(const string result) const {
     return result == "ERROR";
 }
+
+string TestShell::generateRandomHexString() {
+    static const char* hexDigits = "0123456789ABCDEF";
+
+    static bool seeded = false;
+    if (!seeded) {
+        srand(static_cast<unsigned int>(time(nullptr)));
+        seeded = true;
+    }
+
+    unsigned int value = (static_cast<unsigned int>(rand()) << 16) | rand();
+
+    string result = "0x";
+    for (int i = 7; i >= 0; --i) {
+        int digit = (value >> (i * 4)) & 0xF;
+        result += hexDigits[digit];
+    }
+
+    return result;
+}
+
+string TestShell::getWriteDataInFullWriteAndReadCompareScript(int lba) {
+    string evenData = "0xAAAABBBB";
+    string oddData = "0xCCCCDDDD";
+    return (lba / 5 % 2 == 0) ? evenData : oddData;
+}
+

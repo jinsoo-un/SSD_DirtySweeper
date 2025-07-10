@@ -17,7 +17,7 @@
 #include <algorithm>
 #include <io.h>
 #include "gmock/gmock.h"
-#include "testShell_string_manager.h"
+#include "testShell_output_manager.h"
 #include "logger.h"
 #include "ssd.h"
 
@@ -55,10 +55,12 @@ private:
     bool isValidLbaRange(unsigned int startLba, unsigned int endLba);
     bool isValidEraseWithSizeArgument(unsigned int lba, unsigned int size);
     bool isCmdExecuteError(const string result) const;
+    string getWriteDataInFullWriteAndReadCompareScript(int lba);
+    string generateRandomHexString();
 
     SSD* ssd;
     Logger& logger{ Logger::GetInstance()};
-    TestShellStringManager testShellStringManager;
+    TestShellOutputManager testShellStringManager;
 
     bool isExitCmd{ false };
     const int LBA_START_ADDRESS = 0;

@@ -207,6 +207,9 @@ TEST_F(EraseAndWriteAgingTest, PassCase) {
         .Times(MAX_ERASE_CNT)
         .WillRepeatedly(Return());
 
+    EXPECT_CALL(sut, getRandomHexString())
+        .WillRepeatedly(Return("0x12345678"));
+
     const int MAX_READ_OUPUT_CNT = MAX_WRITE_CNT + MAX_ERASE_CNT;
     EXPECT_CALL(sut, readOutputFile())
         .Times(MAX_READ_OUPUT_CNT)
@@ -214,7 +217,12 @@ TEST_F(EraseAndWriteAgingTest, PassCase) {
 
     EXPECT_EQ("PASS", sut.eraseAndWriteAging());
 }
+
 TEST_F(EraseAndWriteAgingTest, Fail) {
+
+    EXPECT_CALL(sut, getRandomHexString())
+        .WillRepeatedly(Return("0x12345678"));
+
     EXPECT_CALL(ssdMock, write(_, _))
         .WillRepeatedly(Return());
 
