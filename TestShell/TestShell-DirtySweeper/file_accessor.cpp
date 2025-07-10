@@ -1,11 +1,11 @@
-#include "file_accessor.h"
+ï»¿#include "file_accessor.h"
 IFileAccessor* FileAccessor::GetInstance() {
     static FileAccessor instance;
     return static_cast<IFileAccessor*>(&instance);
 }
 
 string FileAccessor::readOutputFile() {
-    // shell.exeÀÇ Àı´ë °æ·Î ±¸ÇÏ±â
+    // shell.exeì˜ ì ˆëŒ€ ê²½ë¡œ êµ¬í•˜ê¸°
     char modulePath[MAX_PATH];
     GetModuleFileNameA(NULL, modulePath, MAX_PATH);
 
@@ -13,7 +13,7 @@ string FileAccessor::readOutputFile() {
     size_t lastSlash = shellFullPath.find_last_of("\\/");
     string shellDir = (lastSlash != string::npos) ? shellFullPath.substr(0, lastSlash) : ".";
 
-    // ssd_output.txtÀÇ »ó´ë °æ·Î ¡æ Àı´ë °æ·Î º¯È¯
+    // ssd_output.txtì˜ ìƒëŒ€ ê²½ë¡œ â†’ ì ˆëŒ€ ê²½ë¡œ ë³€í™˜
     string relativePath = shellDir + "\\..\\..\\..\\SSD\\x64\\Release\\ssd_output.txt";
 
     char absPath[MAX_PATH];
@@ -42,11 +42,11 @@ void FileAccessor::executeSsdCommandLine(string commandLine) {
     size_t lastSlash = shellFullPath.find_last_of("\\/");
     string shellDir = (lastSlash != string::npos) ? shellFullPath.substr(0, lastSlash) : ".";
 
-    // ssd.exe °æ·Î: shellDir ±âÁØÀ¸·Î »ó´ë À§Ä¡
+    // ssd.exe ê²½ë¡œ: shellDir ê¸°ì¤€ìœ¼ë¡œ ìƒëŒ€ ìœ„ì¹˜
     string ssdRelativePath = shellDir + "\\..\\..\\..\\SSD\\x64\\Release\\ssd.exe";
     string workingDirRelative = shellDir + "\\..\\..\\..\\SSD\\x64\\Release";
 
-    // Àı´ë°æ·Î·Î º¯È¯
+    // ì ˆëŒ€ê²½ë¡œë¡œ ë³€í™˜
     char absSsdPath[MAX_PATH];
     _fullpath(absSsdPath, ssdRelativePath.c_str(), MAX_PATH);
 
@@ -60,7 +60,7 @@ void FileAccessor::executeSsdCommandLine(string commandLine) {
 
     BOOL success = CreateProcessA(
         NULL,
-        &fullCommand[0],  // ¹İµå½Ã non-const!
+        &fullCommand[0],  // ë°˜ë“œì‹œ non-const!
         NULL, NULL, FALSE,
         0,
         NULL,
