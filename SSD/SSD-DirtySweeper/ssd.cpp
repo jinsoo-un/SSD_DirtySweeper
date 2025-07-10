@@ -321,7 +321,7 @@ private:
 	}
 
 	bool isValidOp(string arg) {
-        if (arg != "R" && arg != "W" && arg != "E")
+        if (arg != "R" && arg != "W" && arg != "E" && arg != "F")
 	        return false;
         return true;
 	}
@@ -363,7 +363,11 @@ public:
 		string operation = ssd->getOp();
 		if (operation == "R") return read();
 		if (operation == "W") return write();
-		if (operation == "E") return erase();	
+		if (operation == "E") return erase();
+        if (operation == "F") {
+            flushBuffer();           
+            return true;
+        }
 	}
 	int getArgCount() {
 		return ssd->getArgCount();
@@ -445,19 +449,17 @@ private:
             if (bufferCommand.op == "W") {
                 if (bufferCommand.addr == ssd->getAddr()) {
                      buffer.eraseBuffer(i);
-                    return true;
                 }
             }
 
             if (bufferCommand.op == "E") {
                 if ((bufferCommand.size == 1) && (bufferCommand.addr == ssd->getAddr())) {
                     buffer.eraseBuffer(i);
-                    return true;
                 }
             }
         }
   
-        return false;        
+        return true;        
 	}
 
 	bool erase() {

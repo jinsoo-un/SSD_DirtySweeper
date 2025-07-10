@@ -310,6 +310,7 @@ public:
     string buildCommand(string cmd, int lba, string data = "") {
         string cmdLine = cmd + " " + std::to_string(lba);
         if (cmd == "W" || cmd == "E") cmdLine = cmdLine + " " + data;
+        if (cmd == "F") cmdLine = "F";
         return cmdLine;
     }
 
@@ -513,7 +514,7 @@ TEST_F(BufSSDTest, EraseTest03) {
     }
 
     for (int i = 0; i < lba_size; i++) {
-        cmd = buildCommand("R", lba);
+        cmd = buildCommand("R", lba + i);
         parseAndExecute(cmd);
         EXPECT_TRUE(checkOutputFile(PRECONDITION_HEX_DATA));
     }
@@ -522,7 +523,7 @@ TEST_F(BufSSDTest, EraseTest03) {
     parseAndExecute(cmd);
 
     for (int i = 0; i < lba_size; i++) {
-        cmd = buildCommand("R", lba);
+        cmd = buildCommand("R", lba + i);
         parseAndExecute(cmd);
         EXPECT_TRUE(checkOutputFile(INITIAL_HEX_DATA));
     }
@@ -545,6 +546,60 @@ TEST_F(BufSSDTest, Erase_Exception) {
     parseAndExecute(cmd);
 
     EXPECT_TRUE(checkOutputFile("ERROR"));
+}
+
+TEST_F(BufSSDTest, Flush01) {
+    lba = 30;
+    lba_size = 5;
+
+    for (int i = 0; i < lba_size; i++) {
+        cmd = buildCommand("W", lba + i, VALID_HEX_DATA);
+        parseAndExecute(cmd);
+    }
+
+    EXPECT_EQ(0, ssd->getAccessCount());
+
+    cmd = buildCommand("F", 0, VALID_HEX_DATA);
+    parseAndExecute(cmd);
+
+    EXPECT_EQ(5, ssd->getAccessCount());
+}
+
+TEST_F(BufSSDTest, Flush02) {
+    lba = 30;
+    lba_size = 10;
+
+    for (int i = 0; i < lba_size; i++) {
+        cmd = buildCommand("W", lba + i, VALID_HEX_DATA);
+        parseAndExecute(cmd);
+    }
+
+    EXPECT_EQ(5, ssd->getAccessCount());
+
+    cmd = buildCommand("F", 0, VALID_HEX_DATA);
+    parseAndExecute(cmd);
+
+    EXPECT_EQ(10, ssd->getAccessCount());
+}
+
+TEST_F(BufSSDTest, Flush03) {
+    lba = 30;
+    lba_size = 4;
+
+    for (int i = 0; i < lba_size; i++) {
+        cmd = buildCommand("W", lba + i, VALID_HEX_DATA);
+        parseAndExecute(cmd);;
+    }
+
+    EXPECT_EQ(0, ssd->getAccessCount());
+
+    cmd = buildCommand("E", lba, std::to_string(2));
+    parseAndExecute(cmd);
+
+    cmd = buildCommand("F", 0, VALID_HEX_DATA);
+    parseAndExecute(cmd);
+
+    EXPECT_EQ(4, ssd->getAccessCount());
 }
 
 #ifdef NDEBUG
