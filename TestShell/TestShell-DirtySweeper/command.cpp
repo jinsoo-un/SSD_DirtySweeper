@@ -1,4 +1,4 @@
-#include "command.h"
+﻿#include "command.h"
 
 string ReadCommand::execute() {
     Logger::GetInstance().print("testShell.read()", "read command called");
@@ -286,4 +286,66 @@ string FlushCommand::execute() {
     string result = FileAccessor::GetInstance()->readOutputFile();
     if (result == "ERROR") return TestShellOutputManager::GetInstance().getErrorFlushResult();
     return TestShellOutputManager::GetInstance().getSuccessFlushResult();
+}
+
+unique_ptr<Command> CommandFactory::getCommand(SSD* ssd, string cmd, const vector<string>& args) {
+    if (cmd == "read") {
+        int lba = stoi(args[0]);
+        return std::make_unique<ReadCommand>(ssd, lba);
+    }
+    if (cmd == "fullread") {
+        return std::make_unique<FullReadCommand>(ssd);
+    }
+
+    if (cmd == "write") {
+        int lba = stoi(args[0]);
+        string data = args[1];
+        return std::make_unique<WriteCommand>(ssd, lba, data);
+    }
+
+    if (cmd == "fullwrite") {
+        string data = args[0];
+        return make_unique<FullWriteCommand>(ssd, data);
+    }
+
+    if (cmd == "help") {
+        return make_unique<HelpCommand>(ssd);
+    }
+
+    if (cmd == "exit") {
+        return make_unique<ExitCommand>(ssd);
+    }
+
+    if (cmd == "1_" || cmd == "1_FullWriteAndReadCompare") {
+        return make_unique<FullWriteAndReadCompareCommand>(ssd);
+    }
+
+    if (cmd == "2_" || cmd == "2_PartialLBAWrite") {
+        return make_unique<PartialLBAWriteCommand>(ssd);
+    }
+    if (cmd == "3_" || cmd == "3_WriteReadAging") {
+        return make_unique<WriteReadAgingCommand>(ssd);
+    }
+
+    if (cmd == "erase") {
+        int lba = stoi(args[0]);
+        int size = stoi(args[1]);
+        return make_unique<EraseWithSizeCommand>(ssd, lba, size);
+    }
+
+    if (cmd == "erase_range") {
+        int startLba = stoi(args[0]);
+        int endLba = stoi(args[1]);
+        return make_unique<EraseWithRangeCommand>(ssd, startLba, endLba);
+    }
+
+    if (cmd == "4_" || cmd == "4_EraseAndWriteAging") {
+        return make_unique<EraseAndWriteAgingCommand>(ssd);
+    }
+
+    if (cmd == "flush") {
+        return make_unique<FlushCommand>(ssd);
+    }
+
+    return nullptr;
 }
