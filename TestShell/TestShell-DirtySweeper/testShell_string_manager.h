@@ -3,20 +3,21 @@ using namespace std;
 
 class TestShellStringManager {
 public:
-    void printErrorReadResult();
-	void printSuccessReadResult(string result, int lba);
-	void printSuccessWriteResult();
-	void printErrorWriteResult();
-	void printSuccessFullWriteResult();
-	void printErrorFullWriteResult();
-	void printScriptFailResult();
-	void printScriptPassResult();
-	void printWriteReadMismatch(int lba, string writeData, string readData);
-	void printEraseErrorResult();
-	void printErasePassResult();
-	void printEraseRangeErrorResult();
-	void printEraseRangePassResult();
+	string getErrorReadResult();
+	string getSuccessReadResult(string result, int lba);
+	string getSuccessWriteResult();
+	string getErrorWriteResult();
+	string getSuccessFullWriteResult();
+	string getErrorFullWriteResult();
+	string getScriptFailResult();
+	string getScriptPassResult();
+	string getWriteReadMismatch(int lba, string writeData, string readData);
+	string getEraseErrorResult();
+	string getErasePassResult();
+	string getEraseRangeErrorResult();
+	string getEraseRangePassResult();
 
 	string generateRandomHexString();
 	string getWriteDataInFullWriteAndReadCompareScript(int lba);
+	string getNewLine();
 };

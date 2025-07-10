@@ -22,27 +22,26 @@
 #include "ssd.h"
 
 using namespace std;
-
 class TestShell {
 public:
     TestShell(SSD* ssd) : ssd{ ssd } {}
 
-    void executeCommand(const string& cmd, const vector<string>& args);
+    string executeCommand(const string& cmd, const vector<string>& args);
     void processInput(const string& input);
-    void help();
-    void read(int lba);
-    void fullRead();
-    void write(int lba, string data);
-    void fullWrite(string data);
-    void fullWriteAndReadCompare();
-    void exit(void);
+    string help();
+    string read(int lba);
+    string fullRead();
+    string write(int lba, string data);
+    string fullWrite(string data);
+    string fullWriteAndReadCompare();
+    string exit(void);
     bool isExit() const;
-    void writeReadAging();
+    string writeReadAging();
     virtual string getRandomHexString();
-    void partialLBAWrite();
-    void eraseWithSize(unsigned int lba, unsigned int size);
-    void eraseWithRange(unsigned int startLba, unsigned int endLba);
-    void eraseAndWriteAging(void);
+    string partialLBAWrite();
+    string eraseWithSize(unsigned int lba, unsigned int size);
+    string eraseWithRange(unsigned int startLba, unsigned int endLba);
+    string eraseAndWriteAging(void);
 
     static const int WRITE_READ_ITERATION = 200;
 private:

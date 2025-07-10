@@ -2,56 +2,58 @@
 #include <iostream>
 #include "testShell_string_manager.h"
 
-void TestShellStringManager::printErrorReadResult() {
-    cout << "[Read] ERROR\n";
+string TestShellStringManager::getErrorReadResult()
+{
+    return "[Read] ERROR";
 }
 
-void TestShellStringManager::printSuccessReadResult(string result, int lba) {
-    cout << "[Read] LBA " << lba << " : " << result << "\n";
+string TestShellStringManager::getSuccessReadResult(string result, int lba)
+{
+    return  "[Read] LBA " + std::to_string(lba) + " : " + result;
 }
 
-void TestShellStringManager::printSuccessWriteResult() {
-    cout << "[Write] Done\n";
+string TestShellStringManager::getSuccessWriteResult() {
+    return "[Write] Done";
 }
 
-void TestShellStringManager::printErrorWriteResult() {
-    cout << "[Write] ERROR\n";
+string TestShellStringManager::getErrorWriteResult() {
+    return "[Write] ERROR";
 }
 
-void TestShellStringManager::printSuccessFullWriteResult() {
-    cout << "[Full Write] Done\n";;
+string TestShellStringManager::getSuccessFullWriteResult() {
+   return "[Full Write] Done";
 }
 
-void TestShellStringManager::printErrorFullWriteResult() {
-    cout << "[Full Write] ERROR\n";
+string TestShellStringManager::getErrorFullWriteResult() {
+    return "[Full Write] ERROR";
 }
 
-void TestShellStringManager::printScriptFailResult() {
-    cout << "FAIL\n";
+string TestShellStringManager::getScriptFailResult() {
+    return "FAIL";
 }
 
-void TestShellStringManager::printScriptPassResult() {
-    cout << "PASS\n";
+string TestShellStringManager::getScriptPassResult() {
+    return "PASS";
 }
 
-void TestShellStringManager::printWriteReadMismatch(int lba, string writeData, string readData) {
-    cout << "[Mismatch] LBA " << lba << " Expected: " << writeData << " Got: " << readData << "\n";
+string TestShellStringManager::getWriteReadMismatch(int lba, string writeData, string readData) {
+    return "[Mismatch] LBA " + to_string(lba) + " Expected: " +  writeData + " Got: " + readData;
 }
 
-void TestShellStringManager::printEraseErrorResult() {
-    cout << "[Erase] ERROR\n";
+string TestShellStringManager::getEraseErrorResult() {
+    return "[Erase] ERROR";
 }
 
-void TestShellStringManager::printErasePassResult() {
-    cout << "[Erase] Done\n";
+string TestShellStringManager::getErasePassResult() {
+    return "[Erase] Done";
 }
 
-void TestShellStringManager::printEraseRangeErrorResult() {
-    cout << "[Erase Range] ERROR\n";
+string TestShellStringManager::getEraseRangeErrorResult() {
+    return "[Erase Range] ERROR";
 }
 
-void TestShellStringManager::printEraseRangePassResult() {
-    cout << "[Erase Range] Done\n";
+string TestShellStringManager::getEraseRangePassResult() {
+    return "[Erase Range] Done";
 }
 
 string TestShellStringManager::generateRandomHexString() {
@@ -79,3 +81,8 @@ string TestShellStringManager::getWriteDataInFullWriteAndReadCompareScript(int l
     string oddData = "0xCCCCDDDD";
     return (lba / 5 % 2 == 0) ? evenData : oddData;
 }
+
+string TestShellStringManager::getNewLine() {
+    return "\n";
+}
+
