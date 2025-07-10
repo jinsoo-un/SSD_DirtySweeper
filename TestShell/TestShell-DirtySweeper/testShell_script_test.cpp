@@ -27,13 +27,6 @@ public:
     MockTestShell sut;
 
     const string DATA;
-
-    string getWriteReadAgingResult() {
-        testing::internal::CaptureStdout();
-        sut.writeReadAging();
-        string output = testing::internal::GetCapturedStdout();
-        return output;
-    }
 };
 
 TEST_F(FullWriteReadTest, FullWriteAndReadCompareShouldPass) {
@@ -126,7 +119,7 @@ TEST_F(WriteReadAgingFixture, PassTest) {
     EXPECT_CALL(sut, readOutputFile())
         .WillRepeatedly(Return(DATA));
 
-    EXPECT_THAT(getWriteReadAgingResult(), ::testing::HasSubstr("PASS"));
+    EXPECT_EQ("PASS", sut.writeReadAging());
 }
 
 TEST_F(WriteReadAgingFixture, FailTest) {
@@ -141,11 +134,7 @@ TEST_F(WriteReadAgingFixture, FailTest) {
         .WillOnce(Return(DATA))
         .WillRepeatedly(Return("ERROR"));
 
-    testing::internal::CaptureStdout();
-    sut.writeReadAging();
-    string output = testing::internal::GetCapturedStdout();
-    cout << output;
-    EXPECT_THAT(output, ::testing::HasSubstr("FAIL"));
+    EXPECT_EQ("FAIL", sut.writeReadAging());
 }
 
 class PartialLBAWrite : public Test {
@@ -154,12 +143,6 @@ public:
     MockTestShell sut{ &ssdMock };
 
     const string DATA = "0xAAAABBBB";
-
-    string getPartialLBAWriteResult() {
-        testing::internal::CaptureStdout();
-        sut.partialLBAWrite();
-        return testing::internal::GetCapturedStdout();
-    }
 };
 
 TEST_F(PartialLBAWrite, PassCase) {
@@ -176,7 +159,7 @@ TEST_F(PartialLBAWrite, PassCase) {
         .Times(5 * 30)
         .WillRepeatedly(Return(DATA));
 
-    EXPECT_THAT(getPartialLBAWriteResult(), ::testing::HasSubstr("PASS"));
+    EXPECT_EQ("PASS", sut.partialLBAWrite());
 }
 
 TEST_F(PartialLBAWrite, FailCase) {
@@ -195,7 +178,7 @@ TEST_F(PartialLBAWrite, FailCase) {
         .WillOnce(Return(DATA))
         .WillOnce(Return(MISMATCHED_DATA));
 
-    EXPECT_THAT(getPartialLBAWriteResult(), ::testing::HasSubstr("FAIL\n"));
+    EXPECT_EQ("FAIL", sut.partialLBAWrite());
 }
 
 class EraseAndWriteAgingTest : public Test {
@@ -205,12 +188,6 @@ public:
 
     const string SUCCESS_RESULT = "";
     const string ERROR_RESULT = "ERROR";
-
-    string getEraseAndWriteAgingResult() {
-        testing::internal::CaptureStdout();
-        sut.eraseAndWriteAging();
-        return testing::internal::GetCapturedStdout();
-    }
 };
 
 TEST_F(EraseAndWriteAgingTest, PassCase) {
@@ -235,7 +212,7 @@ TEST_F(EraseAndWriteAgingTest, PassCase) {
         .Times(MAX_READ_OUPUT_CNT)
         .WillRepeatedly(Return(SUCCESS_RESULT));
 
-    EXPECT_THAT(getEraseAndWriteAgingResult(), ::testing::HasSubstr("PASS"));
+    EXPECT_EQ("PASS", sut.eraseAndWriteAging());
 }
 TEST_F(EraseAndWriteAgingTest, Fail) {
     EXPECT_CALL(ssdMock, write(_, _))
@@ -250,5 +227,5 @@ TEST_F(EraseAndWriteAgingTest, Fail) {
         .WillOnce(Return(SUCCESS_RESULT))
         .WillRepeatedly(Return(ERROR_RESULT));
 
-    EXPECT_THAT(getEraseAndWriteAgingResult(), ::testing::HasSubstr("FAIL"));
+    EXPECT_EQ("FAIL", sut.eraseAndWriteAging());
 }
