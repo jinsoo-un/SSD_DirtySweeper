@@ -1,7 +1,7 @@
 #include "file_accessor.h"
-FileAccessor& FileAccessor::GetInstance() {
+IFileAccessor* FileAccessor::GetInstance() {
     static FileAccessor instance;
-    return instance;
+    return static_cast<IFileAccessor*>(&instance);
 }
 
 string FileAccessor::readOutputFile() {
@@ -76,4 +76,10 @@ void FileAccessor::executeSsdCommandLine(string commandLine) {
     WaitForSingleObject(pi.hProcess, INFINITE);
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
+}
+
+
+IFileAccessor* MockFileAccessor::GetInstance() {
+    static MockFileAccessor instance;
+    return static_cast<IFileAccessor*>(&instance);
 }

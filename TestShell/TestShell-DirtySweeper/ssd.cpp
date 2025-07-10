@@ -38,5 +38,5 @@ string SsdHelpler::buildCommandLine(string cmd, int lba, string data) {
 }
 
 void SsdHelpler::executeCommandLine(string commandLine) {
-    FileAccessor::GetInstance().executeSsdCommandLine(commandLine);
+    FileAccessor::GetInstance()->executeSsdCommandLine(commandLine);
 }

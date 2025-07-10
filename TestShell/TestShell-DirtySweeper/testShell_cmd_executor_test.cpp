@@ -2,6 +2,7 @@
 #include "logger.h"
 #include "ssd.h"
 #include "testShell.h"
+#include "file_accessor.h"
 
 using ::testing::_;
 using ::testing::Return;
@@ -16,13 +17,13 @@ protected:
 
 TEST_F(TestShellLogicTest, ReadShouldCallSSDReadAndPrintResult) {
     EXPECT_CALL(ssd, read(1)).Times(1);
-    EXPECT_CALL(shell, readOutputFile()).WillOnce(Return("DATA123"));
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile()).WillOnce(Return("DATA123"));
     shell.read(1);
 }
 
 TEST_F(TestShellLogicTest, ProcessInputReadShouldTriggerReadLogic) {
     EXPECT_CALL(ssd, read(1)).Times(1);
-    EXPECT_CALL(shell, readOutputFile()).WillOnce(Return("DATA123"));
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile()).WillOnce(Return("DATA123"));
     shell.processInput("read 1");
 }
 

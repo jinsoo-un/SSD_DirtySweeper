@@ -136,7 +136,7 @@ string TestShell::read(int lba) {
     }
     ssd->read(lba);
 
-    string result = FileAccessor::GetInstance().readOutputFile();
+    string result = fileAccessor->readOutputFile();
     if (result == "ERROR")  return testShellStringManager.getErrorReadResult();
     return testShellStringManager.getSuccessReadResult(result, lba);
 }
