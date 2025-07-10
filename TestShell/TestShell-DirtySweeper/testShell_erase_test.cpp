@@ -59,7 +59,7 @@ TEST_F(TestShellEraseTest, EraseForHalf) {
 
     EXPECT_CALL(sut, readOutputFile())
         .Times(5)
-        .WillOnce(Return(""));
+        .WillRepeatedly(Return(""));
 
     auto actual = sut.eraseWithSize(startLBA, size);
     EXPECT_EQ(ERASE_PASS_RESULT, actual);
@@ -74,7 +74,7 @@ TEST_F(TestShellEraseTest, EraseForMax) {
 
     EXPECT_CALL(sut, readOutputFile())
         .Times(10)
-        .WillOnce(Return(""));
+        .WillRepeatedly(Return(""));
 
     auto actual = sut.eraseWithSize(startLBA, size);
     EXPECT_EQ(ERASE_PASS_RESULT, actual);
@@ -88,7 +88,7 @@ TEST_F(TestShellEraseTest, EraseStartFromMiddle) {
 
     EXPECT_CALL(sut, readOutputFile())
         .Times(4)
-        .WillOnce(Return(""));
+        .WillRepeatedly(Return(""));
 
     auto actual = sut.eraseWithSize(startLBA, size);
     EXPECT_EQ(ERASE_PASS_RESULT, actual);
@@ -195,7 +195,7 @@ TEST_F(TestShellEraseTest, EraseRangeMax) {
 
     EXPECT_CALL(sut, readOutputFile())
         .Times(10)
-        .WillOnce(Return(""));
+        .WillRepeatedly(Return(""));
 
     auto actual = sut.eraseWithRange(startLBA, endLBA);
     EXPECT_EQ(ERASE_RANGE_PASS_RESULT, actual);
@@ -210,7 +210,7 @@ TEST_F(TestShellEraseTest, EraseRangeHalfLowerRange) {
 
     EXPECT_CALL(sut, readOutputFile())
         .Times(5)
-        .WillOnce(Return(""));
+        .WillRepeatedly(Return(""));
 
     auto actual = sut.eraseWithRange(startLBA, endLBA);
     EXPECT_EQ(ERASE_RANGE_PASS_RESULT, actual);
@@ -225,7 +225,7 @@ TEST_F(TestShellEraseTest, EraseRangeHalfUpperRange) {
 
     EXPECT_CALL(sut, readOutputFile())
         .Times(5)
-        .WillOnce(Return(""));
+        .WillRepeatedly(Return(""));
 
     auto actual = sut.eraseWithRange(startLBA, endLBA);
     EXPECT_EQ(ERASE_RANGE_PASS_RESULT, actual);
