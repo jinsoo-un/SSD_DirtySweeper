@@ -56,12 +56,12 @@ string TestShellStringManager::getEraseRangePassResult() {
     return "[Erase Range] Done";
 }
 
-void TestShellStringManager::printSuccessFlushResult() {
-    cout << "[Flush] Done\n";
+string TestShellStringManager::getSuccessFlushResult() {
+    return "[Flush] Done";
 }
 
-void TestShellStringManager::printErrorFlushResult() {
-    cout << "[Flush] ERROR\n";
+string TestShellStringManager::getErrorFlushResult() {
+    return "[Flush] ERROR";
 }
 
 string TestShellStringManager::generateRandomHexString() {

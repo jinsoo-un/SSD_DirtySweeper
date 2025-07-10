@@ -87,8 +87,7 @@ string TestShell::executeCommand(const string& cmd, const vector<string>& args) 
     }
 
     if (cmd == "flush") {
-        this->flushSsdBuffer();
-        return;
+        return flushSsdBuffer();
     }
 
     return INVALID_COMMAND;
@@ -318,12 +317,12 @@ string TestShell::eraseAndWriteAging(void) {
     return testShellStringManager.getScriptPassResult();
 }
 
-void TestShell::flushSsdBuffer(void) {
+string TestShell::flushSsdBuffer(void) {
     logger.print("testShell.flushSsdBuffer()", "flush command called");    
     ssd->flushSsdBuffer();
     string result = readOutputFile();
-    if (result == "ERROR") testShellStringManager.printErrorFlushResult();
-    else testShellStringManager.printSuccessFlushResult();
+    if (result == "ERROR") return testShellStringManager.getErrorFlushResult();
+    return testShellStringManager.getSuccessFlushResult();
 }
 
 bool TestShell::isArgumentSizeValid(const string& cmd, int argsSize) {
