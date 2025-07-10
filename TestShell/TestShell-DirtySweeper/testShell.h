@@ -22,9 +22,7 @@ public:
     bool isExit() const;
     
 private:
-    bool isArgumentSizeValid(const string& cmd, int argsSize);
     vector<string> tokenize(const string& input);
-    bool isValidCommand(const string& cmd) const;
 
     SSD* ssd;
     bool isExitCmd{ false };

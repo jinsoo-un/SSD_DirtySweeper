@@ -349,3 +349,57 @@ unique_ptr<Command> CommandFactory::getCommand(SSD* ssd, string cmd, const vecto
 
     return nullptr;
 }
+
+bool ReadCommand::isArgumentSizeValid(int argsSize) {
+    if (argsSize != 1) return false;
+    return true;
+}
+
+bool FullReadCommand::isArgumentSizeValid(int argsSize) {
+    if (argsSize != 0) return false;
+    return true;
+}
+
+bool WriteCommand::isArgumentSizeValid(int argsSize) {
+    if (argsSize != 2) return false;
+    return true;
+}
+
+bool FullWriteCommand::isArgumentSizeValid(int argsSize) {
+    if (argsSize != 1) return false;
+    return true;
+}
+
+bool HelpCommand::isArgumentSizeValid(int argsSize) {
+    return true;
+}
+bool ExitCommand::isArgumentSizeValid(int argsSize) {
+    return true;
+}
+bool FullWriteAndReadCompareCommand::isArgumentSizeValid(int argsSize) {
+    return true;
+}
+bool PartialLBAWriteCommand::isArgumentSizeValid(int argsSize) {
+    return true;
+}
+bool WriteReadAgingCommand::isArgumentSizeValid(int argsSize) {
+    return true;
+}
+
+bool EraseWithSizeCommand::isArgumentSizeValid(int argsSize) {
+    if (argsSize != 2) return false;
+    return true;
+}
+
+bool EraseWithRangeCommand::isArgumentSizeValid(int argsSize) {
+    if (argsSize != 2) return false;
+    return true;
+}
+
+bool EraseAndWriteAgingCommand::isArgumentSizeValid(int argsSize) {
+    return true;
+}
+
+bool FlushCommand::isArgumentSizeValid(int argsSize) {
+    return true;
+}
