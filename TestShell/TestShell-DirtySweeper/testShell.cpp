@@ -20,6 +20,8 @@
 #include "logger.h"
 #include "ssd.h"
 #include "testShell.h"
+#include "file_accessor.h"
+
 using namespace std;
 
 string TestShell::executeCommand(const string& cmd, const vector<string>& args) {
@@ -133,7 +135,8 @@ string TestShell::read(int lba) {
         return testShellStringManager.getErrorReadResult();
     }
     ssd->read(lba);
-    string result = readOutputFile();
+
+    string result = FileAccessor::GetInstance().readOutputFile();
     if (result == "ERROR")  return testShellStringManager.getErrorReadResult();
     return testShellStringManager.getSuccessReadResult(result, lba);
 }
