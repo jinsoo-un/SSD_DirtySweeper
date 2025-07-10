@@ -2,6 +2,11 @@
 #include <iostream>
 #include "testShell_output_manager.h"
 
+TestShellOutputManager& TestShellOutputManager::GetInstance() {
+    static TestShellOutputManager instance;
+    return instance;
+}
+
 string TestShellOutputManager::getErrorReadResult()
 {
     return "[Read] ERROR";

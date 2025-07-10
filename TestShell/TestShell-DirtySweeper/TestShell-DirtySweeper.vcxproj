@@ -129,6 +129,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="command.cpp" />
     <ClCompile Include="file_accessor.cpp" />
     <ClCompile Include="logger.cpp" />
     <ClCompile Include="main.cpp">
@@ -171,6 +172,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="command.h" />
     <ClInclude Include="file_accessor.h" />
     <ClInclude Include="logger.h" />
     <ClInclude Include="ssd.h" />

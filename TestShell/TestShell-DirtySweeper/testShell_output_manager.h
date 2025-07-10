@@ -3,6 +3,8 @@ using namespace std;
 
 class TestShellOutputManager {
 public:
+	static TestShellOutputManager& GetInstance();
+	
 	string getErrorReadResult();
 	string getSuccessReadResult(string result, int lba);
 	string getSuccessWriteResult();
@@ -18,4 +20,9 @@ public:
 	string getEraseRangePassResult();
 	string getSuccessFlushResult();
 	string getErrorFlushResult();
+
+private:
+	TestShellOutputManager() = default;
+	TestShellOutputManager(const TestShellOutputManager& c) = delete;
+	TestShellOutputManager& operator=(const TestShellOutputManager&) = delete;
 };

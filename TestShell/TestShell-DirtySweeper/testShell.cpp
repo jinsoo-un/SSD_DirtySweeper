@@ -1,4 +1,5 @@
 #include "testShell.h"
+#include "command.h"
 
 using namespace std;
 
@@ -8,11 +9,14 @@ string TestShell::executeCommand(const string& cmd, const vector<string>& args) 
 
     if (cmd == "read") {
         int lba = stoi(args[0]);
-        return read(lba);
+        ReadCommand readCommand(ssd, lba);
+        return readCommand.execute();
+        //return read(lba);
     }
 
     if (cmd == "fullread") {
-        return fullRead();
+        FullReadCommand fullReadCommand(ssd);
+        return fullReadCommand.execute();
     }
 
     if (cmd == "write") {
@@ -182,6 +186,7 @@ string TestShell::exit(void) {
     isExitCmd = true;
     return "Set Exit Comannd...\n";
 }
+
 bool TestShell::isExit() const {
     return isExitCmd;
 }

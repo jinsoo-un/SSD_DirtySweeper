@@ -56,7 +56,7 @@ private:
 
     SSD* ssd;
     Logger& logger{ Logger::GetInstance()};
-    TestShellOutputManager testShellStringManager;
+    TestShellOutputManager& testShellStringManager{TestShellOutputManager::GetInstance()};
     IFileAccessor* fileAccessor;
 
     bool isExitCmd{ false };
