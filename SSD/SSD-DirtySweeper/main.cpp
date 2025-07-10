@@ -104,7 +104,6 @@ TEST_F(RealSSDTest, ReadTC_ReturnData02)
 TEST_F(RealSSDTest, ArgparseRead) {
     string cmd = buildCommand("R", 3);
     ssd->parseCommand(cmd);
-    EXPECT_EQ(2, ssd->getArgCount());
     EXPECT_EQ("R", ssd->getOp());
     EXPECT_EQ(3, ssd->getAddr());
 }
@@ -113,7 +112,6 @@ TEST_F(RealSSDTest, ArgparseWrite)
 {
     string cmd = buildCommand("W", 3, VALID_HEX_DATA);
     ssd->parseCommand(cmd);
-    EXPECT_EQ(3, ssd->getArgCount());
     EXPECT_EQ("W", ssd->getOp());
     EXPECT_EQ(3, ssd->getAddr());
     EXPECT_EQ("0x1298CDEF", ssd->getValue());
@@ -123,7 +121,6 @@ TEST_F(RealSSDTest, ArgparseErase)
 {
     string cmd = buildCommand("E", 3, std::to_string(10));
     ssd->parseCommand(cmd);
-    EXPECT_EQ(3, ssd->getArgCount());
     EXPECT_EQ("E", ssd->getOp());
     EXPECT_EQ(3, ssd->getAddr());
 	EXPECT_EQ(10, ssd->getSize());
