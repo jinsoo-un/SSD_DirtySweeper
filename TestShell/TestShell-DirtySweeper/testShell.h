@@ -43,6 +43,7 @@ public:
     void eraseWithSize(unsigned int lba, unsigned int size);
     void eraseWithRange(unsigned int startLba, unsigned int endLba);
     void eraseAndWriteAging(void);
+    void flushSsdBuffer(void);
 
     static const int WRITE_READ_ITERATION = 200;
 private:

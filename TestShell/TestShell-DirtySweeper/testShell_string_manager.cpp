@@ -54,6 +54,10 @@ void TestShellStringManager::printEraseRangePassResult() {
     cout << "[Erase Range] Done\n";
 }
 
+void TestShellStringManager::printSuccessFlushResult() {
+    cout << "[Flush] Done\n";;
+}
+
 string TestShellStringManager::generateRandomHexString() {
     static const char* hexDigits = "0123456789ABCDEF";
 

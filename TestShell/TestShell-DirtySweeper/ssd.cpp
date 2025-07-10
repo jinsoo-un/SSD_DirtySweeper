@@ -23,7 +23,14 @@ void SsdHelpler::erase(unsigned int lba, unsigned size) {
     executeCommandLine(commandLine);
 }
 
+void SsdHelpler::flushSsdBuffer(void) {
+    logger.print("SsdHelpler.flushSsdBuffer()", "Flush");
+    string commandLine = buildCommandLine("F");
+    executeCommandLine(commandLine);
+}
+
 string SsdHelpler::buildCommandLine(string cmd, int lba, string data) {
+    if (cmd == "F") return cmd;
     string cmdLine = cmd + " " + to_string(lba);
     if (cmd == "W" || cmd == "E") cmdLine = cmdLine + " " + data;
     return cmdLine;
