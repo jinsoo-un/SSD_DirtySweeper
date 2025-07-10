@@ -1,26 +1,4 @@
-﻿#include <iostream>
-#include <string>
-#include <stdexcept>
-#include <fstream>
-#include <sstream>
-#include <vector>
-#include <unordered_set>
-#include <windows.h>
-#include <shellapi.h>
-#include <direct.h>
-#include <cstdlib>
-#include <ctime>
-#include <iomanip>
-#include <chrono>
-#include <mutex>
-#include <algorithm>
-#include <io.h>
-#include "gmock/gmock.h"
-#include "testShell_output_manager.h"
-#include "logger.h"
-#include "ssd.h"
 #include "testShell.h"
-#include "file_accessor.h"
 
 using namespace std;
 

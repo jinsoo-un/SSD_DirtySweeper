@@ -1,8 +1,4 @@
-#include "gmock/gmock.h"
-#include "testShell_output_manager.h"
-#include "logger.h"
 #include "ssd.h"
-#include "file_accessor.h"
 
 using namespace std;
 

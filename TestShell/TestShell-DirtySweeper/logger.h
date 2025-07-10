@@ -16,8 +16,6 @@
 #include <mutex>
 #include <algorithm>
 #include <io.h>
-#include "gmock/gmock.h"
-#include "testShell_output_manager.h"
 
 using namespace std;
 class Logger {
