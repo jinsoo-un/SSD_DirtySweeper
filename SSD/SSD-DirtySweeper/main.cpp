@@ -9,6 +9,8 @@ class RealSSDTest : public ::testing::Test {
 public:
     RealSSDTest() : ssd {new RealSSD } { }
     SSD* ssd;
+    commandParams param;
+    CommandParser parser;
 
     string VALID_HEX_DATA = "0x1298CDEF";
     string INVALID_HEX_DATA = "0xABCDEFGH";
@@ -103,33 +105,34 @@ TEST_F(RealSSDTest, ReadTC_ReturnData02)
 
 TEST_F(RealSSDTest, ArgparseRead) {
     string cmd = buildCommand("R", 3);
-    ssd->parseCommand(cmd);
-    EXPECT_EQ("R", ssd->getOp());
-    EXPECT_EQ(3, ssd->getAddr());
+    parser.parseCommand(cmd, param);
+    
+    EXPECT_EQ("R", param.op);
+    EXPECT_EQ(3, param.addr);
 }
 
 TEST_F(RealSSDTest, ArgparseWrite)
 {
     string cmd = buildCommand("W", 3, VALID_HEX_DATA);
-    ssd->parseCommand(cmd);
-    EXPECT_EQ("W", ssd->getOp());
-    EXPECT_EQ(3, ssd->getAddr());
-    EXPECT_EQ("0x1298CDEF", ssd->getValue());
+    parser.parseCommand(cmd, param);
+    EXPECT_EQ("W", param.op);
+    EXPECT_EQ(3, param.addr);
+    EXPECT_EQ("0x1298CDEF", param.value);
 }
 
 TEST_F(RealSSDTest, ArgparseErase)
 {
     string cmd = buildCommand("E", 3, std::to_string(10));
-    ssd->parseCommand(cmd);
-    EXPECT_EQ("E", ssd->getOp());
-    EXPECT_EQ(3, ssd->getAddr());
-	EXPECT_EQ(10, ssd->getSize());
+    parser.parseCommand(cmd, param);
+    EXPECT_EQ("E", param.op);
+    EXPECT_EQ(3, param.addr);
+	EXPECT_EQ(10, param.size);
 }
 
 TEST_F(RealSSDTest, ArgparseInvalidOp)
 {
     string cmd = buildCommand("S", 3);
-    ssd->parseCommand(cmd);
+    parser.parseCommand(cmd, param);
     EXPECT_TRUE(checkOutputFile("ERROR"));
 }
 
