@@ -64,7 +64,11 @@ string HelpCommand::execute() {
     output += "testscript         : Execute the predefined test script. See documentation for details.\n";
     output += "help               : Show usage instructions for all available commands.\n";
     output += "exit               : Exit the program.\n";
-    output += "Note               : INVALID COMMAND will be shown if the input is unrecognized.";
+    output += "erase (LBA) (SIZE) : Erase data from (LBA) for (SIZE).\n";
+    output += "erase_range (ST_LBA) (EN_LBA) : Erase data from (ST_LBA) to (EN_LBA).\n";
+    output += "Note               : INVALID COMMAND will be shown if the input is unrecognized.\n";
+    output += "\n* testscript: \n";
+    output += " 1_FullWriteAndReadCompare / 1_ \n 2_PartialLBAWrite / 2_ \n 3_WriteReadAging / 3_ \n 4_EraseAndWriteAging / 4_ \n";
     return output;
 }
 
