@@ -180,6 +180,16 @@ private:
         }
     }
 
+    void addEraseCmdToBuffer(int startAddr, int endAddr) {
+        struct commandParams ssdParams;
+        ssdParams.op = "E";
+        ssdParams.addr = startAddr;
+        ssdParams.size = endAddr - startAddr + 1;
+
+        buffer.writeBuffer(ssdParams);
+        file.updateOutput("");
+    }
+
     void checkAndMergeErase(const commandParams& cmd, std::vector<int>& markedEraseIndex) {
         struct commandParams bufferCommand;
 
@@ -206,8 +216,7 @@ private:
             endAddr = merged.second;
         }
 
-        buffer.writeBuffer(cmd);
-        file.updateOutput("");
+        addEraseCmdToBuffer(startAddr, endAddr);
     }
 
     void markEraseBeforeWritesInBuffer(std::vector<int>& markedEraseIndex) {
@@ -251,6 +260,7 @@ private:
     }
 
     std::pair<int, int> checkOverlap(int a, int b, int c, int d) {
+        
         if (b + 1 >= c && a <= d + 1) {
             return { std::min(a, c), std::max(b, d) };
         }
