@@ -54,7 +54,7 @@ int main(int argc, char* argv[]) {
 
     while (!shell.isExit()) {
         string input;
-        cout << "Shell> ";
+        cout << "\nShell> ";
         getline(cin, input);
 
         try {
