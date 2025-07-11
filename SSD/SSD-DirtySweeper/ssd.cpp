@@ -130,20 +130,14 @@ private:
         return true;
     }
 
-    bool isAddressMatchedWriteCmd(commandParams& bufferCommand, const int& addr)
-    {
+    bool isAddressMatchedWriteCmd(commandParams& bufferCommand, const int& addr) {
         if (bufferCommand.op == "W" && (bufferCommand.addr == addr)) return true;
         return false;
     }
 
-    bool isAddressMatchedEraseCmd(commandParams& bufferCommand, const int& addr)
-    {
-        if (bufferCommand.op == "E") {
-            for (int checkAddr = bufferCommand.addr; checkAddr < bufferCommand.addr + bufferCommand.size; checkAddr++) {
-                if (checkAddr == addr) {
-                    return true;
-                }
-            }
+    bool isAddressMatchedEraseCmd(commandParams& bufferCommand, const int& addr) {
+        for (int checkAddr = bufferCommand.addr; checkAddr < bufferCommand.addr + bufferCommand.size; checkAddr++) {
+            if ((bufferCommand.op == "E") && (checkAddr == addr)) return true;
         }
         return false;
     }
@@ -171,13 +165,11 @@ private:
             struct commandParams bufferCommand;
             buffer.readAndParseBuffer(i, bufferCommand);
             
-            if (isAddressMatchedWriteCmd(bufferCommand, cmd.addr))
-            {
+            if (isAddressMatchedWriteCmd(bufferCommand, cmd.addr)) {
                 buffer.eraseBuffer(i);
             }
 
-            if ((bufferCommand.size == 1) && isAddressMatchedEraseCmd(bufferCommand, cmd.addr))
-            {
+            if ((bufferCommand.size == 1) && isAddressMatchedEraseCmd(bufferCommand, cmd.addr)) {
                 buffer.eraseBuffer(i);
             }
         }
