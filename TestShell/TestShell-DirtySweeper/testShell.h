@@ -14,60 +14,21 @@
 using namespace std;
 class TestShell {
 public:
-    TestShell(SSD* ssd) : ssd{ ssd } {
-#ifndef NDEBUG
-        fileAccessor = MockFileAccessor::GetInstance(); // Debug ¿ë
-#else
-        fileAccessor = FileAccessor::GetInstance();
-#endif
+    TestShell(SSDInterface* ssd) : ssd{ ssd } {
     }
 
     string executeCommand(const string& cmd, const vector<string>& args);
     void processInput(const string& input);
-    string help();
-    string read(int lba);
-    string fullRead();
-    string write(int lba, string data);
-    string fullWrite(string data);
-    string fullWriteAndReadCompare();
-    string exit(void);
     bool isExit() const;
-    string writeReadAging();
-    virtual string getRandomHexString();
-    string partialLBAWrite();
-    string eraseWithSize(unsigned int lba, unsigned int size);
-    string eraseWithRange(unsigned int startLba, unsigned int endLba);
-    string eraseAndWriteAging(void);
-    string flushSsdBuffer(void);
-
-    static const int WRITE_READ_ITERATION = 200;
+    
 private:
-    bool isArgumentSizeValid(const string& cmd, int argsSize);
-    virtual string readOutputFile();
-    string getWriteReadResult(int lba, string input);
     vector<string> tokenize(const string& input);
-    bool isValidCommand(const string& cmd) const;
-    string erase(unsigned int lba, unsigned int size);
-    bool isValidLbaRange(unsigned int startLba, unsigned int endLba);
-    bool isValidEraseWithSizeArgument(unsigned int lba, unsigned int size);
-    bool isCmdExecuteError(const string result) const;
-    string getWriteDataInFullWriteAndReadCompareScript(int lba);
-    string generateRandomHexString();
 
-    SSD* ssd;
-    Logger& logger{ Logger::GetInstance()};
-    TestShellOutputManager testShellStringManager;
-    IFileAccessor* fileAccessor;
-
+    SSDInterface* ssd;
     bool isExitCmd{ false };
-    const int LBA_START_ADDRESS = 0;
-    const int LBA_END_ADDRESS = 99;
 };
 
 class MockTestShell : public TestShell {
 public:
-    MockTestShell(SSD* ssd) : TestShell(ssd) {}
-    MOCK_METHOD(void, help, (), ());
-    MOCK_METHOD(string, readOutputFile, (), ());
-    MOCK_METHOD(string, getRandomHexString, (), ());
+    MockTestShell(SSDInterface* ssd) : TestShell(ssd) {}    
 };

@@ -1,6 +1,7 @@
 #include "gmock/gmock.h"
 #include "ssd.h"
 #include "testShell.h"
+#include "command.h"
 
 using namespace testing;
 
@@ -17,7 +18,7 @@ TEST_F(FlushTestFixture, FlushSuccess) {
     EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .WillRepeatedly(Return(""));
 
-    string output = testShell.flushSsdBuffer();
+    string output = FlushCommand(&ssdMock).execute();
     EXPECT_EQ("[Flush] Done", output);
 }
 
@@ -28,7 +29,7 @@ TEST_F(FlushTestFixture, FlushFail) {
     EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .WillRepeatedly(Return("ERROR"));
 
-    string output = testShell.flushSsdBuffer();
+    string output = FlushCommand(&ssdMock).execute();
     EXPECT_EQ("[Flush] ERROR", output);
 }
 

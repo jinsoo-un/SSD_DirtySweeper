@@ -2,6 +2,7 @@
 #include "logger.h"
 #include "ssd.h"
 #include "testShell.h"
+#include "command.h"
 
 using namespace testing;
 
@@ -9,13 +10,13 @@ TEST(ExitTest, DefaultExitStatus) {
     SSDMock ssd;
     TestShell sut{ &ssd };
 
-    EXPECT_FALSE(sut.isExit());
+    EXPECT_FALSE(CommandFactory::isExit());
 }
 
 TEST(ExitTest, AfterExitCmd) {
     SSDMock ssd;
     TestShell sut{ &ssd };
 
-    sut.exit();
-    EXPECT_TRUE(sut.isExit());
+    ExitCommand(&ssd).execute();
+    EXPECT_TRUE(CommandFactory::isExit());
 }

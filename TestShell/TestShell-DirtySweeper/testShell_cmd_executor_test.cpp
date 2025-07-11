@@ -3,6 +3,7 @@
 #include "ssd.h"
 #include "testShell.h"
 #include "file_accessor.h"
+#include "command.h"
 
 using ::testing::_;
 using ::testing::Return;
@@ -18,7 +19,8 @@ protected:
 TEST_F(TestShellLogicTest, ReadShouldCallSSDReadAndPrintResult) {
     EXPECT_CALL(ssd, read(1)).Times(1);
     EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile()).WillOnce(Return("DATA123"));
-    shell.read(1);
+
+    ReadCommand(&ssd, 1).execute();
 }
 
 TEST_F(TestShellLogicTest, ProcessInputReadShouldTriggerReadLogic) {
@@ -30,14 +32,15 @@ TEST_F(TestShellLogicTest, ProcessInputReadShouldTriggerReadLogic) {
 TEST_F(TestShellLogicTest, FullReadShouldCallSSDReadForAllLBA) {
     EXPECT_CALL(ssd, read(_)).Times(100);
     EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile()).Times(100).WillRepeatedly(Return("DATA"));
-    shell.fullRead();
+
+    FullReadCommand(&ssd).execute();
 }
 
 TEST_F(TestShellLogicTest, WriteShouldCallSSDWriteAndReturnDoneOnSuccess) {
     EXPECT_CALL(ssd, write(5, "abc")).Times(1);
     EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile()).WillOnce(Return("OK"));
 
-    auto output = shell.write(5, "abc");
+    auto output = WriteCommand(&ssd, 5, "abc").execute();
     EXPECT_THAT("[Write] Done", output);
 }
 
@@ -45,7 +48,7 @@ TEST_F(TestShellLogicTest, WriteShouldReturnErrorOnFailure) {
     EXPECT_CALL(ssd, write(5, "abc")).Times(1);
     EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile()).WillOnce(Return("ERROR"));
 
-    auto output = shell.write(5, "abc");
+    auto output = WriteCommand(&ssd, 5, "abc").execute();
 
     EXPECT_THAT("[Write] ERROR", output);
 }

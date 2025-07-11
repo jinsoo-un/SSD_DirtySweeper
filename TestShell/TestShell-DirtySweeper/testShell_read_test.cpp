@@ -2,6 +2,8 @@
 #include "logger.h"
 #include "ssd.h"
 #include "testShell.h"
+#include "command.h"
+
 using namespace testing;
 
 class ReadTestFixture : public Test {
@@ -20,20 +22,20 @@ TEST_F(ReadTestFixture, BasicRead) {
     EXPECT_CALL(ssdMock, read(_))
         .Times(1);
 
-    EXPECT_CALL(testShell, readOutputFile())
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .WillRepeatedly(Return(RANDOM_VALUE));
 
-    testShell.read(RANDOM_LBA);
+    ReadCommand(&ssdMock, RANDOM_LBA).execute();
 }
 
 TEST_F(ReadTestFixture, InvalidAddress) {
     EXPECT_CALL(ssdMock, read(_))
         .Times(0);
 
-    EXPECT_CALL(testShell, readOutputFile())
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .Times(0);
 
-    auto output = testShell.read(100);
+    auto output = ReadCommand(&ssdMock, 100).execute();
     EXPECT_EQ(READ_ERROR_RESULT, output);
 }
 
@@ -41,32 +43,32 @@ TEST_F(ReadTestFixture, ReadSuccessTest) {
     EXPECT_CALL(ssdMock, read(_))
         .Times(1);
 
-    EXPECT_CALL(testShell, readOutputFile())
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .WillRepeatedly(Return(RANDOM_VALUE));
 
-    testShell.read(RANDOM_LBA);
-    EXPECT_EQ(testShell.readOutputFile(), RANDOM_VALUE);
+    ReadCommand(&ssdMock, RANDOM_LBA).execute();
+    EXPECT_EQ(MockFileAccessor::GetInstance()->readOutputFile(), RANDOM_VALUE);
 }
 
 TEST_F(ReadTestFixture, ReadFailTest) {
     EXPECT_CALL(ssdMock, read(_))
         .Times(1);
 
-    EXPECT_CALL(testShell, readOutputFile())
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .WillRepeatedly(Return(ERROR_RESULT));
 
-    testShell.read(11);
-    EXPECT_EQ(testShell.readOutputFile(), ERROR_RESULT);
+    ReadCommand(&ssdMock, 11).execute();
+    EXPECT_EQ(MockFileAccessor::GetInstance()->readOutputFile(), ERROR_RESULT);
 }
 
 TEST_F(ReadTestFixture, TestIfReadCalled100Times) {
     EXPECT_CALL(ssdMock, read(_))
         .Times(LBA_COUNT);
 
-    EXPECT_CALL(testShell, readOutputFile())
+    EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .WillRepeatedly(Return(RANDOM_VALUE));
 
-    testShell.fullRead();
+    FullReadCommand(&ssdMock).execute();
 }
 
 TEST_F(ReadTestFixture, FulLReadFail) {
@@ -79,5 +81,5 @@ TEST_F(ReadTestFixture, FulLReadFail) {
         .WillOnce(Return(RANDOM_VALUE))
         .WillRepeatedly(Return(ERROR_RESULT));
 
-    testShell.fullRead();
+    FullReadCommand(&ssdMock).execute();
 }

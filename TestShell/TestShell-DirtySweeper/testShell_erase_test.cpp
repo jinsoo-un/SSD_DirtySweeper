@@ -2,6 +2,7 @@
 #include "logger.h"
 #include "ssd.h"
 #include "testShell.h"
+#include "command.h"
 #include <string>
 
 using namespace testing;
@@ -31,7 +32,8 @@ TEST_F(TestShellEraseTest, EraseFail) {
         .Times(1)
         .WillOnce(Return("ERROR"));
 
-    auto actual = sut.eraseWithSize(startLBA, size);
+
+    auto actual = EraseWithSizeCommand(&ssdMock, startLBA, size).execute();
     EXPECT_EQ(ERASE_ERROR_RESULT, actual);
 }
 
@@ -46,7 +48,7 @@ TEST_F(TestShellEraseTest, EraseForShort) {
         .Times(1)
         .WillOnce(Return(""));
 
-    auto actual = sut.eraseWithSize(startLBA, size);
+    auto actual = EraseWithSizeCommand(&ssdMock, startLBA, size).execute();
     EXPECT_EQ(ERASE_PASS_RESULT, actual);
 }
 
@@ -61,7 +63,7 @@ TEST_F(TestShellEraseTest, EraseForHalf) {
         .Times(5)
         .WillRepeatedly(Return(""));
 
-    auto actual = sut.eraseWithSize(startLBA, size);
+    auto actual = EraseWithSizeCommand(&ssdMock, startLBA, size).execute();
     EXPECT_EQ(ERASE_PASS_RESULT, actual);
 }
 
@@ -76,7 +78,7 @@ TEST_F(TestShellEraseTest, EraseForMax) {
         .Times(10)
         .WillRepeatedly(Return(""));
 
-    auto actual = sut.eraseWithSize(startLBA, size);
+    auto actual = EraseWithSizeCommand(&ssdMock, startLBA, size).execute();
     EXPECT_EQ(ERASE_PASS_RESULT, actual);
 }
 TEST_F(TestShellEraseTest, EraseStartFromMiddle) {
@@ -90,7 +92,7 @@ TEST_F(TestShellEraseTest, EraseStartFromMiddle) {
         .Times(4)
         .WillRepeatedly(Return(""));
 
-    auto actual = sut.eraseWithSize(startLBA, size);
+    auto actual = EraseWithSizeCommand(&ssdMock, startLBA, size).execute();
     EXPECT_EQ(ERASE_PASS_RESULT, actual);
 }
 TEST_F(TestShellEraseTest, EraseForLastSingle) {
@@ -104,7 +106,7 @@ TEST_F(TestShellEraseTest, EraseForLastSingle) {
         .Times(1)
         .WillOnce(Return(""));
 
-    auto actual = sut.eraseWithSize(startLBA, size);
+    auto actual = EraseWithSizeCommand(&ssdMock, startLBA, size).execute();
     EXPECT_EQ(ERASE_PASS_RESULT, actual);
 }
 
@@ -119,7 +121,7 @@ TEST_F(TestShellEraseTest, EraseForFirstSingle) {
         .Times(1)
         .WillOnce(Return(""));
 
-    auto actual = sut.eraseWithSize(startLBA, size);
+    auto actual = EraseWithSizeCommand(&ssdMock, startLBA, size).execute();
     EXPECT_EQ(ERASE_PASS_RESULT, actual);
 }
 
@@ -127,7 +129,7 @@ TEST_F(TestShellEraseTest, ExceptionOverMaxSize) {
     const int startLBA = 0;
     const int size = 1000;
 
-    auto actual = sut.eraseWithSize(startLBA, size);
+    auto actual = EraseWithSizeCommand(&ssdMock, startLBA, size).execute();
     EXPECT_EQ(ERASE_ERROR_RESULT, actual);
 }
 
@@ -135,7 +137,7 @@ TEST_F(TestShellEraseTest, ExceptionUnderMinSize) {
     const int startLBA = 0;
     const int size = 0;
 
-    auto actual = sut.eraseWithSize(startLBA, size);
+    auto actual = EraseWithSizeCommand(&ssdMock, startLBA, size).execute();
     EXPECT_EQ(ERASE_ERROR_RESULT, actual);
 }
 
@@ -143,7 +145,7 @@ TEST_F(TestShellEraseTest, ExceptionOverMaxRange) {
     const int startLBA = 99;
     const int size = 10;
 
-    auto actual = sut.eraseWithSize(startLBA, size);
+    auto actual = EraseWithSizeCommand(&ssdMock, startLBA, size).execute();
     EXPECT_EQ(ERASE_ERROR_RESULT, actual);
 }
 
@@ -158,7 +160,7 @@ TEST_F(TestShellEraseTest, EraseRangeFail) {
         .Times(1)
         .WillOnce(Return("ERROR"));
 
-    auto actual = sut.eraseWithRange(startLBA, endLBA);
+    auto actual = EraseWithRangeCommand(&ssdMock, startLBA, endLBA).execute();
     EXPECT_EQ(ERASE_RANGE_ERROR_RESULT, actual);
 }
 
@@ -166,7 +168,7 @@ TEST_F(TestShellEraseTest, EraseRangeExceptionUnderMinLBA) {
     const int startLBA = -1;
     const int endLBA = 10;
 
-    auto actual = sut.eraseWithRange(startLBA, endLBA);
+    auto actual = EraseWithRangeCommand(&ssdMock, startLBA, endLBA).execute();
     EXPECT_EQ(ERASE_RANGE_ERROR_RESULT, actual);
 }
 
@@ -174,7 +176,7 @@ TEST_F(TestShellEraseTest, EraseRangeExceptionOverMaxLBA) {
     const int startLBA = 0;
     const int endLBA = 100;
 
-    auto actual = sut.eraseWithRange(startLBA, endLBA);
+    auto actual = EraseWithRangeCommand(&ssdMock, startLBA, endLBA).execute();
     EXPECT_EQ(ERASE_RANGE_ERROR_RESULT, actual);
 }
 
@@ -182,7 +184,7 @@ TEST_F(TestShellEraseTest, EraseRangeExceptionFirstLBAIsLargerThanLastLBA) {
     const int startLBA = 50;
     const int endLBA = 49;
 
-    auto actual = sut.eraseWithRange(startLBA, endLBA);
+    auto actual = EraseWithRangeCommand(&ssdMock, startLBA, endLBA).execute();
     EXPECT_EQ(ERASE_RANGE_ERROR_RESULT, actual);
 }
 
@@ -197,7 +199,7 @@ TEST_F(TestShellEraseTest, EraseRangeMax) {
         .Times(10)
         .WillRepeatedly(Return(""));
 
-    auto actual = sut.eraseWithRange(startLBA, endLBA);
+    auto actual = EraseWithRangeCommand(&ssdMock, startLBA, endLBA).execute();
     EXPECT_EQ(ERASE_RANGE_PASS_RESULT, actual);
 }
 
@@ -212,7 +214,7 @@ TEST_F(TestShellEraseTest, EraseRangeHalfLowerRange) {
         .Times(5)
         .WillRepeatedly(Return(""));
 
-    auto actual = sut.eraseWithRange(startLBA, endLBA);
+    auto actual = EraseWithRangeCommand(&ssdMock, startLBA, endLBA).execute();
     EXPECT_EQ(ERASE_RANGE_PASS_RESULT, actual);
 }
 
@@ -227,7 +229,7 @@ TEST_F(TestShellEraseTest, EraseRangeHalfUpperRange) {
         .Times(5)
         .WillRepeatedly(Return(""));
 
-    auto actual = sut.eraseWithRange(startLBA, endLBA);
+    auto actual = EraseWithRangeCommand(&ssdMock, startLBA, endLBA).execute();
     EXPECT_EQ(ERASE_RANGE_PASS_RESULT, actual);
 }
 
@@ -242,6 +244,6 @@ TEST_F(TestShellEraseTest, EraseRangeSame) {
         .Times(1)
         .WillOnce(Return(""));
 
-    auto actual = sut.eraseWithRange(startLBA, endLBA);
+    auto actual = EraseWithRangeCommand(&ssdMock, startLBA, endLBA).execute();
     EXPECT_EQ(ERASE_RANGE_PASS_RESULT, actual);
 }
