@@ -129,6 +129,24 @@ private:
         return true;
     }
 
+    bool isAddressMatchedWriteCmd(commandParams& bufferCommand, const int& addr)
+    {
+        if (bufferCommand.op == "W" && (bufferCommand.addr == addr)) return true;
+        return false;
+    }
+
+    bool isAddressMatchedEraseCmd(commandParams& bufferCommand, const int& addr)
+    {
+        if (bufferCommand.op == "E") {
+            for (int checkAddr = bufferCommand.addr; checkAddr < bufferCommand.addr + bufferCommand.size; checkAddr++) {
+                if (checkAddr == addr) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     bool checkAndReadFromBuffer(const commandParams& cmd) {
         struct commandParams bufferCommand;
         for (int i = buffer.getFilledCount(); i > 0; i--) {
@@ -145,39 +163,19 @@ private:
         return false;
     }
 
-    bool isAddressMatchedWriteCmd(commandParams& bufferCommand, const int& addr)
-    {
-        if (bufferCommand.op == "W" && (bufferCommand.addr == addr)) return true;
-        return false;
-    }
-
-    bool isAddressMatchedEraseCmd(commandParams& bufferCommand, const int& addr)
-    {
-        if (bufferCommand.op == "E") {
-            for (int checkAddr = bufferCommand.addr; checkAddr < bufferCommand.addr + bufferCommand.size; checkAddr++) {
-                if (checkAddr == addr) {
-                    
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
     void CheckBufferCmdErasable(const commandParams& cmd) {
         for (int i = buffer.getFilledCount() - 1; i > 0; i--) {
             struct commandParams bufferCommand;
             buffer.readAndParseBuffer(i, bufferCommand);
-            if (bufferCommand.op == "W") {
-                if (bufferCommand.addr == cmd.addr) {
-                    buffer.eraseBuffer(i);
-                }
+            
+            if (isAddressMatchedWriteCmd(bufferCommand, cmd.addr))
+            {
+                buffer.eraseBuffer(i);
             }
 
-            if (bufferCommand.op == "E") {
-                if ((bufferCommand.size == 1) && (bufferCommand.addr == cmd.addr)) {
-                    buffer.eraseBuffer(i);
-                }
+            if ((bufferCommand.size == 1) && isAddressMatchedEraseCmd(bufferCommand, cmd.addr))
+            {
+                buffer.eraseBuffer(i);
             }
         }
     }
