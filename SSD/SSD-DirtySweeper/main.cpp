@@ -263,6 +263,7 @@ class BufSSDTest : public RealSSDTest {
 public:
     BufSSDTest() : ssd { new BufferedSSD } { }
     SSD* ssd;
+    Buffer buffer;
     string cmd;
 
     int lba;
@@ -270,7 +271,7 @@ public:
 
     void SetUp() override {
         initializeDataFile();
-        ssd->bufferClear();
+        buffer.clear();
     }
 
 };

@@ -14,7 +14,6 @@ public:
     virtual bool execute(string command) = 0;
     virtual bool executeWithParam(commandParams cmd) = 0;
     virtual int getAccessCount() = 0;
-    virtual void bufferClear() = 0;
 protected:
     FileControl& file = FileControl::get_instance();
 };
@@ -39,10 +38,6 @@ public:
 
     int getAccessCount() {
         return accessCount;
-    }
-
-    void bufferClear() {
-        return;
     }
 
 private:
@@ -90,10 +85,6 @@ public:
         return ssd->getAccessCount();
     }
 
-    void bufferClear() {
-        buffer.clear();
-        return;
-    }
 private:
     // Buffered SSD methods
     bool read(commandParams cmd) {
