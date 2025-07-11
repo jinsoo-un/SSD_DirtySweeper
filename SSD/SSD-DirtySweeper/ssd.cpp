@@ -104,6 +104,7 @@ private:
             }
         }
         
+        file.updateOutput("");
         buffer.writeBuffer(cmd);
         CheckBufferCmdErasable(cmd);
   
