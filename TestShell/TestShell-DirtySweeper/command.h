@@ -69,7 +69,7 @@ private:
 };
 
 class HelpCommand : public Command {
-public:
+bool isExit();public:
     HelpCommand(SSD* ssd) : Command(ssd) {}
     string execute() override;
     bool isArgumentSizeValid(int argsSize) override;
@@ -80,6 +80,9 @@ public:
     ExitCommand(SSD* ssd) : Command(ssd) {}
     string execute() override;
     bool isArgumentSizeValid(int argsSize) override;
+    static bool getIsExit();
+private:
+    static bool isExit;
 };
 
 class FullWriteAndReadCompareCommand : public Command {
@@ -149,4 +152,5 @@ public:
 class CommandFactory {
 public:
     unique_ptr<Command> getCommand(SSD* ssd, string cmd, const vector<string>& args);
+    static bool isExit();
 };

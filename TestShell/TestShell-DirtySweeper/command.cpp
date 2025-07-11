@@ -68,8 +68,15 @@ string HelpCommand::execute() {
     return output;
 }
 
+bool ExitCommand::isExit = false;
+
 string ExitCommand::execute() {
+    isExit = true;
     return "Set Exit Comannd...\n";
+}
+
+bool ExitCommand::getIsExit() {
+    return isExit;
 }
 
 string FullWriteAndReadCompareCommand::execute() {
@@ -402,4 +409,8 @@ bool EraseAndWriteAgingCommand::isArgumentSizeValid(int argsSize) {
 
 bool FlushCommand::isArgumentSizeValid(int argsSize) {
     return true;
+}
+
+bool CommandFactory::isExit() {
+    return ExitCommand::getIsExit();
 }

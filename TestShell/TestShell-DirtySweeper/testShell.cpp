@@ -27,7 +27,7 @@ void TestShell::processInput(const string& input) {
 
 
 bool TestShell::isExit() const {
-    return isExitCmd;
+    return CommandFactory::isExit();
 }
 
 vector<string> TestShell::tokenize(const string& input) {
