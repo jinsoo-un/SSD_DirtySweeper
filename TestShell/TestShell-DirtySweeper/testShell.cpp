@@ -102,7 +102,11 @@ string TestShell::help() {
     output += "erase (LBA) (SIZE)            : Erase  data from LBA to LBA + SIZE - 1\n";
     output += "erase_range (ST_LBA) (EN LBA) : Erase  data from ST_LBA to EN_LBA\n";
     output += "flush                         : Flush entire buffer\n";
-    output += "testscript                    : Execute the predefined test script. See documentation for details.\n";
+    output += "1_FullWriteAndReadCompare     : Write and Read for All LBAs. Also you can execute with '1_' .See documetation for details.\n";
+    output += "2_PartialLBAWrite             : Aging test for partial LBA write and read. Also you can execute with '2_'. See documetation for details\n";
+    output += "3_WriteReadAging              : Write and Read aging test.Also you can execute with '3_'.See documetation for details\n";
+    output += "4_EraseAndWriteAging          : Erase and Write aging test. Also you can execute with '4_'. See documetation for details\n";
+    output += "flush                         : Flush entire buffer\n";
     output += "help                          : Show usage instructions for all available commands.\n";
     output += "exit                          : Exit the program.\n";
     output += "Note                          : INVALID COMMAND will be shown if the input is unrecognized.";
