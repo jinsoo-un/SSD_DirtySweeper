@@ -11,8 +11,8 @@ using std::string;
 // SSD Interface Class
 class SSD {
 public:
-    virtual bool exec(string command) = 0;
-    virtual bool doCommand(commandParams cmd) = 0;
+    virtual bool execute(string command) = 0;
+    virtual bool executeWithParam(commandParams cmd) = 0;
     virtual int getAccessCount() = 0;
     virtual void bufferClear() = 0;
 protected:
@@ -21,14 +21,14 @@ protected:
 
 class RealSSD : public SSD {
 public:
-    bool exec(string command) {
+    bool execute(string command) {
         commandParams currentCmd;
         if (parser.parseCommand(command, currentCmd) == false) return false;
         
-        return doCommand(currentCmd);
+        return executeWithParam(currentCmd);
     }
 
-    bool doCommand(commandParams cmd) {
+    bool executeWithParam(commandParams cmd) {
         command = factory.getCommand(cmd.op);
         if (command == nullptr) return false;
 
@@ -63,14 +63,14 @@ private:
 class BufferedSSD : public SSD {
 public:
     BufferedSSD() : ssd{ new RealSSD() } {}
-    bool exec(string command) {
+    bool execute(string command) {
         commandParams currentCmd;
         if (parser.parseCommand(command, currentCmd) == false) return false;
 
-        return doCommand(currentCmd);
+        return executeWithParam(currentCmd);
     }
  
-    bool doCommand(commandParams cmd) {
+    bool executeWithParam(commandParams cmd) {
         string operation = cmd.op;
         if (operation == "R") return read(cmd);
         if (operation == "W") return write(cmd);
@@ -98,12 +98,12 @@ private:
     // Buffered SSD methods
     bool read(commandParams cmd) {
         if (buffer.isEmpty())
-            return ssd->doCommand(cmd);
+            return ssd->executeWithParam(cmd);
 
         if (checkAndReadFromBuffer(cmd))
                 return true;
 
-        return ssd->doCommand(cmd);
+        return ssd->executeWithParam(cmd);
     }
 
     bool write(const commandParams& cmd) {
@@ -279,7 +279,7 @@ private:
 
             string cmdLine = buildCommand(commandParam);
 
-            bIsPass = ssd->doCommand(commandParam);
+            bIsPass = ssd->executeWithParam(commandParam);
             if (bIsPass == false) return false;      
 
             buffer.eraseBuffer(buffer_head);    
