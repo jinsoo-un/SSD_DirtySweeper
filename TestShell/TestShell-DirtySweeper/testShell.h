@@ -30,8 +30,5 @@ private:
 
 class MockTestShell : public TestShell {
 public:
-    MockTestShell(SSD* ssd) : TestShell(ssd) {}
-    MOCK_METHOD(void, help, (), ());
-    MOCK_METHOD(string, readOutputFile, (), ());
-    MOCK_METHOD(string, getRandomHexString, (), ());
+    MockTestShell(SSD* ssd) : TestShell(ssd) {}    
 };

@@ -2,6 +2,7 @@
 #include "logger.h"
 #include "ssd.h"
 #include "testShell.h"
+#include "command.h"
 using namespace testing;
 
 class FullWriteReadTest : public ::testing::Test {
@@ -85,47 +86,38 @@ TEST_F(FullWriteReadTest, FullWriteAndReadCompareShouldFail) {
 }
 
 TEST_F(WriteReadAgingFixture, CallTest) {
-    EXPECT_CALL(ssdMock, write(0, DATA))
-        .Times(TestShell::WRITE_READ_ITERATION);
-    EXPECT_CALL(ssdMock, write(99, DATA))
-        .Times(TestShell::WRITE_READ_ITERATION);
+    EXPECT_CALL(ssdMock, write(0, _))
+        .Times(WriteReadAgingCommand::WRITE_READ_ITERATION);
+    EXPECT_CALL(ssdMock, write(99, _))
+        .Times(WriteReadAgingCommand::WRITE_READ_ITERATION);
     EXPECT_CALL(ssdMock, read(0))
-        .Times(TestShell::WRITE_READ_ITERATION);
+        .Times(WriteReadAgingCommand::WRITE_READ_ITERATION);
     EXPECT_CALL(ssdMock, read(99))
-        .Times(TestShell::WRITE_READ_ITERATION);
-
-    EXPECT_CALL(sut, getRandomHexString())
-        .WillRepeatedly(Return(DATA));
+        .Times(WriteReadAgingCommand::WRITE_READ_ITERATION);
 
     EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .WillRepeatedly(Return(DATA));
 
-    sut.writeReadAging();
+    WriteReadAgingCommand(&ssdMock).execute();
 }
 
 TEST_F(WriteReadAgingFixture, PassTest) {
     EXPECT_CALL(ssdMock, write(0, _))
-        .Times(TestShell::WRITE_READ_ITERATION);
+        .Times(WriteReadAgingCommand::WRITE_READ_ITERATION);
     EXPECT_CALL(ssdMock, write(99, _))
-        .Times(TestShell::WRITE_READ_ITERATION);
+        .Times(WriteReadAgingCommand::WRITE_READ_ITERATION);
     EXPECT_CALL(ssdMock, read(0))
-        .Times(TestShell::WRITE_READ_ITERATION);
+        .Times(WriteReadAgingCommand::WRITE_READ_ITERATION);
     EXPECT_CALL(ssdMock, read(99))
-        .Times(TestShell::WRITE_READ_ITERATION);
-
-    EXPECT_CALL(sut, getRandomHexString())
-        .WillRepeatedly(Return(DATA));
+        .Times(WriteReadAgingCommand::WRITE_READ_ITERATION);
 
     EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .WillRepeatedly(Return(DATA));
 
-    EXPECT_EQ("PASS", sut.writeReadAging());
+    EXPECT_EQ("PASS", WriteReadAgingCommand(&ssdMock).execute());
 }
 
 TEST_F(WriteReadAgingFixture, FailTest) {
-    EXPECT_CALL(sut, getRandomHexString())
-        .WillRepeatedly(Return(DATA));
-
     EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .WillOnce(Return(DATA))
         .WillOnce(Return(DATA))
@@ -134,7 +126,7 @@ TEST_F(WriteReadAgingFixture, FailTest) {
         .WillOnce(Return(DATA))
         .WillRepeatedly(Return("ERROR"));
 
-    EXPECT_EQ("FAIL", sut.writeReadAging());
+    EXPECT_EQ("FAIL", WriteReadAgingCommand(&ssdMock).execute());
 }
 
 class PartialLBAWrite : public Test {
@@ -159,7 +151,7 @@ TEST_F(PartialLBAWrite, PassCase) {
         .Times(5 * 30)
         .WillRepeatedly(Return(DATA));
 
-    EXPECT_EQ("PASS", sut.partialLBAWrite());
+    EXPECT_EQ("PASS", PartialLBAWriteCommand(&ssdMock).execute());
 }
 
 TEST_F(PartialLBAWrite, FailCase) {
@@ -178,7 +170,7 @@ TEST_F(PartialLBAWrite, FailCase) {
         .WillOnce(Return(DATA))
         .WillOnce(Return(MISMATCHED_DATA));
 
-    EXPECT_EQ("FAIL", sut.partialLBAWrite());
+    EXPECT_EQ("FAIL", PartialLBAWriteCommand(&ssdMock).execute());
 }
 
 class EraseAndWriteAgingTest : public Test {
@@ -207,22 +199,15 @@ TEST_F(EraseAndWriteAgingTest, PassCase) {
         .Times(MAX_ERASE_CNT)
         .WillRepeatedly(Return());
 
-    EXPECT_CALL(sut, getRandomHexString())
-        .WillRepeatedly(Return("0x12345678"));
-
     const int MAX_READ_OUPUT_CNT = MAX_WRITE_CNT + MAX_ERASE_CNT;
     EXPECT_CALL(*static_cast<MockFileAccessor*>(MockFileAccessor::GetInstance()), readOutputFile())
         .Times(MAX_READ_OUPUT_CNT)
         .WillRepeatedly(Return(SUCCESS_RESULT));
-
-    EXPECT_EQ("PASS", sut.eraseAndWriteAging());
+    
+    EXPECT_EQ("PASS", EraseAndWriteAgingCommand(&ssdMock).execute());
 }
 
 TEST_F(EraseAndWriteAgingTest, Fail) {
-
-    EXPECT_CALL(sut, getRandomHexString())
-        .WillRepeatedly(Return("0x12345678"));
-
     EXPECT_CALL(ssdMock, write(_, _))
         .WillRepeatedly(Return());
 
@@ -235,5 +220,5 @@ TEST_F(EraseAndWriteAgingTest, Fail) {
         .WillOnce(Return(SUCCESS_RESULT))
         .WillRepeatedly(Return(ERROR_RESULT));
 
-    EXPECT_EQ("FAIL", sut.eraseAndWriteAging());
+    EXPECT_EQ("FAIL", EraseAndWriteAgingCommand(&ssdMock).execute());
 }

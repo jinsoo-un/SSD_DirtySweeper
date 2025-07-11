@@ -106,8 +106,8 @@ public:
     WriteReadAgingCommand(SSD* ssd) : Command(ssd) {}
     string execute() override;
     bool isArgumentSizeValid(int argsSize) override;
-private:
     static const int WRITE_READ_ITERATION = 200;
+private:
     string getWriteReadResult(int lba, string input);
 };
 

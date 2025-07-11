@@ -3,6 +3,7 @@
 #include "ssd.h"
 #include "testShell.h"
 #include <string>
+#include "command.h"
 
 using namespace testing;
 
@@ -35,7 +36,7 @@ TEST_F(TestShellWriteTest, Write) {
         .Times(1)
         .WillOnce(Return(""));
 
-    auto actual = sut.write(VALID_LBA, VALID_DATA);
+    auto actual = WriteCommand(&ssdMock, VALID_LBA, VALID_DATA).execute();
     EXPECT_EQ(WRITE_SUCCESS_RESULT, actual);
 }
 
@@ -48,7 +49,7 @@ TEST_F(TestShellWriteTest, WriteFailWithInvalidLBA) {
         .Times(1)
         .WillOnce(Return(SSD_WRITE_ERROR_VALUE));
 
-    auto actual = sut.write(INVALID_LBA, VALID_DATA);
+    auto actual = WriteCommand(&ssdMock, INVALID_LBA, VALID_DATA).execute();
     EXPECT_EQ(WRITE_FAIL_RESULT, actual);
 }
 
@@ -60,7 +61,7 @@ TEST_F(TestShellWriteTest, WriteFailWithInvalidData) {
         .Times(1)
         .WillOnce(Return(SSD_WRITE_ERROR_VALUE));
 
-    auto actual = sut.write(VALID_LBA, INVALID_DATA);
+    auto actual = WriteCommand(&ssdMock, VALID_LBA, INVALID_DATA).execute();
     EXPECT_EQ(WRITE_FAIL_RESULT, actual);
 }
 
@@ -73,7 +74,7 @@ TEST_F(TestShellWriteTest, FullWriteNormalCase) {
         .Times(100)
         .WillRepeatedly(Return(SSD_WRITE_DONE_VALUE));
 
-    auto actual = sut.fullWrite(VALID_DATA);
+    auto actual = FullWriteCommand(&ssdMock, VALID_DATA).execute();
     EXPECT_EQ(FULL_WRITE_SUCCESS_RESULT, actual);
 }
 
@@ -86,6 +87,6 @@ TEST_F(TestShellWriteTest, FullWriteFailWithInvalidData) {
         .Times(1)
         .WillRepeatedly(Return(SSD_WRITE_ERROR_VALUE));
 
-    auto actual = sut.fullWrite(INVALID_DATA);
+    auto actual = FullWriteCommand(&ssdMock, INVALID_DATA).execute();
     EXPECT_EQ(FULL_WRITE_FAIL_RESULT, actual);
 }
