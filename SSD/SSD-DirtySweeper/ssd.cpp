@@ -265,14 +265,6 @@ private:
         return { -1, -1 };
     }
 
-    string buildCommand(struct commandParams& commandParam) {
-        //string cmd, int lba, string data = ""
-        string cmdLine = commandParam.op + " " + std::to_string(commandParam.addr);
-        if (commandParam.op == "W") cmdLine = cmdLine + " " + commandParam.value;
-        if (commandParam.op == "E") cmdLine = cmdLine + " " + std::to_string(commandParam.size);
-        return cmdLine;
-    }
-
     bool flushBuffer() {
         struct commandParams commandParam;
         bool bIsPass = false;
