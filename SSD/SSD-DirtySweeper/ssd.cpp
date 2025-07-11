@@ -116,28 +116,33 @@ private:
             flushBufferandAddCurrentCmd(cmd);
             return true;
         }
-   
-        int startAddr = cmd.addr;
-        int endAddr = startAddr + cmd.size - 1;
+  
         vector<int> markedEraseIndex;
 
-        checkAndMergeWrites(startAddr, endAddr);
+        eraseAddressMatchedWriteCmd(cmd);
         markEraseBeforeWritesInBuffer(markedEraseIndex);
-        checkAndMergeErase(startAddr, endAddr, markedEraseIndex);
-
-        addEraseCmdToBuffer(startAddr, endAddr);
+        checkAndMergeErase(cmd, markedEraseIndex);
 
         return true;
     }
 
-    bool isAddressMatchedWriteCmd(commandParams& bufferCommand, const int& addr) {
-        if (bufferCommand.op == "W" && (bufferCommand.addr == addr)) return true;
+    bool isAddressIncludedWriteCmd(commandParams& cmd, const int& startAddr, const int& endAddr) {
+        if (cmd.op == "W") {
+            if (cmd.addr >= startAddr && cmd.addr <= endAddr) {
+                return true;
+            }
+        }
         return false;
     }
 
-    bool isAddressMatchedEraseCmd(commandParams& bufferCommand, const int& addr) {
-        for (int checkAddr = bufferCommand.addr; checkAddr < bufferCommand.addr + bufferCommand.size; checkAddr++) {
-            if ((bufferCommand.op == "E") && (checkAddr == addr)) return true;
+    bool isAddressMatchedWriteCmd(commandParams& cmd, const int& addr) {
+        if (cmd.op == "W" && (cmd.addr == addr)) return true;
+        return false;
+    }
+
+    bool isAddressMatchedEraseCmd(commandParams& cmd, const int& addr) {
+        for (int checkAddr = cmd.addr; checkAddr < cmd.addr + cmd.size; checkAddr++) {
+            if ((cmd.op == "E") && (checkAddr == addr)) return true;
         }
         return false;
     }
@@ -175,18 +180,11 @@ private:
         }
     }
 
-    void addEraseCmdToBuffer(int startAddr, int endAddr) {
-        struct commandParams ssdParams;
-        ssdParams.op = "E";
-        ssdParams.addr = startAddr;
-        ssdParams.size = endAddr - startAddr + 1;
-
-        buffer.writeBuffer(ssdParams);
-        file.updateOutput("");
-    }
-
-    void checkAndMergeErase(int& startAddr, int& endAddr, std::vector<int>& markedEraseIndex) {
+    void checkAndMergeErase(const commandParams& cmd, std::vector<int>& markedEraseIndex) {
         struct commandParams bufferCommand;
+
+        int startAddr = cmd.addr;
+        int endAddr = startAddr + cmd.size - 1;
 
         for (int i = buffer.getFilledCount(); i > 0; i--) {
             buffer.readAndParseBuffer(i, bufferCommand);
@@ -207,6 +205,9 @@ private:
             startAddr = merged.first;
             endAddr = merged.second;
         }
+
+        buffer.writeBuffer(cmd);
+        file.updateOutput("");
     }
 
     void markEraseBeforeWritesInBuffer(std::vector<int>& markedEraseIndex) {
@@ -228,16 +229,15 @@ private:
         }
     }
 
-    void checkAndMergeWrites(int startAddr, int endAddr) {
+    void eraseAddressMatchedWriteCmd(const commandParams& cmd) {
+        int startAddr = cmd.addr;
+        int endAddr = startAddr + cmd.size - 1;
+
         struct commandParams bufferCommand;
         for (int i = buffer.getFilledCount(); i > 0; i--) {
             buffer.readAndParseBuffer(i, bufferCommand);
-
-            if (bufferCommand.op == "W") {
-                if (bufferCommand.addr >= startAddr && bufferCommand.addr <= endAddr) {
-                    buffer.eraseBuffer(i);
-                }
-            }
+            if(isAddressIncludedWriteCmd(bufferCommand, startAddr, endAddr))
+                buffer.eraseBuffer(i);
         }
     }
 
