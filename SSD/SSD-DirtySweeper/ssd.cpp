@@ -151,10 +151,12 @@ private:
         struct commandParams bufferCommand;
         for (int i = buffer.getFilledCount(); i > 0; i--) {
             buffer.readAndParseBuffer(i, bufferCommand);
+            
             if (isAddressMatchedWriteCmd(bufferCommand, cmd.addr)) {
                 file.updateOutput(bufferCommand.value);
                 return true;
             }
+
             if (isAddressMatchedEraseCmd(bufferCommand, cmd.addr)) {
                 file.updateOutput("0x00000000");
                 return true;
@@ -195,23 +197,22 @@ private:
 
         for (int i = buffer.getFilledCount(); i > 0; i--) {
             buffer.readAndParseBuffer(i, bufferCommand);
+            if (bufferCommand.op != "E") continue;
 
-            if (bufferCommand.op == "E") {
-                int bufStartAddr = bufferCommand.addr;
-                int bufEndAddr = bufferCommand.addr + bufferCommand.size - 1;
-                std::pair<int, int> merged = checkOverlap(startAddr, endAddr, bufStartAddr, bufEndAddr);
+            int bufStartAddr = bufferCommand.addr;
+            int bufEndAddr = bufferCommand.addr + bufferCommand.size - 1;
+            std::pair<int, int> merged = checkOverlap(startAddr, endAddr, bufStartAddr, bufEndAddr);
 
-                if (merged.first == -1)
-                    continue;
-                if (merged.second - merged.first >= 10)
-                    continue;
-                if (find(markedEraseIndex.begin(), markedEraseIndex.end(), i) != markedEraseIndex.end())
-                    continue;
+            if (merged.first == -1)
+                continue;
+            if (merged.second - merged.first >= 10)
+                continue;
+            if (find(markedEraseIndex.begin(), markedEraseIndex.end(), i) != markedEraseIndex.end())
+                continue;
 
-                buffer.eraseBuffer(i);
-                startAddr = merged.first;
-                endAddr = merged.second;
-            }
+            buffer.eraseBuffer(i);
+            startAddr = merged.first;
+            endAddr = merged.second;
         }
     }
 
