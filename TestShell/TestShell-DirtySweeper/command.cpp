@@ -3,7 +3,7 @@
 string ReadCommand::execute() {
     Logger::GetInstance().print("ReadCommand.execute()", "read command called");
     
-    if (lba < 0 || lba > 99) {
+    if (!isValidLBA()) {
         return TestShellOutputManager::GetInstance().getErrorReadResult();
     }
 
@@ -12,6 +12,10 @@ string ReadCommand::execute() {
     string result = fileAccessor->readOutputFile();
     if (result == "ERROR")  return TestShellOutputManager::GetInstance().getErrorReadResult();
     return TestShellOutputManager::GetInstance().getSuccessReadResult(result, lba);
+}
+
+bool ReadCommand::isValidLBA() {
+    return lba >= 0 && lba <= 99;
 }
 
 string FullReadCommand::execute() {
@@ -248,6 +252,10 @@ string EraseWithRangeCommand::execute() {
     return TestShellOutputManager::GetInstance().getEraseRangePassResult();
 }
 
+string InvalidCommand::execute() {
+    return "INVALID COMMAND";
+}
+
 bool EraseWithRangeCommand::isValidLbaRange(unsigned int startLba, unsigned int endLba)
 {
     if (startLba < LBA_START_ADDRESS || startLba > LBA_END_ADDRESS) {
@@ -364,7 +372,7 @@ unique_ptr<ICommand> CommandFactory::getCommand(SSDInterface* ssd, string cmd, c
         return make_unique<FlushCommand>(ssd);
     }
 
-    return nullptr;
+    return make_unique<InvalidCommand>(ssd);
 }
 
 bool CommandFactory::isArgumentSizeValid(string cmd, int argsSize) {

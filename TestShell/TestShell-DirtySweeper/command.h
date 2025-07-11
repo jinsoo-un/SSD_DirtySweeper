@@ -35,8 +35,8 @@ class ReadCommand : public ICommand {
 public:
     ReadCommand(SSDInterface* ssd, int lba) : ICommand(ssd), lba{ lba } {}
     string execute() override;
-
 private:
+    bool isValidLBA();
     int lba;
 };
 
@@ -130,6 +130,12 @@ public:
 class FlushCommand : public ICommand {
 public:
     FlushCommand(SSDInterface* ssd) : ICommand(ssd) {}
+    string execute() override;
+};
+
+class InvalidCommand : public ICommand {
+public:
+    InvalidCommand(SSDInterface* ssd) : ICommand(ssd) {}
     string execute() override;
 };
 
