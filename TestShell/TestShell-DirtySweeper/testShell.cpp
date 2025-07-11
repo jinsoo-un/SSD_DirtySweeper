@@ -8,7 +8,6 @@ string TestShell::executeCommand(const string& cmd, const vector<string>& args) 
     CommandFactory factory;
     auto commandPtr = factory.getCommand(ssd, cmd, args);
     if (commandPtr == nullptr) return INVALID_COMMAND;
-    if (!commandPtr->isArgumentSizeValid(args.size())) return INVALID_COMMAND;
     return commandPtr->execute();
 }
 

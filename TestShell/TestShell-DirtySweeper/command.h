@@ -15,7 +15,6 @@ public:
 #endif
     }
     virtual string execute() = 0;
-    virtual bool isArgumentSizeValid(int argsSize) = 0;
     
 protected:
     SSD* ssd;
@@ -36,7 +35,6 @@ class ReadCommand : public Command {
 public:
     ReadCommand(SSD* ssd, int lba) : Command(ssd), lba{ lba } {}
     string execute() override;
-    bool isArgumentSizeValid(int argsSize) override;
 
 private:
     int lba;
@@ -46,14 +44,12 @@ class FullReadCommand : public Command {
 public:
     FullReadCommand(SSD* ssd) : Command(ssd) {}
     string execute() override;
-    bool isArgumentSizeValid(int argsSize) override;
 };
 
 class WriteCommand : public Command {
 public:
     WriteCommand(SSD* ssd, int lba, string data) : Command(ssd), lba{ lba }, data{data} {}
     string execute() override;
-    bool isArgumentSizeValid(int argsSize) override;
 private:
     int lba;
     string data;
@@ -63,23 +59,20 @@ class FullWriteCommand : public Command {
 public:
     FullWriteCommand(SSD* ssd, string data) : Command(ssd), data{ data } {}
     string execute() override;
-    bool isArgumentSizeValid(int argsSize) override;
 private:
     string data;
 };
 
 class HelpCommand : public Command {
-bool isExit();public:
+public:
     HelpCommand(SSD* ssd) : Command(ssd) {}
     string execute() override;
-    bool isArgumentSizeValid(int argsSize) override;
 };
 
 class ExitCommand : public Command {
 public:
     ExitCommand(SSD* ssd) : Command(ssd) {}
     string execute() override;
-    bool isArgumentSizeValid(int argsSize) override;
     static bool getIsExit();
 private:
     static bool isExit;
@@ -89,7 +82,6 @@ class FullWriteAndReadCompareCommand : public Command {
 public:
     FullWriteAndReadCompareCommand(SSD* ssd) : Command(ssd) {}
     string execute() override;
-    bool isArgumentSizeValid(int argsSize) override;
 private:
     string getWriteDataInFullWriteAndReadCompareScript(int lba);
 };
@@ -98,14 +90,12 @@ class PartialLBAWriteCommand : public Command {
 public:
     PartialLBAWriteCommand(SSD* ssd) : Command(ssd) {}
     string execute() override;
-    bool isArgumentSizeValid(int argsSize) override;
 };
 
 class WriteReadAgingCommand : public Command {
 public:
     WriteReadAgingCommand(SSD* ssd) : Command(ssd) {}
     string execute() override;
-    bool isArgumentSizeValid(int argsSize) override;
     static const int WRITE_READ_ITERATION = 200;
 private:
     string getWriteReadResult(int lba, string input);
@@ -115,7 +105,6 @@ class EraseWithSizeCommand : public Command {
 public:
     EraseWithSizeCommand(SSD* ssd, int lba, int size) : Command(ssd), lba{ lba }, size{size} {}
     string execute() override;
-    bool isArgumentSizeValid(int argsSize) override;
 private:
     int lba;
     int size;
@@ -126,7 +115,6 @@ class EraseWithRangeCommand : public Command {
 public:
     EraseWithRangeCommand(SSD* ssd, int startLba, int endLba) : Command(ssd), startLba{ startLba }, endLba{ endLba } {}
     string execute() override;
-    bool isArgumentSizeValid(int argsSize) override;
 private:
     int startLba;
     int endLba;
@@ -138,19 +126,18 @@ class EraseAndWriteAgingCommand : public Command {
 public:
     EraseAndWriteAgingCommand(SSD* ssd) : Command(ssd) {}
     string execute() override;
-    bool isArgumentSizeValid(int argsSize) override;
 };
 
 class FlushCommand : public Command {
 public:
     FlushCommand(SSD* ssd) : Command(ssd) {}
     string execute() override;
-    bool isArgumentSizeValid(int argsSize) override;
 };
 
 
 class CommandFactory {
 public:
     unique_ptr<Command> getCommand(SSD* ssd, string cmd, const vector<string>& args);
+    bool isArgumentSizeValid(string cmd, int argsSize);
     static bool isExit();
 };

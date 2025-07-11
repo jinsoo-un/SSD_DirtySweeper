@@ -296,6 +296,8 @@ string FlushCommand::execute() {
 }
 
 unique_ptr<Command> CommandFactory::getCommand(SSD* ssd, string cmd, const vector<string>& args) {
+    if (!isArgumentSizeValid(cmd, args.size())) return nullptr;
+
     if (cmd == "read") {
         int lba = stoi(args[0]);
         return std::make_unique<ReadCommand>(ssd, lba);
@@ -357,59 +359,29 @@ unique_ptr<Command> CommandFactory::getCommand(SSD* ssd, string cmd, const vecto
     return nullptr;
 }
 
-bool ReadCommand::isArgumentSizeValid(int argsSize) {
-    if (argsSize != 1) return false;
+bool CommandFactory::isArgumentSizeValid(string cmd, int argsSize) {
+    if (cmd == "read") {
+        if (argsSize != 1) return false;
+    }
+    else if (cmd == "fullread") {
+        if (argsSize != 0) return false;
+    }
+    else if (cmd == "write") {
+        if (argsSize != 2) return false;
+    }
+    else if (cmd == "fullwrite") {
+        if (argsSize != 1) return false;
+    }
+    else if (cmd == "erase") {
+        if (argsSize != 2) return false;
+    }
+    else if (cmd == "erase_range") {
+        if (argsSize != 2) return false;
+    }
+
     return true;
 }
 
-bool FullReadCommand::isArgumentSizeValid(int argsSize) {
-    if (argsSize != 0) return false;
-    return true;
-}
-
-bool WriteCommand::isArgumentSizeValid(int argsSize) {
-    if (argsSize != 2) return false;
-    return true;
-}
-
-bool FullWriteCommand::isArgumentSizeValid(int argsSize) {
-    if (argsSize != 1) return false;
-    return true;
-}
-
-bool HelpCommand::isArgumentSizeValid(int argsSize) {
-    return true;
-}
-bool ExitCommand::isArgumentSizeValid(int argsSize) {
-    return true;
-}
-bool FullWriteAndReadCompareCommand::isArgumentSizeValid(int argsSize) {
-    return true;
-}
-bool PartialLBAWriteCommand::isArgumentSizeValid(int argsSize) {
-    return true;
-}
-bool WriteReadAgingCommand::isArgumentSizeValid(int argsSize) {
-    return true;
-}
-
-bool EraseWithSizeCommand::isArgumentSizeValid(int argsSize) {
-    if (argsSize != 2) return false;
-    return true;
-}
-
-bool EraseWithRangeCommand::isArgumentSizeValid(int argsSize) {
-    if (argsSize != 2) return false;
-    return true;
-}
-
-bool EraseAndWriteAgingCommand::isArgumentSizeValid(int argsSize) {
-    return true;
-}
-
-bool FlushCommand::isArgumentSizeValid(int argsSize) {
-    return true;
-}
 
 bool CommandFactory::isExit() {
     return ExitCommand::getIsExit();
