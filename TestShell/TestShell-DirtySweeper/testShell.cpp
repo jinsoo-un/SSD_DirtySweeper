@@ -95,14 +95,17 @@ string TestShell::help() {
     logger.print("testShell.help()", "help command called");
 
     string output = "Developed by: Team Members - Sooeon Jin, Euncho Bae, Kwangwon Min, Hyeongseok Choi, Yunbae Kim, Seongkyoon Lee\n";
-    output += "read (LBA)         : Read data from (LBA).\n";
-    output += "write (LBA) (DATA) : Write (DATA) to (LBA).\n";
-    output += "fullread           : Read data from all LBAs.\n";
-    output += "fullwrite (DATA)   : Write (DATA) to all LBAs\n";
-    output += "testscript         : Execute the predefined test script. See documentation for details.\n";
-    output += "help               : Show usage instructions for all available commands.\n";
-    output += "exit               : Exit the program.\n";
-    output += "Note               : INVALID COMMAND will be shown if the input is unrecognized.";
+    output += "read (LBA)                    : Read data from (LBA).\n";
+    output += "write (LBA) (DATA)            : Write (DATA) to (LBA).\n";
+    output += "fullread                      : Read data from all LBAs.\n";
+    output += "fullwrite (DATA)              : Write (DATA) to all LBAs\n";
+    output += "erase (LBA) (SIZE)            : Erase  data from LBA to LBA + SIZE - 1\n";
+    output += "erase_range (ST_LBA) (EN LBA) : Erase  data from ST_LBA to EN_LBA\n";
+    output += "flush                         : Flush entire buffer\n";
+    output += "testscript                    : Execute the predefined test script. See documentation for details.\n";
+    output += "help                          : Show usage instructions for all available commands.\n";
+    output += "exit                          : Exit the program.\n";
+    output += "Note                          : INVALID COMMAND will be shown if the input is unrecognized.";
     return output;
 }
 
