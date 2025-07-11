@@ -248,6 +248,10 @@ string EraseWithRangeCommand::execute() {
     return TestShellOutputManager::GetInstance().getEraseRangePassResult();
 }
 
+string InvalidCommand::execute() {
+    return "INVALID COMMAND";
+}
+
 bool EraseWithRangeCommand::isValidLbaRange(unsigned int startLba, unsigned int endLba)
 {
     if (startLba < LBA_START_ADDRESS || startLba > LBA_END_ADDRESS) {
@@ -364,7 +368,7 @@ unique_ptr<ICommand> CommandFactory::getCommand(SSDInterface* ssd, string cmd, c
         return make_unique<FlushCommand>(ssd);
     }
 
-    return nullptr;
+    return make_unique<InvalidCommand>(ssd);
 }
 
 bool CommandFactory::isArgumentSizeValid(string cmd, int argsSize) {

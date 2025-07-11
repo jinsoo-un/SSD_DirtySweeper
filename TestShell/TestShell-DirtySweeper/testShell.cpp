@@ -4,10 +4,8 @@
 using namespace std;
 
 string TestShell::executeCommand(const string& cmd, const vector<string>& args) {
-    const string INVALID_COMMAND = "INVALID COMMAND";
     CommandFactory factory;
     auto commandPtr = factory.getCommand(ssd, cmd, args);
-    if (commandPtr == nullptr) return INVALID_COMMAND;
     return commandPtr->execute();
 }
 

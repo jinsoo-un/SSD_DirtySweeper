@@ -133,6 +133,12 @@ public:
     string execute() override;
 };
 
+class InvalidCommand : public ICommand {
+public:
+    InvalidCommand(SSDInterface* ssd) : ICommand(ssd) {}
+    string execute() override;
+};
+
 
 class CommandFactory {
 public:
