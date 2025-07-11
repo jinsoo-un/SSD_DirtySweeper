@@ -281,8 +281,6 @@ private:
             bIsPass = buffer.readAndParseBuffer(buffer_head, commandParam);
             if (bIsPass == false) return false;
 
-            string cmdLine = buildCommand(commandParam);
-
             bIsPass = ssd->executeWithParam(commandParam);
             if (bIsPass == false) return false;      
 
