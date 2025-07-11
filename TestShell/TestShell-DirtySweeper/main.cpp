@@ -5,7 +5,7 @@
 
 #ifdef NDEBUG
 int main(int argc, char* argv[]) {
-    SsdHelpler ssd;
+    SSDDriver ssd;
     TestShell shell(&ssd);
 
     if (argc == 2) {

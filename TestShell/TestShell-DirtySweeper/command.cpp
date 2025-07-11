@@ -161,7 +161,7 @@ string WriteReadAgingCommand::getWriteReadResult(int lba, string input) {
     return result;
 }
 
-string Command::getRandomHexString() {
+string ICommand::getRandomHexString() {
     static const char* hexDigits = "0123456789ABCDEF";
 
     static bool seeded = false;
@@ -209,7 +209,7 @@ string EraseWithSizeCommand::execute() {
     return TestShellOutputManager::GetInstance().getErasePassResult();
 }
 
-string Command::erase(unsigned int lba, unsigned int size) {
+string ICommand::erase(unsigned int lba, unsigned int size) {
     const int maxEraseSize = 10;
     int currentLba = lba;
     for (int remainedSize = size; remainedSize > 0;) {
@@ -295,7 +295,7 @@ string FlushCommand::execute() {
     return TestShellOutputManager::GetInstance().getSuccessFlushResult();
 }
 
-unique_ptr<Command> CommandFactory::getCommand(SSD* ssd, string cmd, const vector<string>& args) {
+unique_ptr<ICommand> CommandFactory::getCommand(SSDInterface* ssd, string cmd, const vector<string>& args) {
     if (!isArgumentSizeValid(cmd, args.size())) return nullptr;
 
     if (cmd == "read") {

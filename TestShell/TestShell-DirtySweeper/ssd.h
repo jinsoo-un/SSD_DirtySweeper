@@ -5,7 +5,7 @@
 
 using namespace std;
 
-class SSD {
+class SSDInterface {
 public:
     virtual void read(int lba) = 0;
     virtual void write(int lba, string data) = 0;
@@ -13,7 +13,7 @@ public:
     virtual void flushSsdBuffer(void) = 0;
 };
 
-class SsdHelpler : public SSD {
+class SSDDriver : public SSDInterface {
 public:
     void read(int lba) override;
     void write(int lba, string data) override;
@@ -26,7 +26,7 @@ private:
     void executeCommandLine(string commandLine);
 };
 
-class SSDMock : public SSD {
+class SSDMock : public SSDInterface {
 public:
     MOCK_METHOD(void, read, (int lba), (override));
     MOCK_METHOD(void, write, (int, string), (override));

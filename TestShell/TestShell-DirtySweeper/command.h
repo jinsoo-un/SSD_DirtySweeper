@@ -5,9 +5,9 @@
 #include "ssd.h"
 #include <memory>
 
-class Command {
+class ICommand {
 public:
-    Command(SSD* ssd) : ssd{ ssd } {
+    ICommand(SSDInterface* ssd) : ssd{ ssd } {
 #ifdef NDEBUG
         fileAccessor = FileAccessor::GetInstance();
 #else
@@ -17,7 +17,7 @@ public:
     virtual string execute() = 0;
     
 protected:
-    SSD* ssd;
+    SSDInterface* ssd;
     IFileAccessor* fileAccessor;
     const int LBA_START_ADDRESS = 0;
     const int LBA_END_ADDRESS = 99;
@@ -31,79 +31,79 @@ protected:
     string erase(unsigned int lba, unsigned int size);
 };
 
-class ReadCommand : public Command {
+class ReadCommand : public ICommand {
 public:
-    ReadCommand(SSD* ssd, int lba) : Command(ssd), lba{ lba } {}
+    ReadCommand(SSDInterface* ssd, int lba) : ICommand(ssd), lba{ lba } {}
     string execute() override;
 
 private:
     int lba;
 };
 
-class FullReadCommand : public Command {
+class FullReadCommand : public ICommand {
 public:
-    FullReadCommand(SSD* ssd) : Command(ssd) {}
+    FullReadCommand(SSDInterface* ssd) : ICommand(ssd) {}
     string execute() override;
 };
 
-class WriteCommand : public Command {
+class WriteCommand : public ICommand {
 public:
-    WriteCommand(SSD* ssd, int lba, string data) : Command(ssd), lba{ lba }, data{data} {}
+    WriteCommand(SSDInterface* ssd, int lba, string data) : ICommand(ssd), lba{ lba }, data{data} {}
     string execute() override;
 private:
     int lba;
     string data;
 };
 
-class FullWriteCommand : public Command {
+class FullWriteCommand : public ICommand {
 public:
-    FullWriteCommand(SSD* ssd, string data) : Command(ssd), data{ data } {}
+    FullWriteCommand(SSDInterface* ssd, string data) : ICommand(ssd), data{ data } {}
     string execute() override;
 private:
     string data;
 };
 
-class HelpCommand : public Command {
+class HelpCommand : public ICommand {
 public:
-    HelpCommand(SSD* ssd) : Command(ssd) {}
+    HelpCommand(SSDInterface* ssd) : ICommand(ssd) {}
     string execute() override;
 };
 
-class ExitCommand : public Command {
+class ExitCommand : public ICommand {
 public:
-    ExitCommand(SSD* ssd) : Command(ssd) {}
+    ExitCommand(SSDInterface* ssd) : ICommand(ssd) {}
     string execute() override;
     static bool getIsExit();
 private:
     static bool isExit;
 };
 
-class FullWriteAndReadCompareCommand : public Command {
+class FullWriteAndReadCompareCommand : public ICommand {
 public:
-    FullWriteAndReadCompareCommand(SSD* ssd) : Command(ssd) {}
+    FullWriteAndReadCompareCommand(SSDInterface* ssd) : ICommand(ssd) {}
     string execute() override;
 private:
     string getWriteDataInFullWriteAndReadCompareScript(int lba);
 };
 
-class PartialLBAWriteCommand : public Command {
+class PartialLBAWriteCommand : public ICommand {
 public:
-    PartialLBAWriteCommand(SSD* ssd) : Command(ssd) {}
+    PartialLBAWriteCommand(SSDInterface* ssd) : ICommand(ssd) {}
     string execute() override;
 };
 
-class WriteReadAgingCommand : public Command {
+class WriteReadAgingCommand : public ICommand {
 public:
-    WriteReadAgingCommand(SSD* ssd) : Command(ssd) {}
+    WriteReadAgingCommand(SSDInterface* ssd) : ICommand(ssd) {}
     string execute() override;
     static const int WRITE_READ_ITERATION = 200;
 private:
     string getWriteReadResult(int lba, string input);
 };
 
-class EraseWithSizeCommand : public Command {
+class EraseWithSizeCommand : public ICommand {
 public:
-    EraseWithSizeCommand(SSD* ssd, int lba, int size) : Command(ssd), lba{ lba }, size{size} {}
+    EraseWithSizeCommand(SSDInterface* ssd, int lba, int size) : ICommand(ssd), lba{ lba }, size{size} {}
     string execute() override;
 private:
     int lba;
@@ -111,9 +111,9 @@ private:
     bool isValidEraseWithSizeArgument(unsigned int lba, unsigned int size);
 };
 
-class EraseWithRangeCommand : public Command {
+class EraseWithRangeCommand : public ICommand {
 public:
-    EraseWithRangeCommand(SSD* ssd, int startLba, int endLba) : Command(ssd), startLba{ startLba }, endLba{ endLba } {}
+    EraseWithRangeCommand(SSDInterface* ssd, int startLba, int endLba) : ICommand(ssd), startLba{ startLba }, endLba{ endLba } {}
     string execute() override;
 private:
     int startLba;
@@ -121,23 +121,22 @@ private:
     bool isValidLbaRange(unsigned int startLba, unsigned int endLba);
 };
 
-
-class EraseAndWriteAgingCommand : public Command {
+class EraseAndWriteAgingCommand : public ICommand {
 public:
-    EraseAndWriteAgingCommand(SSD* ssd) : Command(ssd) {}
+    EraseAndWriteAgingCommand(SSDInterface* ssd) : ICommand(ssd) {}
     string execute() override;
 };
 
-class FlushCommand : public Command {
+class FlushCommand : public ICommand {
 public:
-    FlushCommand(SSD* ssd) : Command(ssd) {}
+    FlushCommand(SSDInterface* ssd) : ICommand(ssd) {}
     string execute() override;
 };
 
 
 class CommandFactory {
 public:
-    unique_ptr<Command> getCommand(SSD* ssd, string cmd, const vector<string>& args);
+    unique_ptr<ICommand> getCommand(SSDInterface* ssd, string cmd, const vector<string>& args);
     bool isArgumentSizeValid(string cmd, int argsSize);
     static bool isExit();
 };

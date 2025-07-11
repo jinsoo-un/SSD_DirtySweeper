@@ -14,7 +14,7 @@
 using namespace std;
 class TestShell {
 public:
-    TestShell(SSD* ssd) : ssd{ ssd } {
+    TestShell(SSDInterface* ssd) : ssd{ ssd } {
     }
 
     string executeCommand(const string& cmd, const vector<string>& args);
@@ -24,11 +24,11 @@ public:
 private:
     vector<string> tokenize(const string& input);
 
-    SSD* ssd;
+    SSDInterface* ssd;
     bool isExitCmd{ false };
 };
 
 class MockTestShell : public TestShell {
 public:
-    MockTestShell(SSD* ssd) : TestShell(ssd) {}    
+    MockTestShell(SSDInterface* ssd) : TestShell(ssd) {}    
 };
