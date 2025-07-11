@@ -57,18 +57,21 @@ string HelpCommand::execute() {
     Logger::GetInstance().print("HelpCommand.execute()", "help command called");
 
     string output = "Developed by: Team Members - Sooeon Jin, Euncho Bae, Kwangwon Min, Hyeongseok Choi, Yunbae Kim, Seongkyoon Lee\n";
-    output += "read (LBA)         : Read data from (LBA).\n";
-    output += "write (LBA) (DATA) : Write (DATA) to (LBA).\n";
-    output += "fullread           : Read data from all LBAs.\n";
-    output += "fullwrite (DATA)   : Write (DATA) to all LBAs\n";
-    output += "testscript         : Execute the predefined test script. See documentation for details.\n";
-    output += "help               : Show usage instructions for all available commands.\n";
-    output += "exit               : Exit the program.\n";
-    output += "erase (LBA) (SIZE) : Erase data from (LBA) for (SIZE).\n";
-    output += "erase_range (ST_LBA) (EN_LBA) : Erase data from (ST_LBA) to (EN_LBA).\n";
-    output += "Note               : INVALID COMMAND will be shown if the input is unrecognized.\n";
-    output += "\n* testscript: \n";
-    output += " 1_FullWriteAndReadCompare / 1_ \n 2_PartialLBAWrite / 2_ \n 3_WriteReadAging / 3_ \n 4_EraseAndWriteAging / 4_ \n";
+    output += "read (LBA)                    : Read data from (LBA).\n";
+    output += "write (LBA) (DATA)            : Write (DATA) to (LBA).\n";
+    output += "fullread                      : Read data from all LBAs.\n";
+    output += "fullwrite (DATA)              : Write (DATA) to all LBAs\n";
+    output += "erase (LBA) (SIZE)            : Erase  data from LBA to LBA + SIZE - 1\n";
+    output += "erase_range (ST_LBA) (EN LBA) : Erase  data from ST_LBA to EN_LBA\n";
+    output += "flush                         : Flush entire buffer\n";
+    output += "1FullWriteAndReadCompare     : Write and Read for All LBAs. Also you can execute with '1' .See documetation for details.\n";
+    output += "2PartialLBAWrite             : Aging test for partial LBA write and read. Also you can execute with '2'. See documetation for details\n";
+    output += "3WriteReadAging              : Write and Read aging test.Also you can execute with '3'.See documetation for details\n";
+    output += "4EraseAndWriteAging          : Erase and Write aging test. Also you can execute with '4'. See documetation for details\n";
+    output += "flush                         : Flush entire buffer\n";
+    output += "help                          : Show usage instructions for all available commands.\n";
+    output += "exit                          : Exit the program.\n";
+    output += "Note                          : INVALID COMMAND will be shown if the input is unrecognized.";
     return output;
 }
 
