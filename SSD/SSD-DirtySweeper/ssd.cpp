@@ -133,18 +133,31 @@ private:
         struct commandParams bufferCommand;
         for (int i = buffer.getFilledCount(); i > 0; i--) {
             buffer.readAndParseBuffer(i, bufferCommand);
-            if (bufferCommand.op == "W") {
-                if (bufferCommand.addr == cmd.addr) {
-                    file.updateOutput(bufferCommand.value);
-                    return true;
-                }
+            if (isAddressMatchedWriteCmd(bufferCommand, cmd.addr)) {
+                file.updateOutput(bufferCommand.value);
+                return true;
             }
-            if (bufferCommand.op == "E") {
-                for (int checkAddr = bufferCommand.addr; checkAddr < bufferCommand.addr + bufferCommand.size; checkAddr++) {
-                    if (checkAddr == cmd.addr) {
-                        file.updateOutput("0x00000000");
-                        return true;
-                    }
+            if (isAddressMatchedEraseCmd(bufferCommand, cmd.addr)) {
+                file.updateOutput("0x00000000");
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool isAddressMatchedWriteCmd(commandParams& bufferCommand, const int& addr)
+    {
+        if (bufferCommand.op == "W" && (bufferCommand.addr == addr)) return true;
+        return false;
+    }
+
+    bool isAddressMatchedEraseCmd(commandParams& bufferCommand, const int& addr)
+    {
+        if (bufferCommand.op == "E") {
+            for (int checkAddr = bufferCommand.addr; checkAddr < bufferCommand.addr + bufferCommand.size; checkAddr++) {
+                if (checkAddr == addr) {
+                    
+                    return true;
                 }
             }
         }
