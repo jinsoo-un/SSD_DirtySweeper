@@ -7,12 +7,19 @@
 
 class Command {
 public:
-    Command(SSD* ssd) : ssd{ ssd } {}
+    Command(SSD* ssd) : ssd{ ssd } {
+#ifdef NDEBUG
+        fileAccessor = FileAccessor::GetInstance();
+#else
+        fileAccessor = MockFileAccessor::GetInstance();
+#endif
+    }
     virtual string execute() = 0;
     virtual bool isArgumentSizeValid(int argsSize) = 0;
     
 protected:
     SSD* ssd;
+    IFileAccessor* fileAccessor;
     const int LBA_START_ADDRESS = 0;
     const int LBA_END_ADDRESS = 99;
 

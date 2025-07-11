@@ -9,7 +9,7 @@ string ReadCommand::execute() {
 
     ssd->read(lba);
 
-    string result = FileAccessor::GetInstance()->readOutputFile();
+    string result = fileAccessor->readOutputFile();
     if (result == "ERROR")  return TestShellOutputManager::GetInstance().getErrorReadResult();
     return TestShellOutputManager::GetInstance().getSuccessReadResult(result, lba);
 }
@@ -20,7 +20,7 @@ string FullReadCommand::execute() {
 
     for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; lba++) {
         ssd->read(lba);
-        string outputResult = FileAccessor::GetInstance()->readOutputFile();
+        string outputResult = fileAccessor->readOutputFile();
         if (outputResult == "ERROR") {
             result += TestShellOutputManager::GetInstance().getErrorReadResult();
             return result;
@@ -35,7 +35,7 @@ string WriteCommand::execute() {
     Logger::GetInstance().print("testShell.write()", "write command called");
     ssd->write(lba, data);
 
-    if (isCmdExecuteError(FileAccessor::GetInstance()->readOutputFile())) {
+    if (isCmdExecuteError(fileAccessor->readOutputFile())) {
         return TestShellOutputManager::GetInstance().getErrorWriteResult();
     }
     return TestShellOutputManager::GetInstance().getSuccessWriteResult();
@@ -46,7 +46,7 @@ string FullWriteCommand::execute() {
     for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; lba++) {
         ssd->write(lba, data);
 
-        if (isCmdExecuteError(FileAccessor::GetInstance()->readOutputFile())) {
+        if (isCmdExecuteError(fileAccessor->readOutputFile())) {
             return TestShellOutputManager::GetInstance().getErrorFullWriteResult();
         }
     }
@@ -80,7 +80,7 @@ string FullWriteAndReadCompareCommand::execute() {
 
         ssd->write(lba, writeData);
         ssd->read(lba);
-        string readData = FileAccessor::GetInstance()->readOutputFile();
+        string readData = fileAccessor->readOutputFile();
 
         if (readData != writeData) {
             return TestShellOutputManager::GetInstance().getWriteReadMismatch(lba, writeData, readData)
@@ -111,15 +111,15 @@ string PartialLBAWriteCommand::execute() {
 
         vector<string> result;
         ssd->read(4);
-        result.push_back(FileAccessor::GetInstance()->readOutputFile());
+        result.push_back(fileAccessor->readOutputFile());
         ssd->read(0);
-        result.push_back(FileAccessor::GetInstance()->readOutputFile());
+        result.push_back(fileAccessor->readOutputFile());
         ssd->read(3);
-        result.push_back(FileAccessor::GetInstance()->readOutputFile());
+        result.push_back(fileAccessor->readOutputFile());
         ssd->read(1);
-        result.push_back(FileAccessor::GetInstance()->readOutputFile());
+        result.push_back(fileAccessor->readOutputFile());
         ssd->read(2);
-        result.push_back(FileAccessor::GetInstance()->readOutputFile());
+        result.push_back(fileAccessor->readOutputFile());
 
         auto firstData = result[0];
         result.erase(result.begin());
@@ -150,7 +150,7 @@ string WriteReadAgingCommand::execute() {
 string WriteReadAgingCommand::getWriteReadResult(int lba, string input) {
     ssd->write(lba, input);
     ssd->read(lba);
-    string result = FileAccessor::GetInstance()->readOutputFile();
+    string result = fileAccessor->readOutputFile();
     return result;
 }
 
@@ -210,7 +210,7 @@ string Command::erase(unsigned int lba, unsigned int size) {
         ssd->erase(currentLba, chunkSize);
         remainedSize -= chunkSize;
         currentLba += chunkSize;
-        if (FileAccessor::GetInstance()->readOutputFile() == "ERROR") {
+        if (fileAccessor->readOutputFile() == "ERROR") {
             return "ERROR";
         }
     }
@@ -256,7 +256,7 @@ string EraseAndWriteAgingCommand::execute() {
     const int maxAgingCnt = 30;
     ssd->erase(0, eraseUnitSize);
 
-    if (isCmdExecuteError(FileAccessor::GetInstance()->readOutputFile())) {
+    if (isCmdExecuteError(fileAccessor->readOutputFile())) {
         return TestShellOutputManager::GetInstance().getScriptFailResult();
     }
 
@@ -264,11 +264,11 @@ string EraseAndWriteAgingCommand::execute() {
         for (int lba = 2; lba < LBA_END_ADDRESS; lba += eraseUnitSize) {
             vector<string> result;
             ssd->write(lba, getRandomHexString());
-            result.push_back(FileAccessor::GetInstance()->readOutputFile());
+            result.push_back(fileAccessor->readOutputFile());
             ssd->write(lba, getRandomHexString());
-            result.push_back(FileAccessor::GetInstance()->readOutputFile());
+            result.push_back(fileAccessor->readOutputFile());
             ssd->erase(lba, eraseUnitSize);
-            result.push_back(FileAccessor::GetInstance()->readOutputFile());
+            result.push_back(fileAccessor->readOutputFile());
 
             for (auto data : result) {
                 if (isCmdExecuteError(data)) {
@@ -283,7 +283,7 @@ string EraseAndWriteAgingCommand::execute() {
 string FlushCommand::execute() {
     Logger::GetInstance().print("testShell.flushSsdBuffer()", "flush command called");
     ssd->flushSsdBuffer();
-    string result = FileAccessor::GetInstance()->readOutputFile();
+    string result = fileAccessor->readOutputFile();
     if (result == "ERROR") return TestShellOutputManager::GetInstance().getErrorFlushResult();
     return TestShellOutputManager::GetInstance().getSuccessFlushResult();
 }
