@@ -5,64 +5,131 @@
 
 using namespace std;
 
-class RealSSDTest : public ::testing::Test {
-public:
-    RealSSDTest() : ssd {new RealSSD } { }
-    SSD* ssd;
-    commandParams param;
-    CommandParser parser;
-
+namespace SSDTestMaterials {
     string VALID_HEX_DATA = "0x1298CDEF";
     string INVALID_HEX_DATA = "0xABCDEFGH";
     string INITIAL_HEX_DATA = "0x00000000";
+    string PRECONDITION_HEX_DATA = "0xABCDA5A5";
+    
     static const int VALID_TEST_ADDRESS = 0;
     static const int VALID_TEST_ADDRESS_MAX = 99;
     static const int INVALID_TEST_ADDRESS = 100;
     static const int VALID_TEST_SIZE = 10;
     static const int INVALID_TEST_SIZE = 20;
+}
+using namespace SSDTestMaterials;
+
+
+void initializeDataFile()
+{
+    ofstream file(FileNames::DATA_FILE);
+    if (!file.is_open()) {
+        cout << "Error opening file for setup test." << endl;
+        return;
+    }
+
+    for (int i = MIN_ADDRESS; i < MAX_ADDRESS; i++) {
+        file << i << "\t" << "0x00000000" << endl;
+    }
+    file.close();
+}
+
+bool checkOutputFile(string expected) {
+    ifstream fin(FileNames::OUTPUT_FILE);
+    if (!fin.is_open()) {
+        cout << "OUTPUT file open failed\n";
+        return false;
+    }
+
+    string line;
+    getline(fin, line);
+    if (line != expected)
+        return false;
+    return true;
+}
+
+string buildCommand(string cmd, int lba, string data = "") {
+    string cmdLine = cmd + " " + std::to_string(lba);
+    if (cmd == "W" || cmd == "E") cmdLine = cmdLine + " " + data;
+    if (cmd == "F") cmdLine = "F";
+    return cmdLine;
+}
+
+class ParserTest : public ::testing::Test {
+public:
+    CommandParser parser;
+    string cmd;
+    commandParams param;
 
     void SetUp() override {
         initializeDataFile();
     }
 
-    void initializeDataFile()
-    {
-        ofstream file(FileNames::DATA_FILE);
-        if (!file.is_open()) {
-            cout << "Error opening file for setup test." << endl;
-            return;
-        }
+};
 
-        for (int i = MIN_ADDRESS; i < MAX_ADDRESS; i++) {
-            file << i << "\t" << "0x00000000" << endl;
-        }
-        file.close();
-    }
+TEST_F(ParserTest, ArgparseRead) {
+    cmd = buildCommand("R", 3);
+    parser.parseCommand(cmd, param);
 
-    bool checkOutputFile(string expected) {
-        ifstream fin(FileNames::OUTPUT_FILE);
-        if (!fin.is_open()) {
-            cout << "OUTPUT file open failed\n";
-            return false;
-        }
+    EXPECT_EQ("R", param.op);
+    EXPECT_EQ(3, param.addr);
+}
 
-        string line;
-        getline(fin, line);
-        if (line != expected)
-            return false;
-        return true;
-    }
+TEST_F(ParserTest, ArgparseWrite)
+{
+    cmd = buildCommand("W", 3, VALID_HEX_DATA);
+    parser.parseCommand(cmd, param);
+    EXPECT_EQ("W", param.op);
+    EXPECT_EQ(3, param.addr);
+    EXPECT_EQ("0x1298CDEF", param.value);
+}
 
-    string buildCommand(string cmd, int lba, string data = "") {
-        string cmdLine = cmd + " " + std::to_string(lba);
-        if (cmd == "W" || cmd == "E") cmdLine = cmdLine + " " + data;
-        return cmdLine;
+TEST_F(ParserTest, ArgparseErase)
+{
+    cmd = buildCommand("E", 3, std::to_string(10));
+    parser.parseCommand(cmd, param);
+    EXPECT_EQ("E", param.op);
+    EXPECT_EQ(3, param.addr);
+    EXPECT_EQ(10, param.size);
+}
+
+TEST_F(ParserTest, ArgparseInvalidOp)
+{
+    cmd = buildCommand("S", 3);
+    parser.parseCommand(cmd, param);
+    EXPECT_TRUE(checkOutputFile("ERROR"));
+}
+
+TEST_F(ParserTest, ArgparseInvalidAddr)
+{
+    cmd = buildCommand("R", 300);
+    parser.parseCommand(cmd, param);
+    EXPECT_TRUE(checkOutputFile("ERROR"));
+}
+
+TEST_F(ParserTest, ArgparseInvalidValue)
+{
+    cmd = buildCommand("W", 3, INVALID_HEX_DATA);
+    parser.parseCommand(cmd, param);
+    EXPECT_TRUE(checkOutputFile("ERROR"));
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+class RealSSDTest : public ::testing::Test {
+public:
+    RealSSDTest() : ssd {new RealSSD } { }
+    SSD* ssd;
+    string cmd;
+
+    void SetUp() override {
+        initializeDataFile();
     }
 };
 
 TEST_F(RealSSDTest, ReadTC_InitialValue)
 {
-    string cmd = buildCommand("R", 1);
+    cmd = buildCommand("R", 1);
     bool isPass = ssd->exec(cmd);
 
     EXPECT_EQ(true, isPass);
@@ -71,7 +138,7 @@ TEST_F(RealSSDTest, ReadTC_InitialValue)
 
 TEST_F(RealSSDTest, ReadTC_OutofRange)
 {
-    string cmd = buildCommand("R", 100);
+    cmd = buildCommand("R", 100);
     bool isPass = ssd->exec(cmd);
     EXPECT_EQ(false, isPass);
     EXPECT_TRUE(checkOutputFile("ERROR"));
@@ -79,7 +146,7 @@ TEST_F(RealSSDTest, ReadTC_OutofRange)
 
 TEST_F(RealSSDTest, ReadTC_ReturnData01)
 {
-    string cmd = buildCommand("R", 50);
+    cmd = buildCommand("R", 50);
     bool isPass = ssd->exec(cmd);
     EXPECT_EQ(true, isPass);
     EXPECT_TRUE(checkOutputFile(INITIAL_HEX_DATA));
@@ -87,104 +154,56 @@ TEST_F(RealSSDTest, ReadTC_ReturnData01)
 
 TEST_F(RealSSDTest, ReadTC_ReturnData02)
 {
-    string cmd = buildCommand("R", 30);
+    cmd = buildCommand("R", 30);
     bool isPass = ssd->exec(cmd);
     EXPECT_EQ(true, isPass);
     EXPECT_TRUE(checkOutputFile(INITIAL_HEX_DATA));
 }
 
-TEST_F(RealSSDTest, ArgparseRead) {
-    string cmd = buildCommand("R", 3);
-    parser.parseCommand(cmd, param);
-    
-    EXPECT_EQ("R", param.op);
-    EXPECT_EQ(3, param.addr);
-}
-
-TEST_F(RealSSDTest, ArgparseWrite)
-{
-    string cmd = buildCommand("W", 3, VALID_HEX_DATA);
-    parser.parseCommand(cmd, param);
-    EXPECT_EQ("W", param.op);
-    EXPECT_EQ(3, param.addr);
-    EXPECT_EQ("0x1298CDEF", param.value);
-}
-
-TEST_F(RealSSDTest, ArgparseErase)
-{
-    string cmd = buildCommand("E", 3, std::to_string(10));
-    parser.parseCommand(cmd, param);
-    EXPECT_EQ("E", param.op);
-    EXPECT_EQ(3, param.addr);
-	EXPECT_EQ(10, param.size);
-}
-
-TEST_F(RealSSDTest, ArgparseInvalidOp)
-{
-    string cmd = buildCommand("S", 3);
-    parser.parseCommand(cmd, param);
-    EXPECT_TRUE(checkOutputFile("ERROR"));
-}
-
-TEST_F(RealSSDTest, ArgparseInvalidAddr)
-{
-    string cmd = buildCommand("R", 300);
-    parser.parseCommand(cmd, param);
-    EXPECT_TRUE(checkOutputFile("ERROR"));
-}
-
-TEST_F(RealSSDTest, ArgparseInvalidValue)
-{
-    string cmd = buildCommand("W", 3, INVALID_HEX_DATA);
-    parser.parseCommand(cmd, param);
-    EXPECT_TRUE(checkOutputFile("ERROR"));
-}
-
 TEST_F(RealSSDTest, WritePass) {
-    string cmd = buildCommand("W", VALID_TEST_ADDRESS, VALID_HEX_DATA);
-    parser.parseCommand(cmd, param);
-    bool isPass = ssd->doCommand(param);
+    cmd = buildCommand("W", VALID_TEST_ADDRESS, VALID_HEX_DATA);
+    bool isPass = ssd->exec(cmd);
     EXPECT_TRUE(isPass);
 }
 
 TEST_F(RealSSDTest, WriteFailWithOutOfAddressRange) {
-    string cmd = buildCommand("W", INVALID_TEST_ADDRESS, VALID_HEX_DATA);
+    cmd = buildCommand("W", INVALID_TEST_ADDRESS, VALID_HEX_DATA);
     bool isPass = ssd->exec(cmd);
     EXPECT_FALSE(isPass);
 }
 
 TEST_F(RealSSDTest, WriteInvalidData00) {
-    string cmd = buildCommand("W", VALID_TEST_ADDRESS, "0x1234567890000");
+    cmd = buildCommand("W", VALID_TEST_ADDRESS, "0x1234567890000");
     bool isPass = ssd->exec(cmd);
     EXPECT_FALSE(isPass);
 }
 
 TEST_F(RealSSDTest, WriteInvalidData01) {
-    string cmd = buildCommand("W", VALID_TEST_ADDRESS, "0x1234");
+    cmd = buildCommand("W", VALID_TEST_ADDRESS, "0x1234");
     bool isPass = ssd->exec(cmd);
     EXPECT_FALSE(isPass);
 }
 
 TEST_F(RealSSDTest, WriteInvalidData02) {
-    string cmd = buildCommand("W", VALID_TEST_ADDRESS, "12345678");
+    cmd = buildCommand("W", VALID_TEST_ADDRESS, "12345678");
     bool isPass = ssd->exec(cmd);
     EXPECT_FALSE(isPass);
 }
 
 TEST_F(RealSSDTest, WriteInvalidData03) {
-    string cmd = buildCommand("W", VALID_TEST_ADDRESS, "0x1234ABzE");
+    cmd = buildCommand("W", VALID_TEST_ADDRESS, "0x1234ABzE");
     bool isPass = ssd->exec(cmd);
     EXPECT_FALSE(isPass);
 }
 
 TEST_F(RealSSDTest, WriteInvalidData04) {
-    string cmd = buildCommand("W", VALID_TEST_ADDRESS, "0xA5CCH012");
+    cmd = buildCommand("W", VALID_TEST_ADDRESS, "0xA5CCH012");
     bool isPass = ssd->exec(cmd);
     EXPECT_FALSE(isPass);
 }
 
 TEST_F(RealSSDTest, WriteReadVerify00) {
-    string cmd = buildCommand("R", VALID_TEST_ADDRESS);
+    cmd = buildCommand("R", VALID_TEST_ADDRESS);
     bool isPass = ssd->exec(cmd);
 
     ASSERT_EQ(true, isPass);
@@ -201,31 +220,31 @@ TEST_F(RealSSDTest, WriteReadVerify00) {
 }
 
 TEST_F(RealSSDTest, ErasePass) {
-    string cmd = buildCommand("E", VALID_TEST_ADDRESS, to_string(VALID_TEST_SIZE));
+    cmd = buildCommand("E", VALID_TEST_ADDRESS, to_string(VALID_TEST_SIZE));
     bool isPass = ssd->exec(cmd);
     EXPECT_TRUE(isPass);
 }
 
 TEST_F(RealSSDTest, EraseFailOutofRange) {
-    string cmd = buildCommand("E", INVALID_TEST_ADDRESS, to_string(VALID_TEST_SIZE));
+    cmd = buildCommand("E", INVALID_TEST_ADDRESS, to_string(VALID_TEST_SIZE));
     bool isPass = ssd->exec(cmd);
     EXPECT_FALSE(isPass);
 }
 
 TEST_F(RealSSDTest, EraseFailOutofRangeDestination) {
-    string cmd = buildCommand("E", VALID_TEST_ADDRESS_MAX, to_string(VALID_TEST_SIZE));
+    cmd = buildCommand("E", VALID_TEST_ADDRESS_MAX, to_string(VALID_TEST_SIZE));
     bool isPass = ssd->exec(cmd);
     EXPECT_FALSE(isPass);
 }
 
 TEST_F(RealSSDTest, EraseFailExceedMaxSize) {
-    string cmd = buildCommand("E", VALID_TEST_ADDRESS, to_string(INVALID_TEST_SIZE));
+    cmd = buildCommand("E", VALID_TEST_ADDRESS, to_string(INVALID_TEST_SIZE));
     bool isPass = ssd->exec(cmd);
     EXPECT_FALSE(isPass);
 }
 
 TEST_F(RealSSDTest, EraseAndReadVerify) {
-    string cmd = buildCommand("W", VALID_TEST_ADDRESS, VALID_HEX_DATA);
+    cmd = buildCommand("W", VALID_TEST_ADDRESS, VALID_HEX_DATA);
     bool isPass = ssd->exec(cmd);
     ASSERT_TRUE(isPass);
 
@@ -244,10 +263,8 @@ class BufSSDTest : public RealSSDTest {
 public:
     BufSSDTest() : ssd { new BufferedSSD } { }
     SSD* ssd;
-
-    string PRECONDITION_HEX_DATA = "0xABCDA5A5";
-    
     string cmd;
+
     int lba;
     int lba_size;
 
@@ -256,18 +273,11 @@ public:
         ssd->bufferClear();
     }
 
-    string buildCommand(string cmd, int lba, string data = "") {
-        string cmdLine = cmd + " " + std::to_string(lba);
-        if (cmd == "W" || cmd == "E") cmdLine = cmdLine + " " + data;
-        if (cmd == "F") cmdLine = "F";
-        return cmdLine;
-    }
-
 };
 
 TEST_F(BufSSDTest, ReadTC_InitialValue)
 {
-    string cmd = buildCommand("R", 1);
+    cmd = buildCommand("R", 1);
     bool isPass = ssd->exec(cmd);
     EXPECT_EQ(true, isPass);
     EXPECT_TRUE(checkOutputFile(INITIAL_HEX_DATA));
@@ -275,7 +285,7 @@ TEST_F(BufSSDTest, ReadTC_InitialValue)
 
 TEST_F(BufSSDTest, ReadTC_OutofRange)
 {
-    string cmd = buildCommand("R", 100);
+    cmd = buildCommand("R", 100);
     bool isPass = ssd->exec(cmd);
     EXPECT_EQ(false, isPass);
     EXPECT_TRUE(checkOutputFile("ERROR"));
@@ -283,7 +293,7 @@ TEST_F(BufSSDTest, ReadTC_OutofRange)
 
 TEST_F(BufSSDTest, ReadTC_ReturnData01)
 {
-    string cmd = buildCommand("R", 50);
+    cmd = buildCommand("R", 50);
     bool isPass = ssd->exec(cmd);
     EXPECT_EQ(true, isPass);
     EXPECT_TRUE(checkOutputFile(INITIAL_HEX_DATA));
@@ -291,7 +301,7 @@ TEST_F(BufSSDTest, ReadTC_ReturnData01)
 
 TEST_F(BufSSDTest, ReadTC_ReturnData02)
 {
-    string cmd = buildCommand("R", 30);
+    cmd = buildCommand("R", 30);
     bool isPass = ssd->exec(cmd);
     EXPECT_EQ(true, isPass);
     EXPECT_TRUE(checkOutputFile(INITIAL_HEX_DATA));
