@@ -1,7 +1,7 @@
 ﻿#include "command.h"
 
 string ReadCommand::execute() {
-    Logger::GetInstance().print("testShell.read()", "read command called");
+    Logger::GetInstance().print("ReadCommand.execute()", "read command called");
     
     if (lba < 0 || lba > 99) {
         return TestShellOutputManager::GetInstance().getErrorReadResult();
@@ -16,7 +16,7 @@ string ReadCommand::execute() {
 
 string FullReadCommand::execute() {
     string result = "";
-    Logger::GetInstance().print("testShell.fullRead()", "full read command called");
+    Logger::GetInstance().print("FullReadCommand.execute()", "full read command called");
 
     for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; lba++) {
         ssd->read(lba);
@@ -32,7 +32,7 @@ string FullReadCommand::execute() {
 }
 
 string WriteCommand::execute() {
-    Logger::GetInstance().print("testShell.write()", "write command called");
+    Logger::GetInstance().print("WriteCommand.execute()", "write command called");
     ssd->write(lba, data);
 
     if (isCmdExecuteError(fileAccessor->readOutputFile())) {
@@ -42,7 +42,7 @@ string WriteCommand::execute() {
 }
 
 string FullWriteCommand::execute() {
-    Logger::GetInstance().print("testShell.fullWrite()", "full write command called");
+    Logger::GetInstance().print("FullWriteCommand.execute()", "full write command called");
     for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; lba++) {
         ssd->write(lba, data);
 
@@ -54,17 +54,24 @@ string FullWriteCommand::execute() {
 }
 
 string HelpCommand::execute() {
-    Logger::GetInstance().print("testShell.help()", "help command called");
+    Logger::GetInstance().print("HelpCommand.execute()", "help command called");
 
     string output = "Developed by: Team Members - Sooeon Jin, Euncho Bae, Kwangwon Min, Hyeongseok Choi, Yunbae Kim, Seongkyoon Lee\n";
-    output += "read (LBA)         : Read data from (LBA).\n";
-    output += "write (LBA) (DATA) : Write (DATA) to (LBA).\n";
-    output += "fullread           : Read data from all LBAs.\n";
-    output += "fullwrite (DATA)   : Write (DATA) to all LBAs\n";
-    output += "testscript         : Execute the predefined test script. See documentation for details.\n";
-    output += "help               : Show usage instructions for all available commands.\n";
-    output += "exit               : Exit the program.\n";
-    output += "Note               : INVALID COMMAND will be shown if the input is unrecognized.";
+    output += "read (LBA)                    : Read data from (LBA).\n";
+    output += "write (LBA) (DATA)            : Write (DATA) to (LBA).\n";
+    output += "fullread                      : Read data from all LBAs.\n";
+    output += "fullwrite (DATA)              : Write (DATA) to all LBAs\n";
+    output += "erase (LBA) (SIZE)            : Erase  data from LBA to LBA + SIZE - 1\n";
+    output += "erase_range (ST_LBA) (EN LBA) : Erase  data from ST_LBA to EN_LBA\n";
+    output += "flush                         : Flush entire buffer\n";
+    output += "1FullWriteAndReadCompare     : Write and Read for All LBAs. Also you can execute with '1' .See documetation for details.\n";
+    output += "2PartialLBAWrite             : Aging test for partial LBA write and read. Also you can execute with '2'. See documetation for details\n";
+    output += "3WriteReadAging              : Write and Read aging test.Also you can execute with '3'.See documetation for details\n";
+    output += "4EraseAndWriteAging          : Erase and Write aging test. Also you can execute with '4'. See documetation for details\n";
+    output += "flush                         : Flush entire buffer\n";
+    output += "help                          : Show usage instructions for all available commands.\n";
+    output += "exit                          : Exit the program.\n";
+    output += "Note                          : INVALID COMMAND will be shown if the input is unrecognized.";
     return output;
 }
 
@@ -72,6 +79,7 @@ bool ExitCommand::isExit = false;
 
 string ExitCommand::execute() {
     isExit = true;
+    Logger::GetInstance().print("ExitCommand.execute()", "exit command called");
     return "Set Exit Comannd...\n";
 }
 
@@ -80,7 +88,7 @@ bool ExitCommand::getIsExit() {
 }
 
 string FullWriteAndReadCompareCommand::execute() {
-    Logger::GetInstance().print("testShell.fullWriteAndReadCompare()", "full write and read compare command called");
+    Logger::GetInstance().print("FullWriteAndReadCompareCommand.execute()", "full write and read compare command called");
 
     for (int lba = LBA_START_ADDRESS; lba <= LBA_END_ADDRESS; ++lba) {
         string writeData = getWriteDataInFullWriteAndReadCompareScript(lba);
@@ -105,7 +113,7 @@ string FullWriteAndReadCompareCommand::getWriteDataInFullWriteAndReadCompareScri
 }
 
 string PartialLBAWriteCommand::execute() {
-    Logger::GetInstance().print("testShell.partialLBAWrite()", "partial LBA write command called");
+    Logger::GetInstance().print("PartialLBAWriteCommand.execute()", "partial LBA write command called");
 
     const string testValue = "0x12345678";
     const int repeatCnt = 30;
@@ -140,7 +148,7 @@ string PartialLBAWriteCommand::execute() {
 }
 
 string WriteReadAgingCommand::execute() {
-    Logger::GetInstance().print("testShell.writeReadAging()", "write read aging command called");
+    Logger::GetInstance().print("WriteReadAgingCommand.execute()", "write read aging command called");
 
     for (int i = 0; i < WRITE_READ_ITERATION; i++) {
         string randomString = getRandomHexString();
@@ -195,7 +203,7 @@ bool EraseWithSizeCommand::isValidEraseWithSizeArgument(unsigned int lba, unsign
     return true;
 }
 string EraseWithSizeCommand::execute() {
-    Logger::GetInstance().print("testShell.eraseWithSize()", "erase with size command called");
+    Logger::GetInstance().print("EraseWithSizeCommand.execute()", "erase with size command called");
 
     if (!isValidEraseWithSizeArgument(lba, size)) {
         return TestShellOutputManager::GetInstance().getEraseErrorResult();
@@ -225,7 +233,7 @@ string ICommand::erase(unsigned int lba, unsigned int size) {
 }
 
 string EraseWithRangeCommand::execute() {
-    Logger::GetInstance().print("testShell.eraseWithRange()", "erase with range command called");
+    Logger::GetInstance().print("EraseWithRangeCommand.execute()", "erase with range command called");
 
     if (!isValidLbaRange(startLba, endLba)) {
         return TestShellOutputManager::GetInstance().getEraseRangeErrorResult();
@@ -257,7 +265,7 @@ bool EraseWithRangeCommand::isValidLbaRange(unsigned int startLba, unsigned int 
 }
 
 string EraseAndWriteAgingCommand::execute() {
-    Logger::GetInstance().print("testShell.eraseAndWriteAging()", "erase and write aging command called");
+    Logger::GetInstance().print("EraseAndWriteAgingCommand.execute()", "erase and write aging command called");
 
     const int eraseUnitSize = 2;
     const int maxAgingCnt = 30;
@@ -288,7 +296,7 @@ string EraseAndWriteAgingCommand::execute() {
 }
 
 string FlushCommand::execute() {
-    Logger::GetInstance().print("testShell.flushSsdBuffer()", "flush command called");
+    Logger::GetInstance().print("FlushCommand.execute()", "flush command called");
     ssd->flushSsdBuffer();
     string result = fileAccessor->readOutputFile();
     if (result == "ERROR") return TestShellOutputManager::GetInstance().getErrorFlushResult();
