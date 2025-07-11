@@ -35,8 +35,8 @@ class ReadCommand : public ICommand {
 public:
     ReadCommand(SSDInterface* ssd, int lba) : ICommand(ssd), lba{ lba } {}
     string execute() override;
-
 private:
+    bool isValidLBA();
     int lba;
 };
 
